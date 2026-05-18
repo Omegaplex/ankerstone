@@ -1,3 +1,3 @@
-#Ankerstone
+# Ankerstone
 
-A learning projet for Java and Fabric modding
+A learning project for Java and Fabric modding.
