@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "ankerstone",
+	"version": "${version}",
+	"name": "Ankerstone",
+	"description": "Adds a redstone-powered chunk-loading block called Ankerstone.",
+	"authors": [
+		"Omegaplex"
+	],
+	"contact": {
+		"sources": "https://github.com/Omegaplex/ankerstone"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/ankerstone/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"io.github.omegaplex.ankerstone.Ankerstone"
+		],
+		"client": [
+			"io.github.omegaplex.ankerstone.client.AnkerstoneClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
