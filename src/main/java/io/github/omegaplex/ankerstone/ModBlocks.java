@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 public class ModBlocks {
     public static final Block ANKERSTONE = register(
             "ankerstone",
-            Block::new,
+            AnkerstoneBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.STONE));
 
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,

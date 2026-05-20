@@ -1,5 +1,13 @@
 {
-    "variants": {
-        "": { "model": "ankerstone:block/ankerstone" }
+  "variants": {
+    "mode=off": {
+      "model": "ankerstone:block/ankerstone_off"
+    },
+    "mode=single": {
+      "model": "ankerstone:block/ankerstone_single"
+    },
+    "mode=wide": {
+      "model": "ankerstone:block/ankerstone_wide"
     }
+  }
 }
