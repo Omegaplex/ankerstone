@@ -1,6 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,7 +41,17 @@ public class AnkerstoneBlock extends Block {
         int signalStrength = level.getBestNeighborSignal(pos);
         AnkerstoneMode mode = modeFromSignal(signalStrength);
 
-        if (state.getValue(MODE) != mode) {
+        AnkerstoneMode oldMode = state.getValue(MODE);
+
+        if (oldMode != mode) {
+            if (mode == AnkerstoneMode.SINGLE) {
+                setSingleChunkLoaded(level, pos, true);
+            }
+
+            if (oldMode == AnkerstoneMode.SINGLE) {
+                setSingleChunkLoaded(level, pos, false);
+            }
+
             level.setBlock(pos, state.setValue(MODE, mode), Block.UPDATE_CLIENTS);
         }
     }
@@ -55,5 +66,26 @@ public class AnkerstoneBlock extends Block {
         }
 
         return AnkerstoneMode.SINGLE;
+    }
+
+    private static void setSingleChunkLoaded(Level level, BlockPos pos, boolean loaded) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        int chunkX = Math.floorDiv(pos.getX(), 16);
+        int chunkZ = Math.floorDiv(pos.getZ(), 16);
+
+        serverLevel.setChunkForced(chunkX, chunkZ, loaded);
+    }
+
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos,
+            boolean movedByPiston) {
+        if (state.getValue(MODE) == AnkerstoneMode.SINGLE) {
+            setSingleChunkLoaded(level, pos, false);
+        }
+
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
     }
 }
