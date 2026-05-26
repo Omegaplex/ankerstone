@@ -1,4 +1,7 @@
-# Ankerstone
+<img width="1583" height="365" alt="ankerstone_gen_logo-v1" src="https://github.com/user-attachments/assets/7b869887-6d9d-4985-bf1f-9474bd1d6fe2" />
+
+
+
 
 # Lore & Crafting Notes
 
