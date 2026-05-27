@@ -73,10 +73,11 @@ public class AnkerstoneBlock extends Block {
             return;
         }
 
-        int chunkX = Math.floorDiv(pos.getX(), 16);
-        int chunkZ = Math.floorDiv(pos.getZ(), 16);
-
-        serverLevel.setChunkForced(chunkX, chunkZ, loaded);
+        if (loaded) {
+            AnkerstoneChunkTickets.add(serverLevel, pos);
+        } else {
+            AnkerstoneChunkTickets.remove(serverLevel, pos);
+        }
     }
 
     @Override
