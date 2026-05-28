@@ -1,6 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,8 @@ public class Ankerstone implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 		ModBlocks.initialize();
+		ServerLevelEvents.LOAD.register((server, level) -> AnkerstoneChunkTickets.restore(level));
+		ServerLevelEvents.UNLOAD.register((server, level) -> AnkerstoneChunkTickets.clear(level));
 
 		LOGGER.info("Ankerstone initialized!");
 	}
