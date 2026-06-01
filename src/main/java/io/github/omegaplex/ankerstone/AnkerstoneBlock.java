@@ -44,12 +44,12 @@ public class AnkerstoneBlock extends Block {
         AnkerstoneMode oldMode = state.getValue(MODE);
 
         if (oldMode != mode) {
-            if (mode == AnkerstoneMode.SINGLE) {
-                setSingleChunkLoaded(level, pos, true);
+            if (oldMode != AnkerstoneMode.OFF) {
+                setChunkLoading(level, pos, oldMode, false);
             }
 
-            if (oldMode == AnkerstoneMode.SINGLE) {
-                setSingleChunkLoaded(level, pos, false);
+            if (mode != AnkerstoneMode.OFF) {
+                setChunkLoading(level, pos, mode, true);
             }
 
             level.setBlock(pos, state.setValue(MODE, mode), Block.UPDATE_CLIENTS);
@@ -68,23 +68,25 @@ public class AnkerstoneBlock extends Block {
         return AnkerstoneMode.SINGLE;
     }
 
-    private static void setSingleChunkLoaded(Level level, BlockPos pos, boolean loaded) {
+    private static void setChunkLoading(Level level, BlockPos pos, AnkerstoneMode mode, boolean loaded) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
         if (loaded) {
-            AnkerstoneChunkTickets.add(serverLevel, pos);
+            AnkerstoneChunkTickets.add(serverLevel, pos, mode);
         } else {
-            AnkerstoneChunkTickets.remove(serverLevel, pos);
+            AnkerstoneChunkTickets.remove(serverLevel, pos, mode);
         }
     }
 
     @Override
     protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos,
             boolean movedByPiston) {
-        if (state.getValue(MODE) == AnkerstoneMode.SINGLE) {
-            setSingleChunkLoaded(level, pos, false);
+        AnkerstoneMode mode = state.getValue(MODE);
+
+        if (mode != AnkerstoneMode.OFF) {
+            setChunkLoading(level, pos, mode, false);
         }
 
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);

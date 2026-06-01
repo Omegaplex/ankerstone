@@ -1,10 +1,11 @@
 package io.github.omegaplex.ankerstone;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
@@ -18,14 +19,22 @@ public class AnkerstoneSavedData extends SavedData {
     public AnkerstoneSavedData() {
     }
 
-    // Saves owner positions as a list of block positions. We can reconstruct the
-    // map of chunk positions to owner block positions from this list when the
-    // server starts. We use a list instead of a set because Codec doesn't have a
-    // built-in way to serialize sets, but it can serialize lists, and we can easily
-    // convert between them.
-    public static final Codec<AnkerstoneSavedData> CODEC = BlockPos.CODEC
+    private record OwnerEntry(BlockPos pos, AnkerstoneMode mode) {
+    }
+
+    private static final Codec<OwnerEntry> OWNER_ENTRY_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            BlockPos.CODEC.fieldOf("pos").forGetter(OwnerEntry::pos),
+            AnkerstoneMode.CODEC.fieldOf("mode").forGetter(OwnerEntry::mode))
+            .apply(instance, OwnerEntry::new));
+
+    // Saves owner positions as a list owner entries (BlockPos + AnkerstoneMode). We
+    // can reconstruct the map of chunk positions to owner block positions from this
+    // list when the dimension loads. We use a list instead of a set because Codec
+    // doesn't have a built-in way to serialize sets, but it can serialize lists,
+    // and we can easily convert between them.
+    public static final Codec<AnkerstoneSavedData> CODEC = OWNER_ENTRY_CODEC
             .listOf()
-            .xmap(AnkerstoneSavedData::new, data -> List.copyOf(data.ownerPositions));
+            .xmap(AnkerstoneSavedData::new, AnkerstoneSavedData::ownerEntries);
 
     // Describes how Minecraft identifies, creates, and serializes this saved data.
     public static final SavedDataType<AnkerstoneSavedData> TYPE = new SavedDataType<>(
@@ -34,33 +43,41 @@ public class AnkerstoneSavedData extends SavedData {
             CODEC,
             DataFixTypes.SAVED_DATA_FORCED_CHUNKS);
 
-    // Declaring the set of active Ankerstone owner block positions. This is used to
-    // determine which chunks should be forced to stay loaded. A chunk is forced to
-    // stay loaded if it has at least one Ankerstone owner block position in it.
-    private final Set<BlockPos> ownerPositions = new HashSet<>();
+    // Maps each active Ankerstone owner block position to the mode it should
+    // restore.
+    private final Map<BlockPos, AnkerstoneMode> ownerModes = new HashMap<>();
 
-    private AnkerstoneSavedData(List<BlockPos> ownerPositions) {
-        this.ownerPositions.addAll(ownerPositions);
+    private AnkerstoneSavedData(List<OwnerEntry> ownerEntries) {
+        for (OwnerEntry entry : ownerEntries) {
+            ownerModes.put(entry.pos(), entry.mode());
+        }
     }
 
-    public void addOwner(BlockPos ownerPos) {
-        // We only setDirty if the owner position was actually added, to avoid
-        // unnecessary saves.
-        if (ownerPositions.add(ownerPos)) {
+    private List<OwnerEntry> ownerEntries() {
+        return ownerModes.entrySet().stream()
+                .map(entry -> new OwnerEntry(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    // Mode-aware owner table used while preparing wide-mode persistence.
+    public void addOwner(BlockPos ownerPos, AnkerstoneMode mode) {
+        AnkerstoneMode oldMode = ownerModes.put(ownerPos, mode);
+
+        if (oldMode != mode) {
             setDirty();
         }
     }
 
     public void removeOwner(BlockPos ownerPos) {
-        // We only setDirty if the owner position was actually removed, to avoid
-        // unnecessary saves.
-        if (ownerPositions.remove(ownerPos)) {
+        AnkerstoneMode removedMode = ownerModes.remove(ownerPos);
+
+        if (removedMode != null) {
             setDirty();
         }
     }
 
-    public Set<BlockPos> getOwnerPositions() {
-        return Set.copyOf(ownerPositions);
+    public Map<BlockPos, AnkerstoneMode> getOwnerModes() {
+        return Map.copyOf(ownerModes);
     }
 
     // Gets this dimension's saved Ankerstone ownership data, creating it if needed.

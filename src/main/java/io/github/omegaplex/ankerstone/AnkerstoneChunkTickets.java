@@ -28,65 +28,70 @@ public class AnkerstoneChunkTickets {
         return OWNERS.computeIfAbsent(level.dimension(), ignored -> new HashMap<>());
     }
 
-    public static void add(ServerLevel level, BlockPos ownerPos) {
-        addToMemory(level, ownerPos);
-        AnkerstoneSavedData.get(level).addOwner(ownerPos);
+    private static Set<ChunkPos> chunksFor(BlockPos ownerPos, AnkerstoneMode mode) {
+        ChunkPos center = new ChunkPos(
+                Math.floorDiv(ownerPos.getX(), 16),
+                Math.floorDiv(ownerPos.getZ(), 16));
+
+        int radius = mode == AnkerstoneMode.WIDE ? 1 : 0;
+        Set<ChunkPos> chunks = new HashSet<>();
+
+        for (int chunkX = center.x() - radius; chunkX <= center.x() + radius; chunkX++) {
+            for (int chunkZ = center.z() - radius; chunkZ <= center.z() + radius; chunkZ++) {
+                chunks.add(new ChunkPos(chunkX, chunkZ));
+            }
+        }
+
+        return chunks;
+    }
+
+    public static void add(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
+        addToMemory(level, ownerPos, mode);
+        AnkerstoneSavedData.get(level).addOwner(ownerPos, mode);
     }
 
     // Rebuilds runtime ownership and chunk tickets without changing saved data.
-    private static void addToMemory(ServerLevel level, BlockPos ownerPos) {
-        ChunkPos chunkPos = new ChunkPos(
-                Math.floorDiv(ownerPos.getX(), 16),
-                Math.floorDiv(ownerPos.getZ(), 16));
-
+    private static void addToMemory(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
         Map<ChunkPos, Set<BlockPos>> dimensionOwners = ownersFor(level);
-        // Get the set of owner block positions for this chunk, create it if it doesn't
-        // exist. Set prevents duplicates, so if the same block is added multiple times,
-        // it won't cause issues.
-        Set<BlockPos> owners = dimensionOwners.computeIfAbsent(chunkPos, ignored -> new HashSet<>());
-        boolean wasEmpty = owners.isEmpty();
-        // Add the owner block position to the set of owners for this chunk.
-        owners.add(ownerPos);
 
-        if (wasEmpty) {
-            // If the set of owners was empty before adding this block, it means this chunk
-            // wasn't forced to stay loaded before, so we need to force it now.
-            level.setChunkForced(chunkPos.x(), chunkPos.z(), true);
+        for (ChunkPos chunkPos : chunksFor(ownerPos, mode)) {
+            Set<BlockPos> owners = dimensionOwners.computeIfAbsent(chunkPos, ignored -> new HashSet<>());
+            boolean wasEmpty = owners.isEmpty();
+
+            owners.add(ownerPos);
+
+            if (wasEmpty) {
+                level.setChunkForced(chunkPos.x(), chunkPos.z(), true);
+            }
         }
     }
 
-    public static void remove(ServerLevel level, BlockPos ownerPos) {
-        // Use floorDiv so negative block coordinates map to the correct chunk.
-        ChunkPos chunkPos = new ChunkPos(
-                Math.floorDiv(ownerPos.getX(), 16),
-                Math.floorDiv(ownerPos.getZ(), 16));
-
-        // Get this dimension's owner map.
-        // If this chunk has no owners recorded, there is nothing to remove.
+    public static void remove(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
         Map<ChunkPos, Set<BlockPos>> dimensionOwners = ownersFor(level);
-        Set<BlockPos> owners = dimensionOwners.get(chunkPos);
 
-        if (owners == null) {
-            return;
+        for (ChunkPos chunkPos : chunksFor(ownerPos, mode)) {
+            Set<BlockPos> owners = dimensionOwners.get(chunkPos);
+
+            if (owners == null) {
+                continue;
+            }
+
+            owners.remove(ownerPos);
+
+            if (owners.isEmpty()) {
+                dimensionOwners.remove(chunkPos);
+                level.setChunkForced(chunkPos.x(), chunkPos.z(), false);
+            }
         }
 
-        owners.remove(ownerPos);
         AnkerstoneSavedData.get(level).removeOwner(ownerPos);
-
-        // If the set of owners is now empty after removing this block, it means there
-        // are no more Ankerstone blocks in this chunk, so we can unforce it and remove
-        // the entry from the map to save memory.
-        if (owners.isEmpty()) {
-            dimensionOwners.remove(chunkPos);
-            level.setChunkForced(chunkPos.x(), chunkPos.z(), false);
-        }
     }
 
     public static void restore(ServerLevel level) {
         AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
 
-        for (BlockPos ownerPos : savedData.getOwnerPositions()) {
-            addToMemory(level, ownerPos);
+        for (Map.Entry<BlockPos, AnkerstoneMode> entry : savedData.getOwnerModes().entrySet()) {
+            addToMemory(level, entry.getKey(), entry.getValue());
         }
     }
 
