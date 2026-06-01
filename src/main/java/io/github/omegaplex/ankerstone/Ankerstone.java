@@ -20,7 +20,9 @@ public class Ankerstone implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 		ModBlocks.initialize();
+		// Rebuild live chunk tickets from saved data whenever a server dimension loads.
 		ServerLevelEvents.LOAD.register((server, level) -> AnkerstoneChunkTickets.restore(level));
+		// Clear live chunk tickets from memory whenever a server dimension unloads; saved data remains.
 		ServerLevelEvents.UNLOAD.register((server, level) -> AnkerstoneChunkTickets.clear(level));
 
 		LOGGER.info("Ankerstone initialized!");
