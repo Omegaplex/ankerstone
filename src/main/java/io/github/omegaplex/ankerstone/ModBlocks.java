@@ -19,7 +19,8 @@ public class ModBlocks {
     public static final Block ANKERSTONE = register(
             "ankerstone",
             AnkerstoneBlock::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.STONE));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
+                    .lightLevel(AnkerstoneBlock::lightLevel));
 
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
             BlockBehaviour.Properties settings) {

@@ -91,4 +91,18 @@ public class AnkerstoneBlock extends Block {
 
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
     }
+
+    public static int lightLevel(BlockState state) {
+        AnkerstoneMode mode = state.getValue(MODE);
+
+        if (mode == AnkerstoneMode.WIDE) {
+            return 7;
+        }
+
+        if (mode == AnkerstoneMode.SINGLE) {
+            return 3;
+        }
+
+        return 0;
+    }
 }
