@@ -1,7 +1,9 @@
 package io.github.omegaplex.ankerstone;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -104,5 +106,49 @@ public class AnkerstoneBlock extends Block {
         }
 
         return 0;
+    }
+
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        AnkerstoneMode mode = state.getValue(MODE);
+
+        if (mode == AnkerstoneMode.OFF) {
+            return;
+        }
+
+        int particleCount = mode == AnkerstoneMode.WIDE ? 4 : 1;
+
+        for (int i = 0; i < particleCount; i++) {
+            int side = random.nextInt(6);
+
+            double x = pos.getX() + 0.5;
+            double y = pos.getY() + 0.5;
+            double z = pos.getZ() + 0.5;
+            double xSpeed = 0.0;
+            double ySpeed = 0.0;
+            double zSpeed = 0.0;
+
+            if (side == 0) {
+                x = pos.getX() - 0.05;
+                xSpeed = 0.02;
+            } else if (side == 1) {
+                x = pos.getX() + 1.05;
+                xSpeed = -0.02;
+            } else if (side == 2) {
+                y = pos.getY() - 0.05;
+                ySpeed = 0.02;
+            } else if (side == 3) {
+                y = pos.getY() + 1.05;
+                ySpeed = -0.02;
+            } else if (side == 4) {
+                z = pos.getZ() - 0.05;
+                zSpeed = 0.02;
+            } else {
+                z = pos.getZ() + 1.05;
+                zSpeed = -0.02;
+            }
+
+            level.addParticle(ParticleTypes.REVERSE_PORTAL, x, y, z, xSpeed, ySpeed, zSpeed);
+        }
     }
 }
