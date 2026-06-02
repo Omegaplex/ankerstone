@@ -13,6 +13,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class ModBlocks {
@@ -25,6 +26,11 @@ public class ModBlocks {
     public static final Block STILLSTONE = register(
             "stillstone",
             Block::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+
+    public static final Block STILLSTONE_SLAB = register(
+            "stillstone_slab",
+            SlabBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
 
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
@@ -51,6 +57,9 @@ public class ModBlocks {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.REDSTONE_BLOCKS)
                 .register(entries -> entries.accept(ANKERSTONE));
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
-                .register(entries -> entries.accept(STILLSTONE));
+                .register(entries -> {
+                    entries.accept(STILLSTONE);
+                    entries.accept(STILLSTONE_SLAB);
+                });
     }
 }

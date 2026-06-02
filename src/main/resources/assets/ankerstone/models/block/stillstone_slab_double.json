@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "ankerstone:block/stillstone",
+    "side": "ankerstone:block/stillstone_slab_side"
+  }
+}
