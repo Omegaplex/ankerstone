@@ -22,6 +22,11 @@ public class ModBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
                     .lightLevel(AnkerstoneBlock::lightLevel));
 
+    public static final Block STILLSTONE = register(
+            "stillstone",
+            Block::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
             BlockBehaviour.Properties settings) {
         ResourceKey<Block> blockKey = keyOfBlock(name);
@@ -43,7 +48,9 @@ public class ModBlocks {
     }
 
     public static void initialize() {
-        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.REDSTONE_BLOCKS)
                 .register(entries -> entries.accept(ANKERSTONE));
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
+                .register(entries -> entries.accept(STILLSTONE));
     }
 }
