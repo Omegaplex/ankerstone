@@ -1,12 +1,11 @@
 package io.github.omegaplex.ankerstone;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -20,29 +19,28 @@ public class AnkerstoneChunkTickets {
     // saved data because it's only used for quick access while the server is
     // running, and we can reconstruct it from the saved data when a server
     // dimension loads.
-    private static final Map<ResourceKey<Level>, Map<ChunkPos, Set<BlockPos>>> OWNERS = new HashMap<>();
+    private static final Map<ResourceKey<Level>, Map<ChunkPos, Map<BlockPos, AnkerstoneMode>>> OWNERS = new HashMap<>();
 
     // Get the map of chunk positions to owner block positions for a given level,
     // create it if it doesn't exist.
-    private static Map<ChunkPos, Set<BlockPos>> ownersFor(ServerLevel level) {
+    private static Map<ChunkPos, Map<BlockPos, AnkerstoneMode>> ownersFor(ServerLevel level) {
         return OWNERS.computeIfAbsent(level.dimension(), ignored -> new HashMap<>());
     }
 
-    private static Set<ChunkPos> chunksFor(BlockPos ownerPos, AnkerstoneMode mode) {
-        ChunkPos center = new ChunkPos(
+    private static final TicketType ANKERSTONE_TICKET = new TicketType(
+            TicketType.NO_TIMEOUT,
+            TicketType.FLAG_LOADING
+                    | TicketType.FLAG_SIMULATION
+                    | TicketType.FLAG_KEEP_DIMENSION_ACTIVE);
+
+    private static ChunkPos chunkFor(BlockPos ownerPos) {
+        return new ChunkPos(
                 Math.floorDiv(ownerPos.getX(), 16),
                 Math.floorDiv(ownerPos.getZ(), 16));
+    }
 
-        int radius = mode == AnkerstoneMode.WIDE ? 1 : 0;
-        Set<ChunkPos> chunks = new HashSet<>();
-
-        for (int chunkX = center.x() - radius; chunkX <= center.x() + radius; chunkX++) {
-            for (int chunkZ = center.z() - radius; chunkZ <= center.z() + radius; chunkZ++) {
-                chunks.add(new ChunkPos(chunkX, chunkZ));
-            }
-        }
-
-        return chunks;
+    private static int radiusFor(AnkerstoneMode mode) {
+        return mode == AnkerstoneMode.WIDE ? 3 : 2;
     }
 
     public static void add(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
@@ -52,36 +50,37 @@ public class AnkerstoneChunkTickets {
 
     // Rebuilds runtime ownership and chunk tickets without changing saved data.
     private static void addToMemory(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
-        Map<ChunkPos, Set<BlockPos>> dimensionOwners = ownersFor(level);
+        Map<ChunkPos, Map<BlockPos, AnkerstoneMode>> dimensionOwners = ownersFor(level);
+        ChunkPos chunkPos = chunkFor(ownerPos);
+        Map<BlockPos, AnkerstoneMode> owners = dimensionOwners.computeIfAbsent(chunkPos, ignored -> new HashMap<>());
+        boolean alreadyHasThisMode = owners.containsValue(mode);
 
-        for (ChunkPos chunkPos : chunksFor(ownerPos, mode)) {
-            Set<BlockPos> owners = dimensionOwners.computeIfAbsent(chunkPos, ignored -> new HashSet<>());
-            boolean wasEmpty = owners.isEmpty();
+        owners.put(ownerPos, mode);
 
-            owners.add(ownerPos);
-
-            if (wasEmpty) {
-                level.setChunkForced(chunkPos.x(), chunkPos.z(), true);
-            }
+        if (!alreadyHasThisMode) {
+            level.getChunkSource().addTicketWithRadius(ANKERSTONE_TICKET, chunkPos, radiusFor(mode));
         }
     }
 
     public static void remove(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
-        Map<ChunkPos, Set<BlockPos>> dimensionOwners = ownersFor(level);
+        Map<ChunkPos, Map<BlockPos, AnkerstoneMode>> dimensionOwners = ownersFor(level);
+        ChunkPos chunkPos = chunkFor(ownerPos);
+        Map<BlockPos, AnkerstoneMode> owners = dimensionOwners.get(chunkPos);
 
-        for (ChunkPos chunkPos : chunksFor(ownerPos, mode)) {
-            Set<BlockPos> owners = dimensionOwners.get(chunkPos);
+        if (owners == null) {
+            AnkerstoneSavedData.get(level).removeOwner(ownerPos);
+            return;
+        }
 
-            if (owners == null) {
-                continue;
-            }
+        owners.remove(ownerPos);
+        boolean stillHasThisMode = owners.containsValue(mode);
 
-            owners.remove(ownerPos);
+        if (!stillHasThisMode) {
+            level.getChunkSource().removeTicketWithRadius(ANKERSTONE_TICKET, chunkPos, radiusFor(mode));
+        }
 
-            if (owners.isEmpty()) {
-                dimensionOwners.remove(chunkPos);
-                level.setChunkForced(chunkPos.x(), chunkPos.z(), false);
-            }
+        if (owners.isEmpty()) {
+            dimensionOwners.remove(chunkPos);
         }
 
         AnkerstoneSavedData.get(level).removeOwner(ownerPos);
