@@ -28,7 +28,8 @@ public class ModBlocks {
     public static final Block STILLSTONE = register(
             "stillstone",
             Block::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE)
+                    .isRedstoneConductor((state, level, pos) -> false));
 
     public static final Block STILLSTONE_SLAB = register(
             "stillstone_slab",
