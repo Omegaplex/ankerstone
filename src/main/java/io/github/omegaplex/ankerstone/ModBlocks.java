@@ -45,6 +45,11 @@ public class ModBlocks {
             WallBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
 
+    public static final Block REINFORCED_STILLSTONE = register(
+            "reinforced_stillstone",
+            Block::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
             BlockBehaviour.Properties settings) {
         ResourceKey<Block> blockKey = keyOfBlock(name);
@@ -74,6 +79,7 @@ public class ModBlocks {
                     entries.accept(STILLSTONE_SLAB);
                     entries.accept(STILLSTONE_STAIRS);
                     entries.accept(STILLSTONE_WALL);
+                    entries.accept(REINFORCED_STILLSTONE);
                 });
     }
 }

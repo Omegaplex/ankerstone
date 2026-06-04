@@ -3,5 +3,6 @@
   "block.ankerstone.stillstone": "Stillstone",
   "block.ankerstone.stillstone_slab": "Stillstone Slab",
   "block.ankerstone.stillstone_stairs": "Stillstone Stairs",
-  "block.ankerstone.stillstone_wall": "Stillstone Wall"
+  "block.ankerstone.stillstone_wall": "Stillstone Wall",
+  "block.ankerstone.reinforced_stillstone": "Reinforced Stillstone"
 }
