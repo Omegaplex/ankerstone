@@ -60,6 +60,11 @@ public class ModBlocks {
             settings -> new StairBlock(REINFORCED_STILLSTONE.defaultBlockState(), settings),
             BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
 
+    public static final Block REINFORCED_STILLSTONE_WALL = register(
+            "reinforced_stillstone_wall",
+            WallBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
             BlockBehaviour.Properties settings) {
         ResourceKey<Block> blockKey = keyOfBlock(name);
@@ -92,6 +97,7 @@ public class ModBlocks {
                     entries.accept(REINFORCED_STILLSTONE);
                     entries.accept(REINFORCED_STILLSTONE_SLAB);
                     entries.accept(REINFORCED_STILLSTONE_STAIRS);
+                    entries.accept(REINFORCED_STILLSTONE_WALL);
                 });
     }
 }

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "ankerstone:stillstone_wall"
+    "ankerstone:stillstone_wall",
+    "ankerstone:reinforced_stillstone_wall"
   ]
 }
