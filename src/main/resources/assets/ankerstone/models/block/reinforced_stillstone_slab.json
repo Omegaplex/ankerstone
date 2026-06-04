@@ -1,0 +1,8 @@
+{
+  "parent": "block/slab",
+  "textures": {
+    "bottom": "ankerstone:block/reinforced_stillstone",
+    "top": "ankerstone:block/reinforced_stillstone",
+    "side": "ankerstone:block/reinforced_stillstone"
+  }
+}

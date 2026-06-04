@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "ankerstone:block/reinforced_stillstone_slab"
+    },
+    "type=top": {
+      "model": "ankerstone:block/reinforced_stillstone_slab_top"
+    },
+    "type=double": {
+      "model": "ankerstone:block/reinforced_stillstone_slab_double"
+    }
+  }
+}
