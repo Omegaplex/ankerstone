@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class ModBlocks {
@@ -37,6 +38,11 @@ public class ModBlocks {
     public static final Block STILLSTONE_STAIRS = register(
             "stillstone_stairs",
             settings -> new StairBlock(STILLSTONE.defaultBlockState(), settings),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
+
+    public static final Block STILLSTONE_WALL = register(
+            "stillstone_wall",
+            WallBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE));
 
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory,
@@ -67,6 +73,7 @@ public class ModBlocks {
                     entries.accept(STILLSTONE);
                     entries.accept(STILLSTONE_SLAB);
                     entries.accept(STILLSTONE_STAIRS);
+                    entries.accept(STILLSTONE_WALL);
                 });
     }
 }
