@@ -1,5 +1,6 @@
 {
   "block.ankerstone.ankerstone": "Ankerstone",
   "block.ankerstone.stillstone": "Stillstone",
-  "block.ankerstone.stillstone_slab": "Stillstone Slab"
+  "block.ankerstone.stillstone_slab": "Stillstone Slab",
+  "block.ankerstone.stillstone_stairs": "Stillstone Stairs"
 }
