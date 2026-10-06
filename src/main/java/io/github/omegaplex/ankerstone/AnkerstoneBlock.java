@@ -21,6 +21,15 @@ public class AnkerstoneBlock extends Block {
 
     @Override
     protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        // Active placements need ownership even when their mode does not change.
+        if (!oldState.is(this)) {
+            AnkerstoneMode mode = state.getValue(MODE);
+
+            if (mode != AnkerstoneMode.OFF) {
+                setChunkLoading(level, pos, mode, true);
+            }
+        }
+
         updateMode(level, pos, state);
     }
 
