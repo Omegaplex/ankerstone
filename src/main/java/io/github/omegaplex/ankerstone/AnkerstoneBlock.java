@@ -1,6 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -64,6 +65,7 @@ public class AnkerstoneBlock extends Block {
             }
 
             level.setBlock(pos, state.setValue(MODE, mode), Block.UPDATE_CLIENTS);
+            level.updateNeighbourForOutputSignal(pos, state.getBlock());
         }
     }
 
@@ -101,6 +103,21 @@ public class AnkerstoneBlock extends Block {
         }
 
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(BlockState state, Level level,
+            BlockPos pos, Direction direction) {
+        return switch (state.getValue(MODE)) {
+            case OFF -> 0;
+            case SINGLE -> 7;
+            case WIDE -> 15;
+        };
     }
 
     public static int lightLevel(BlockState state) {
