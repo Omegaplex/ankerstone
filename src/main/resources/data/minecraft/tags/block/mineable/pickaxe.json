@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "ankerstone:ankerstone",
+    "ankerstone:stillstone",
+    "ankerstone:stillstone_slab",
+    "ankerstone:stillstone_stairs",
+    "ankerstone:stillstone_wall",
+    "ankerstone:reinforced_stillstone",
+    "ankerstone:reinforced_stillstone_slab",
+    "ankerstone:reinforced_stillstone_stairs",
+    "ankerstone:reinforced_stillstone_wall"
+  ]
+}

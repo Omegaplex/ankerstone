@@ -20,6 +20,10 @@ restores their tickets when the dimension loads.
 Both decorative families include blocks, slabs, stairs, and walls.
 Textures include LabPBR material maps for compatible shaders.
 
+All blocks require a pickaxe to drop items. Stillstone accepts any
+pickaxe; Reinforced Stillstone and Ankerstone require iron or better.
+Double slabs drop two slab items.
+
 ## Development
 
 See [Testing](docs/testing.md) for automated tests and manual

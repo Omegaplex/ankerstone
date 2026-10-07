@@ -12,8 +12,9 @@ Run from the repository root on Windows:
 `build` includes the GameTests. GitHub Actions runs `./gradlew build`
 on pushes and pull requests.
 
-Coverage includes piston reactions, active placement, power transitions,
-shared and mixed-mode tickets, owner serialization, and ticket restoration.
+Coverage includes piston reactions, active placement, power transitions
+and comparator readouts, shared and mixed-mode tickets, owner serialization,
+ticket restoration, tool eligibility, and loot item/count checks.
 
 ## Manual Restart Check
 
