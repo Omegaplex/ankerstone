@@ -5,7 +5,8 @@
   "entrypoints": {
     "fabric-gametest": [
       "io.github.omegaplex.ankerstone.AnkerstonePistonGameTests",
-      "io.github.omegaplex.ankerstone.AnkerstonePlacementGameTests"
+      "io.github.omegaplex.ankerstone.AnkerstonePlacementGameTests",
+        "io.github.omegaplex.ankerstone.AnkerstoneSavedDataGameTests"
     ]
   },
   "depends": {
