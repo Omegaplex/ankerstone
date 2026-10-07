@@ -1,10 +1,12 @@
 package io.github.omegaplex.ankerstone;
 
 import java.util.List;
+import java.util.Map;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.TicketStorage;
@@ -168,5 +170,54 @@ public class AnkerstonePlacementGameTests {
 
         helper.assertTrue(actual.equals(expected),
                 "Expected ticket levels " + expected + ", got " + actual);
+    }
+
+    @GameTest
+    public void restoringSavedOwnersRebuildsSharedTickets(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos second = helper.absolutePos(new BlockPos(2, 4, 2));
+        BlockPos wide = helper.absolutePos(new BlockPos(2, 6, 2));
+        ChunkPos chunk = ChunkPos.containing(first);
+        AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+        Map<BlockPos, AnkerstoneMode> expected = Map.of(
+                first, AnkerstoneMode.SINGLE,
+                second, AnkerstoneMode.SINGLE,
+                wide, AnkerstoneMode.WIDE);
+
+        helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                "Restoration test requires an empty saved owner table");
+        assertTicketLevels(helper, chunk, List.of());
+
+        try {
+            expected.forEach(savedData::addOwner);
+            savedData.setDirty(false);
+
+            AnkerstoneChunkTickets.restore(level);
+            assertTicketLevels(helper, chunk, List.of(30, 31));
+            AnkerstoneChunkTickets.restore(level);
+            assertTicketLevels(helper, chunk, List.of(30, 31));
+
+            helper.assertTrue(savedData.getOwnerModes().equals(expected),
+                    "Restoration must preserve saved owners");
+            helper.assertTrue(!savedData.isDirty(),
+                    "Restoration must not mark unchanged saved data dirty");
+
+            AnkerstoneChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+            assertTicketLevels(helper, chunk, List.of(30, 31));
+            AnkerstoneChunkTickets.remove(level, second, AnkerstoneMode.SINGLE);
+            assertTicketLevels(helper, chunk, List.of(30));
+            AnkerstoneChunkTickets.remove(level, wide, AnkerstoneMode.WIDE);
+            assertTicketLevels(helper, chunk, List.of());
+            helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                    "Removing all restored owners must clear their saved entries");
+        } finally {
+            expected.forEach((pos, mode) -> AnkerstoneChunkTickets.remove(level, pos, mode));
+            level.getChunkSource().removeTicketWithRadius(
+                    AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+            level.getChunkSource().removeTicketWithRadius(
+                    AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
+        }
+        helper.succeed();
     }
 }
