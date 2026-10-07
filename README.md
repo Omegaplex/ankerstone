@@ -1,9 +1,34 @@
 <img width="1583" height="365" alt="ankerstone_gen_logo-v1" src="https://github.com/user-attachments/assets/7b869887-6d9d-4985-bf1f-9474bd1d6fe2" />
 
 
+# Ankerstone
 
+A Fabric mod with redstone-controlled chunk anchors and two
+decorative block families: Stillstone and Reinforced Stillstone.
 
-# Lore & Crafting Notes
+## Current Behavior
+
+| Mode | Redstone Input | Comparator Output | Piston Movable |
+|---|---|---|---|
+| Off | 0 | 0 | Yes |
+| Single | 1-14 | 7 | No |
+| Wide | 15 | 15 | No |
+
+Active anchors keep chunks loaded and ticking. Saved ownership
+restores their tickets when the dimension loads.
+
+Both decorative families include blocks, slabs, stairs, and walls.
+Textures include LabPBR material maps for compatible shaders.
+
+## Development
+
+See [Testing](docs/testing.md) for automated tests and manual
+restart checks.
+
+## Lore & Planned Crafting
+
+The crafting descriptions below are design notes.
+Survival crafting recipes are not implemented yet.
 
 ---
 
@@ -92,7 +117,7 @@ The spawner builders pushed energy through a hole in the world. The Ankerstone h
 
 ---
 
-## Crafting Reference
+## Planned Crafting Reference
 
 ### stillstone
 `deepslate` + `lapis lazuli` = `stillstone x5`

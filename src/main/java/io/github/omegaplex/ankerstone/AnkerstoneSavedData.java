@@ -27,11 +27,7 @@ public class AnkerstoneSavedData extends SavedData {
             AnkerstoneMode.CODEC.fieldOf("mode").forGetter(OwnerEntry::mode))
             .apply(instance, OwnerEntry::new));
 
-    // Saves owner positions as a list owner entries (BlockPos + AnkerstoneMode). We
-    // can reconstruct the map of chunk positions to owner block positions from this
-    // list when the dimension loads. We use a list instead of a set because Codec
-    // doesn't have a built-in way to serialize sets, but it can serialize lists,
-    // and we can easily convert between them.
+    // Stores position/mode pairs as a list; decoding rebuilds the owner map.
     public static final Codec<AnkerstoneSavedData> CODEC = OWNER_ENTRY_CODEC
             .listOf()
             .xmap(AnkerstoneSavedData::new, AnkerstoneSavedData::ownerEntries);
@@ -59,7 +55,6 @@ public class AnkerstoneSavedData extends SavedData {
                 .toList();
     }
 
-    // Mode-aware owner table used while preparing wide-mode persistence.
     public void addOwner(BlockPos ownerPos, AnkerstoneMode mode) {
         AnkerstoneMode oldMode = ownerModes.put(ownerPos, mode);
 

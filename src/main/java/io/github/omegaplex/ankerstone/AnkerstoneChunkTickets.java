@@ -11,18 +11,11 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
 public class AnkerstoneChunkTickets {
-    // Map of dimension to chunk positions to owner block positions. Read from inner
-    // to outer: for each dimension, which chunks have Ankerstone owners, and for
-    // each chunk, which block positions are the owners.
-    // Static because we only want one instance of this map for the entire server,
-    // and we access it from static methods. We don't want to store this in the
-    // saved data because it's only used for quick access while the server is
-    // running, and we can reconstruct it from the saved data when a server
-    // dimension loads.
+    // Runtime owners grouped by dimension and center chunk.
+    // Owners with the same mode in a chunk share a ticket.
+    // Rebuilt from saved owners when the dimension loads.
     private static final Map<ResourceKey<Level>, Map<ChunkPos, Map<BlockPos, AnkerstoneMode>>> OWNERS = new HashMap<>();
 
-    // Get the map of chunk positions to owner block positions for a given level,
-    // create it if it doesn't exist.
     private static Map<ChunkPos, Map<BlockPos, AnkerstoneMode>> ownersFor(ServerLevel level) {
         return OWNERS.computeIfAbsent(level.dimension(), ignored -> new HashMap<>());
     }

@@ -9,20 +9,14 @@ import org.slf4j.LoggerFactory;
 public class Ankerstone implements ModInitializer {
 	public static final String MOD_ID = "ankerstone";
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
 		ModBlocks.initialize();
 		// Rebuild live chunk tickets from saved data whenever a server dimension loads.
 		ServerLevelEvents.LOAD.register((server, level) -> AnkerstoneChunkTickets.restore(level));
-		// Clear live chunk tickets from memory whenever a server dimension unloads; saved data remains.
+		// Discard runtime ownership on unload; saved owners remain for restoration.
 		ServerLevelEvents.UNLOAD.register((server, level) -> AnkerstoneChunkTickets.clear(level));
 
 		LOGGER.info("Ankerstone initialized!");
