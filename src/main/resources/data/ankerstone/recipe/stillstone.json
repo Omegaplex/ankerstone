@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["DLD", "LDL", "DLD"],
+  "key": {
+    "D": "minecraft:cobbled_deepslate",
+    "L": "minecraft:lapis_lazuli"
+  },
+  "result": {
+    "id": "ankerstone:stillstone",
+    "count": 5
+  }
+}

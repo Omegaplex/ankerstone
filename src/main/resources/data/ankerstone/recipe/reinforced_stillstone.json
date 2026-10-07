@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["III", "ISI", "III"],
+  "key": {
+    "I": "minecraft:iron_nugget",
+    "S": "ankerstone:stillstone"
+  },
+  "result": {
+    "id": "ankerstone:reinforced_stillstone",
+    "count": 1
+  }
+}

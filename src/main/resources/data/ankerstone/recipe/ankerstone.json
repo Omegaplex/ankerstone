@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": ["RDR", "DPD", "RDR"],
+  "key": {
+    "R": "ankerstone:reinforced_stillstone",
+    "D": "minecraft:redstone",
+    "P": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "ankerstone:ankerstone",
+    "count": 1
+  }
+}

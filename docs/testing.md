@@ -14,7 +14,8 @@ on pushes and pull requests.
 
 Coverage includes piston reactions, active placement, power transitions
 and comparator readouts, shared and mixed-mode tickets, owner serialization,
-ticket restoration, tool eligibility, and loot item/count checks.
+ticket restoration, tool eligibility, loot item/count checks, recipe matching,
+crafting output item/count checks, and invalid ingredient/layout rejection.
 
 ## Manual Restart Check
 
@@ -60,3 +61,12 @@ It does not verify the full surrounding coverage of Wide mode.
 
 Manual Off, Single, and Wide restart checks passed on 2026-10-06
 using Minecraft 26.1.2.
+
+## Manual Crafting Check
+
+Survival crafting passed for all three core recipes with outputs of
+five Stillstone, one Reinforced Stillstone, and one Ankerstone.
+
+Recipe-book discovery passed in a fresh world: lapis unlocked Stillstone,
+Stillstone unlocked Reinforced Stillstone, and Reinforced Stillstone
+unlocked Ankerstone. Checked on 2026-10-07 using Minecraft 26.1.2.

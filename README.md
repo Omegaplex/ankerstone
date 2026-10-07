@@ -29,10 +29,10 @@ Double slabs drop two slab items.
 See [Testing](docs/testing.md) for automated tests and manual
 restart checks.
 
-## Lore & Planned Crafting
+## Lore & Crafting
 
-The crafting descriptions below are design notes.
-Survival crafting recipes are not implemented yet.
+The three core blocks have Survival crafting recipes and recipe-book
+unlocks. Slab, stair, wall, and stonecutting recipes are still planned.
 
 ---
 
@@ -83,7 +83,7 @@ This tradition did not build weapons or cities. It built knowledge. And that kno
 ---
 
 **stillstone**
-*Crafted from deepslate and lapis lazuli*
+*Crafted from cobbled deepslate and lapis lazuli*
 
 Not invented. Discovered. A dense, lapis-altered deepslate that resists dimensional flux by nature — quiet, heavy, and inert. It does not generate in the world. No vein of it exists waiting to be found. Someone had to learn to make it, which means someone had to understand why lapis and deepslate together produce something that refuses to change.
 
@@ -95,7 +95,7 @@ The enchanting tradition's fingerprint is all over it. The lapis is not incident
 ---
 
 **reinforced stillstone**
-*Crafted by surrounding stillstone with iron ingots*
+*Crafted by surrounding stillstone with iron nuggets*
 
 The first act of intent. stillstone resists change on its own — reinforced stillstone is what happens when someone decided that resistance needs to last. Ancient ironwork, bound around the stillstone in a repeating lattice, turns a found material into a structural one. Load-bearing. Architectural. Permanent in a way that raw stillstone is not.
 
@@ -121,27 +121,27 @@ The spawner builders pushed energy through a hole in the world. The Ankerstone h
 
 ---
 
-## Planned Crafting Reference
+## Crafting Reference
 
 ### stillstone
-`deepslate` + `lapis lazuli` = `stillstone x5`
+`cobbled deepslate` + `lapis lazuli` = `stillstone x5`
 
 | | | |
 |---|---|---|
-| deepslate | lapis lazuli | deepslate |
-| lapis lazuli | deepslate | lapis lazuli |
-| deepslate | lapis lazuli | deepslate |
+| cobbled deepslate | lapis lazuli | cobbled deepslate |
+| lapis lazuli | cobbled deepslate | lapis lazuli |
+| cobbled deepslate | lapis lazuli | cobbled deepslate |
 
 ---
 
 ### reinforced stillstone
-`stillstone` + `iron ingots` = `reinforced stillstone x1`
+`stillstone` + `iron nugget` = `reinforced stillstone x1`
 
 | | | |
 |---|---|---|
-| iron ingot | iron ingot | iron ingot |
-| iron ingot | stillstone | iron ingot |
-| iron ingot | iron ingot | iron ingot |
+| iron nugget | iron nugget | iron nugget |
+| iron nugget | stillstone | iron nugget |
+| iron nugget | iron nugget | iron nugget |
 
 ---
 
