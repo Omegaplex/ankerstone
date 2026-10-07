@@ -1,5 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
+import java.util.List;
+
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -116,5 +118,55 @@ public class AnkerstonePlacementGameTests {
 
         helper.assertTrue(actual == expected,
                 "Expected " + expected + " Ankerstone tickets, got " + actual);
+    }
+
+    @GameTest
+    public void mixedModesKeepTheirOwnTickets(GameTestHelper helper) {
+        BlockPos single = new BlockPos(2, 2, 2);
+        BlockPos wide = new BlockPos(2, 6, 2);
+        ChunkPos chunk = ChunkPos.containing(helper.absolutePos(single));
+
+        assertTicketLevels(helper, chunk, List.of());
+        try {
+            helper.setBlock(single, ModBlocks.ANKERSTONE);
+            setPowerAndAssert(helper, single, 1, AnkerstoneMode.SINGLE);
+            assertTicketLevels(helper, chunk, List.of(31));
+
+            helper.setBlock(wide, ModBlocks.ANKERSTONE);
+            setPowerAndAssert(helper, wide, 15, AnkerstoneMode.WIDE);
+            assertTicketLevels(helper, chunk, List.of(30, 31));
+
+            helper.setBlock(wide, Blocks.AIR);
+            assertTicketLevels(helper, chunk, List.of(31));
+
+            helper.setBlock(wide, ModBlocks.ANKERSTONE);
+            setPowerAndAssert(helper, wide, 15, AnkerstoneMode.WIDE);
+            assertTicketLevels(helper, chunk, List.of(30, 31));
+
+            helper.setBlock(single, Blocks.AIR);
+            assertTicketLevels(helper, chunk, List.of(30));
+            helper.setBlock(wide, Blocks.AIR);
+            assertTicketLevels(helper, chunk, List.of());
+        } finally {
+            helper.setBlock(single, Blocks.AIR);
+            helper.setBlock(wide, Blocks.AIR);
+            helper.setBlock(single.below(), Blocks.AIR);
+            helper.setBlock(wide.below(), Blocks.AIR);
+        }
+        helper.succeed();
+    }
+
+    private void assertTicketLevels(GameTestHelper helper, ChunkPos chunk,
+            List<Integer> expected) {
+        TicketStorage storage = helper.getLevel().getChunkSource()
+                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+        List<Integer> actual = storage.getTickets(chunk.pack()).stream()
+                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .map(ticket -> ticket.getTicketLevel())
+                .sorted()
+                .toList();
+
+        helper.assertTrue(actual.equals(expected),
+                "Expected ticket levels " + expected + ", got " + actual);
     }
 }
