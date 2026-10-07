@@ -27,7 +27,7 @@ public class AnkerstoneChunkTickets {
         return OWNERS.computeIfAbsent(level.dimension(), ignored -> new HashMap<>());
     }
 
-    private static final TicketType ANKERSTONE_TICKET = new TicketType(
+    static final TicketType ANKERSTONE_TICKET = new TicketType(
             TicketType.NO_TIMEOUT,
             TicketType.FLAG_LOADING
                     | TicketType.FLAG_SIMULATION

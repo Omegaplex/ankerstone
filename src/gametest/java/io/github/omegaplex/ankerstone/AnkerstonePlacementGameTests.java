@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -74,5 +76,45 @@ public class AnkerstonePlacementGameTests {
         helper.assertTrue(actualOwner == expectedOwner,
                 "Power " + power + " expected owner " + expectedOwner
                         + ", got " + actualOwner);
+    }
+
+    @GameTest
+    public void sharedTicketRemainsUntilLastOwnerIsRemoved(GameTestHelper helper) {
+        BlockPos first = new BlockPos(2, 2, 2);
+        BlockPos second = new BlockPos(2, 4, 2);
+        ChunkPos chunk = ChunkPos.containing(helper.absolutePos(first));
+
+        assertTicketCount(helper, chunk, 0);
+        try {
+            helper.setBlock(first.below(), Blocks.REDSTONE_BLOCK);
+            helper.setBlock(second.below(), Blocks.REDSTONE_BLOCK);
+
+            helper.setBlock(first, ModBlocks.ANKERSTONE);
+            assertTicketCount(helper, chunk, 1);
+            helper.setBlock(second, ModBlocks.ANKERSTONE);
+            assertTicketCount(helper, chunk, 1);
+
+            helper.setBlock(first, Blocks.AIR);
+            assertTicketCount(helper, chunk, 1);
+            helper.setBlock(second, Blocks.AIR);
+            assertTicketCount(helper, chunk, 0);
+        } finally {
+            helper.setBlock(first, Blocks.AIR);
+            helper.setBlock(second, Blocks.AIR);
+            helper.setBlock(first.below(), Blocks.AIR);
+            helper.setBlock(second.below(), Blocks.AIR);
+        }
+        helper.succeed();
+    }
+
+    private void assertTicketCount(GameTestHelper helper, ChunkPos chunk, int expected) {
+        TicketStorage storage = helper.getLevel().getChunkSource()
+                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+        long actual = storage.getTickets(chunk.pack()).stream()
+                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .count();
+
+        helper.assertTrue(actual == expected,
+                "Expected " + expected + " Ankerstone tickets, got " + actual);
     }
 }
