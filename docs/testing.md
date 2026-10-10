@@ -115,6 +115,8 @@ Checked on 2026-10-10 using Minecraft 26.1.2.
 - Ankerstone moved by a piston while Off retained its placer across a full restart and awarded Stay a While at its destination.
 - Placement beside existing power awarded Stay a While immediately.
 
-Restart checks used the same fixed dev username, AnkerstoneTester, with
-Minecraft closed completely between runs. Offline pending credit across
-a restart has not been checked manually yet.
+Restart checks used fixed dev usernames, AnkerstoneTester and
+AnkerstoneHelper, with Minecraft closed completely between runs.
+Offline activation credited the original placer on return, even after
+the block was removed. After revoking the advancement and restarting
+again, it was not awarded a second time.

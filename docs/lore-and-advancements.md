@@ -2,7 +2,7 @@
 
 This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
 
-**Status (2026-10-10):** Acquisition and activation advancements are implemented. Automated tests cover player attribution, offline credit, and removal during piston movement. Manual restart checks passed for ordinary and piston-moved placements. Offline pending credit across a restart still needs checking. Public-facing prose remains a draft.
+**Status (2026-10-10):** Acquisition and activation advancements are implemented. Automated tests cover player attribution, offline credit, and removal during piston movement. Manual restart checks passed for ordinary and piston-moved placements. Offline credit also passed restart and repeat-delivery checks. Public-facing prose remains a draft.
 
 ## Full Lore
 
@@ -134,10 +134,8 @@ Chunk-ticket ownership in `AnkerstoneSavedData` and `AnkerstoneChunkTickets` tra
 - Placement records can be removed once activation credit is awarded or safely queued.
 - Advancement parents organize the tree; they do not gate item acquisition.
 
-Attribution storage and basic activation credit are implemented and tested. Still to do:
-
-- check Creative placement and activation without a known placer
-- check interrupted piston movement
-- check saving and loading across an actual restart
+Attribution storage and activation credit are implemented and tested.
+Manual restart checks passed for ordinary placements, piston-moved
+placements, and offline credit.
 
 Keep existing chunk tickets and recipe unlocks working as they are.
