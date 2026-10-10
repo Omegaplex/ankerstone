@@ -93,19 +93,43 @@ public class AnkerstoneActivationGameTests {
         }
 
         @GameTest
-        public void nonPlayerPlacementHasNoPlacer(GameTestHelper helper) {
-                BlockPos localPos = new BlockPos(2, 2, 2);
+        @SuppressWarnings("removal")
+        public void nonPlayerActivationGrantsNoCredit(GameTestHelper helper) {
+                BlockPos pos = new BlockPos(2, 2, 2);
                 GlobalPos position = GlobalPos.of(
-                                helper.getLevel().dimension(), helper.absolutePos(localPos));
+                                helper.getLevel().dimension(), helper.absolutePos(pos));
                 AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AdvancementHolder advancement = helper.getLevel().getServer()
+                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
+                                                "ankerstone", "stay_a_while"));
+                helper.assertTrue(advancement != null, "Missing activation advancement");
+                ServerPlayer activator = helper.makeMockServerPlayerInLevel();
 
                 try {
-                        helper.setBlock(localPos, ModBlocks.ANKERSTONE);
+                        helper.setBlock(pos.below(2), Blocks.STONE);
+                        helper.setBlock(pos.below(), Blocks.STONE);
+                        helper.setBlock(pos, ModBlocks.ANKERSTONE);
                         helper.assertTrue(data.getPlacer(position) == null,
-                                        "Placement without a player must not invent attribution");
+                                        "Non-player placement must not invent attribution");
+
+                        helper.setBlock(pos.below(), Blocks.AIR);
+                        placeBlockAsPlayer(helper, activator, pos.below(), Blocks.REDSTONE_BLOCK);
+
+                        helper.assertBlockProperty(pos, AnkerstoneBlock.MODE, AnkerstoneMode.WIDE);
+                        helper.assertFalse(activator.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Powering an unattributed block must not grant activation credit");
+                        helper.assertTrue(data.getPlacer(position) == null,
+                                        "Activation must not invent a placer");
+                        helper.assertFalse(data.hasPendingCredit(activator.getUUID()),
+                                        "An unattributed block must not queue credit for its activator");
                 } finally {
-                        helper.setBlock(localPos, Blocks.AIR);
+                        helper.setBlock(pos, Blocks.AIR);
+                        helper.setBlock(pos.below(), Blocks.AIR);
+                        helper.setBlock(pos.below(2), Blocks.AIR);
                         data.removePlacer(position);
+                        data.removePendingCredit(activator.getUUID());
+                        helper.getLevel().getServer().getPlayerList().remove(activator);
                 }
                 helper.succeed();
         }
@@ -267,6 +291,8 @@ public class AnkerstoneActivationGameTests {
                 ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
                 try {
+                        helper.assertTrue(player.isCreative(),
+                                        "Powered placement fixture must be Creative");
                         helper.assertFalse(player.getAdvancements()
                                         .getOrStartProgress(advancement).isDone(),
                                         "Activation advancement must start incomplete");

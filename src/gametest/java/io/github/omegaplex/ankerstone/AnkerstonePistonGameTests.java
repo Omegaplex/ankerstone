@@ -425,4 +425,44 @@ public class AnkerstonePistonGameTests {
             helper.succeed();
         });
     }
+
+    @GameTest(maxTicks = 40)
+    public void removingMovingAnkerstoneClearsPlacer(GameTestHelper helper) {
+        BlockPos piston = new BlockPos(2, 2, 2);
+        BlockPos start = piston.east();
+        BlockPos destination = start.east();
+        GlobalPos oldPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(start));
+        GlobalPos newPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(destination));
+        UUID placer = UUID.randomUUID();
+        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+
+        helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
+                .setValue(PistonBaseBlock.FACING, Direction.EAST));
+        helper.setBlock(start, ModBlocks.ANKERSTONE);
+        data.setPlacer(oldPosition, placer);
+        helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
+
+        helper.runAfterDelay(1, () -> {
+            try {
+                helper.assertBlockPresent(Blocks.MOVING_PISTON, destination);
+                helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
+                        "Moving Ankerstone must already have destination attribution");
+
+                helper.setBlock(destination, Blocks.AIR);
+
+                helper.assertBlockPresent(Blocks.AIR, destination);
+                helper.assertTrue(data.getPlacer(newPosition) == null,
+                        "Removing moving Ankerstone must clear destination attribution");
+                helper.assertTrue(data.getPlacer(oldPosition) == null,
+                        "Interrupted movement must not restore old attribution");
+            } finally {
+                clearPistonFixture(helper, piston);
+                data.removePlacer(oldPosition);
+                data.removePlacer(newPosition);
+            }
+            helper.succeed();
+        });
+    }
 }

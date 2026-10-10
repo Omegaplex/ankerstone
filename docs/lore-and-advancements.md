@@ -2,7 +2,7 @@
 
 This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
 
-**Status (2026-10-10):** Lore and advancement wording are agreed. Acquisition and activation credit are implemented, including offline credit and join delivery. Piston attribution is implemented and tested. Actual restart and interrupted-movement checks are still pending. Public-facing prose remains a draft; recipe-book unlocks are separate.
+**Status (2026-10-10):** Acquisition and activation advancements are implemented. Automated tests cover player attribution, offline credit, and removal during piston movement. Manual restart checks passed for ordinary and piston-moved placements. Offline pending credit across a restart still needs checking. Public-facing prose remains a draft.
 
 ## Full Lore
 

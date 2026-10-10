@@ -33,7 +33,7 @@ Coverage includes:
 - pending credit serialization, clearing, and retention after placement-record removal
 - save flags for placement and pending-credit changes
 - player placement records the placer; ordinary removal clears the record
-- non-player placement does not create attribution
+- activation without a known placer does not credit the player supplying power
 - Single and Wide activation grant placer credit, including placement into existing power
 - another player supplying power still credits the original placer
 - replacing a block assigns credit to its new placer
@@ -41,6 +41,8 @@ Coverage includes:
 - piston pushes and sticky pulls preserve the original placer
 - adjacent moves preserve each block's placer; blocked moves leave attribution unchanged
 - Single and Wide activation after piston movement queue credit for the original placer
+- removing Ankerstone during piston movement clears its attribution
+- moved attribution requires saving and survives serialization at its destination
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
@@ -109,4 +111,10 @@ Checked on 2026-10-10 using Minecraft 26.1.2.
 - Obtaining each full-block item earned its corresponding advancement.
 - The tab, descriptions, icons, and tiled Stillstone background displayed correctly.
 - Stay a While used the Wide appearance; the inventory item stayed Off.
-- Activation credit has automated coverage; manual activation checks are still pending.
+- Ankerstone placed while Off retained its placer across a full restart and awarded Stay a While when activated.
+- Ankerstone moved by a piston while Off retained its placer across a full restart and awarded Stay a While at its destination.
+- Placement beside existing power awarded Stay a While immediately.
+
+Restart checks used the same fixed dev username, AnkerstoneTester, with
+Minecraft closed completely between runs. Offline pending credit across
+a restart has not been checked manually yet.
