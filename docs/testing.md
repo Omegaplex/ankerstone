@@ -17,6 +17,11 @@ and comparator readouts, shared and mixed-mode tickets, owner serialization,
 ticket restoration, tool eligibility, loot item/count checks, recipe matching,
 crafting output item/count checks, and invalid ingredient/layout rejection.
 
+Variant crafting tests check shifted and mirrored patterns, output items
+and counts, mixed ingredients, and incorrect layouts. Stonecutting tests
+check all six recipes, their outputs and counts, and rejection of the
+other stone family. Recipe-book discovery is checked manually.
+
 ## Manual Restart Check
 
 Use a new Creative superflat world with commands enabled and no other
@@ -64,9 +69,9 @@ using Minecraft 26.1.2.
 
 ## Manual Crafting Check
 
-Survival crafting passed for all three core recipes with outputs of
+- Survival crafting passed for all three core recipes with outputs of
 five Stillstone, one Reinforced Stillstone, and one Ankerstone.
 
-Recipe-book discovery passed in a fresh world: lapis unlocked Stillstone,
-Stillstone unlocked Reinforced Stillstone, and Reinforced Stillstone
-unlocked Ankerstone. Checked on 2026-10-07 using Minecraft 26.1.2.
+- Recipe-book discovery passed in a fresh world: lapis unlocked Stillstone, Stillstone unlocked Reinforced Stillstone, and Reinforced Stillstone unlocked Ankerstone. *Checked on 2026-10-07 using Minecraft 26.1.2.*
+
+- Both families' variant recipes passed in-game checks on 2026-10-09 using Minecraft 26.1.2. Obtaining each base block unlocked its crafting recipes in a fresh Survival world. Crafting produced six slabs, four stairs, or six walls; stonecutting produced two slabs, one stair, or one wall.

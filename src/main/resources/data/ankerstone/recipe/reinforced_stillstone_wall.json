@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["SSS", "SSS"],
+  "key": {
+    "S": "ankerstone:reinforced_stillstone"
+  },
+  "result": {
+    "id": "ankerstone:reinforced_stillstone_wall",
+    "count": 6
+  }
+}

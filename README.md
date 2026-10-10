@@ -31,8 +31,9 @@ restart checks.
 
 ## Lore & Crafting
 
-The three core blocks have Survival crafting recipes and recipe-book
-unlocks. Slab, stair, wall, and stonecutting recipes are still planned.
+The three core blocks and both families' slabs, stairs, and walls have
+Survival crafting recipes and recipe-book unlocks. Each family's full
+block can also be stonecut into slabs, stairs, and walls.
 
 ---
 

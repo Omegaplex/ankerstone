@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["S  ", "SS ", "SSS"],
+  "key": {
+    "S": "ankerstone:stillstone"
+  },
+  "result": {
+    "id": "ankerstone:stillstone_stairs",
+    "count": 4
+  }
+}

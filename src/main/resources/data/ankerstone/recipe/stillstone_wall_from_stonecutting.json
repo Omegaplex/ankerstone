@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": "ankerstone:stillstone",
+  "result": {
+    "id": "ankerstone:stillstone_wall",
+    "count": 1
+  }
+}

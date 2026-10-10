@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": "ankerstone:reinforced_stillstone",
+  "result": {
+    "id": "ankerstone:reinforced_stillstone_slab",
+    "count": 2
+  }
+}
