@@ -2,7 +2,7 @@
 
 This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
 
-**Status (2026-10-10):** Core lore, four advancement names/descriptions, progression, and player-facing activation credit are agreed. Public-facing prose below is a draft for reuse and editing. The first three advancements work, while Stay a While has its display but still needs player attribution.*; existing recipe-book unlocks are separate and already implemented.
+**Status (2026-10-10):** Lore and advancement wording are agreed. Acquisition and activation credit are implemented, including offline credit and join delivery. Piston attribution and actual restart checks are still pending. Public-facing prose remains a draft; recipe-book unlocks are separate.
 
 ## Full Lore
 
@@ -119,7 +119,7 @@ Intended persistence and multiplayer behavior:
 - Breaking and placing an Ankerstone again attributes the newly placed block to its new placer.
 - Do not require the placer to stand nearby, activate a lever, or be online at the moment redstone changes.
 
-**Verified existing-code limitation (2026-10-10):** `AnkerstoneSavedData` persists active **block positions and modes** only. `AnkerstoneChunkTickets` calls those blocks *owners* of chunk tickets. Neither currently identifies a **player** or maintains placement credit for an Off block. Player identity/pending-credit persistence must be designed separately or carefully integrated; do not mistake ticket ownership for player ownership.
+Chunk-ticket ownership in `AnkerstoneSavedData` and `AnkerstoneChunkTickets` tracks block positions and modes, not players. `AnkerstoneAttributionData` separately stores placer UUIDs and pending advancement credit.
 
 ### Implementation Decisions
 
@@ -134,10 +134,9 @@ Intended persistence and multiplayer behavior:
 - Placement records can be removed once activation credit is awarded or safely queued.
 - Advancement parents organize the tree; they do not gate item acquisition.
 
-Attribution storage is in place and tested. Still to do:
+Attribution storage and basic activation credit are implemented and tested. Still to do:
 
-- record the player when placing an Ankerstone
-- award activation credit and deliver pending credit on login
+- check the remaining multiplayer and dimension edge cases
 - carry attribution through piston movement
 - check saving and loading across an actual restart
 

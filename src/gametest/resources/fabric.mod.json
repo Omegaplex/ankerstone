@@ -10,7 +10,8 @@
       "io.github.omegaplex.ankerstone.AnkerstoneMiningGameTests",
       "io.github.omegaplex.ankerstone.AnkerstoneCraftingGameTests",
       "io.github.omegaplex.ankerstone.AnkerstoneAdvancementGameTests",
-      "io.github.omegaplex.ankerstone.AnkerstoneAttributionDataGameTests"
+      "io.github.omegaplex.ankerstone.AnkerstoneAttributionDataGameTests",
+      "io.github.omegaplex.ankerstone.AnkerstoneActivationGameTests"
     ]
   },
   "depends": {

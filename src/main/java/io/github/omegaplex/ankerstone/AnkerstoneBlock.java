@@ -2,9 +2,13 @@ package io.github.omegaplex.ankerstone;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,6 +22,25 @@ public class AnkerstoneBlock extends Block {
     public AnkerstoneBlock(Properties settings) {
         super(settings);
         this.registerDefaultState(this.defaultBlockState().setValue(MODE, AnkerstoneMode.OFF));
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state,
+            LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+
+        if (level instanceof ServerLevel serverLevel
+                && placer instanceof ServerPlayer player) {
+            AnkerstoneAttributionData.get(serverLevel).setPlacer(
+                    GlobalPos.of(serverLevel.dimension(), pos),
+                    player.getUUID());
+
+            BlockState placedState = serverLevel.getBlockState(pos);
+            if (placedState.is(this)
+                    && placedState.getValue(MODE) != AnkerstoneMode.OFF) {
+                AnkerstoneAdvancements.onActivated(serverLevel, pos);
+            }
+        }
     }
 
     @Override
@@ -66,6 +89,11 @@ public class AnkerstoneBlock extends Block {
 
             level.setBlock(pos, state.setValue(MODE, mode), Block.UPDATE_CLIENTS);
             level.updateNeighbourForOutputSignal(pos, state.getBlock());
+            if (oldMode == AnkerstoneMode.OFF
+                    && mode != AnkerstoneMode.OFF
+                    && level instanceof ServerLevel serverLevel) {
+                AnkerstoneAdvancements.onActivated(serverLevel, pos);
+            }
         }
     }
 
@@ -94,12 +122,17 @@ public class AnkerstoneBlock extends Block {
     }
 
     @Override
-    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos,
-            boolean movedByPiston) {
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level,
+            BlockPos pos, boolean movedByPiston) {
         AnkerstoneMode mode = state.getValue(MODE);
 
         if (mode != AnkerstoneMode.OFF) {
             setChunkLoading(level, pos, mode, false);
+        }
+
+        if (!movedByPiston) {
+            AnkerstoneAttributionData.get(level).removePlacer(
+                    GlobalPos.of(level.dimension(), pos));
         }
 
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);

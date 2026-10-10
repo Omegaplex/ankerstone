@@ -32,6 +32,10 @@ Coverage includes:
 - shared attribution storage across dimensions
 - pending credit serialization, clearing, and retention after placement-record removal
 - save flags for placement and pending-credit changes
+- player placement records the placer; ordinary removal clears the record
+- non-player placement does not create attribution
+- Wide activation grants placer credit, including placement into existing power
+- offline activation queues credit; the join event awards it and clears the queue
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
@@ -101,3 +105,4 @@ Checked on 2026-10-10 using Minecraft 26.1.2.
 - The tab, descriptions, icons, and tiled Stillstone background displayed correctly.
 - Stay a While used the Wide appearance; the inventory item stayed Off.
 - Activation credit is not implemented yet.
+- Activation credit has automated coverage; manual activation checks are still pending.

@@ -2,6 +2,7 @@ package io.github.omegaplex.ankerstone;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ public class Ankerstone implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModBlocks.initialize();
+		ServerPlayConnectionEvents.JOIN
+				.register((handler, sender, server) -> AnkerstoneAdvancements.onPlayerJoin(handler.player));
 		// Rebuild live chunk tickets from saved data whenever a server dimension loads.
 		ServerLevelEvents.LOAD.register((server, level) -> AnkerstoneChunkTickets.restore(level));
 		// Discard runtime ownership on unload; saved owners remain for restoration.
