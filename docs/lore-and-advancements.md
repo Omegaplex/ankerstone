@@ -134,5 +134,11 @@ Intended persistence and multiplayer behavior:
 - Placement records can be removed once activation credit is awarded or safely queued.
 - Advancement parents organize the tree; they do not gate item acquisition.
 
-Player attribution, persistence, offline credit, and piston transfers still need
-implementation and tests. Preserve existing chunk tickets and recipe unlocks.
+Attribution storage is in place and tested. Still to do:
+
+- record the player when placing an Ankerstone
+- award activation credit and deliver pending credit on login
+- carry attribution through piston movement
+- check saving and loading across an actual restart
+
+Keep existing chunk tickets and recipe unlocks working as they are.

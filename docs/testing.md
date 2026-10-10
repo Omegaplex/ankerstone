@@ -28,6 +28,10 @@ Coverage includes:
 - decorative variants excluded from material milestones
 - obtaining Ankerstone does not grant activation credit
 - Wide model selection for the activation advancement icon
+- placer UUID serialization, dimension separation, and mutable-position copying
+- shared attribution storage across dimensions
+- pending credit serialization, clearing, and retention after placement-record removal
+- save flags for placement and pending-credit changes
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
