@@ -17,7 +17,7 @@ Coverage includes:
 - owner serialization
 - ticket restoration
 - piston reactions; `OFF` piston pushing & sticky-piston pulling, `SINGLE` & `WIDE` resisting pushes
-- ownership at powered destinations
+- ownership at powered destinations, `OFF` pushes, and blocked pushes
 - active placement, power transitions and comparator readouts
 - tool eligibility
 - loot item/count checks

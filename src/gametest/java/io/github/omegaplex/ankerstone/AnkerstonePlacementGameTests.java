@@ -66,38 +66,6 @@ public class AnkerstonePlacementGameTests {
                 helper.succeed();
         }
 
-        private void setPowerAndAssert(GameTestHelper helper, BlockPos localPos,
-                        int power, AnkerstoneMode expectedMode) {
-                helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
-                                .setValue(DaylightDetectorBlock.POWER, power));
-                helper.assertBlockProperty(localPos, AnkerstoneBlock.MODE, expectedMode);
-
-                AnkerstoneMode actualOwner = AnkerstoneSavedData.get(helper.getLevel())
-                                .getOwnerModes().get(helper.absolutePos(localPos));
-                AnkerstoneMode expectedOwner = expectedMode == AnkerstoneMode.OFF
-                                ? null
-                                : expectedMode;
-
-                helper.assertTrue(actualOwner == expectedOwner,
-                                "Power " + power + " expected owner " + expectedOwner
-                                                + ", got " + actualOwner);
-                BlockState state = helper.getBlockState(localPos);
-                int expectedOutput = switch (expectedMode) {
-                        case OFF -> 0;
-                        case SINGLE -> 7;
-                        case WIDE -> 15;
-                };
-                helper.assertTrue(state.hasAnalogOutputSignal(),
-                                "Ankerstone must advertise a comparator readout");
-                for (Direction direction : Direction.Plane.HORIZONTAL) {
-                        int actual = state.getAnalogOutputSignal(helper.getLevel(),
-                                        helper.absolutePos(localPos), direction);
-                        helper.assertTrue(actual == expectedOutput,
-                                        "Power " + power + ", direction " + direction
-                                                        + " expected readout " + expectedOutput + ", got " + actual);
-                }
-        }
-
         @GameTest
         public void sharedTicketRemainsUntilLastOwnerIsRemoved(GameTestHelper helper) {
                 BlockPos first = new BlockPos(2, 2, 2);
@@ -125,17 +93,6 @@ public class AnkerstonePlacementGameTests {
                         helper.setBlock(second.below(), Blocks.AIR);
                 }
                 helper.succeed();
-        }
-
-        private void assertTicketCount(GameTestHelper helper, ChunkPos chunk, int expected) {
-                TicketStorage storage = helper.getLevel().getChunkSource()
-                                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
-                long actual = storage.getTickets(chunk.pack()).stream()
-                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
-                                .count();
-
-                helper.assertTrue(actual == expected,
-                                "Expected " + expected + " Ankerstone tickets, got " + actual);
         }
 
         @GameTest
@@ -172,20 +129,6 @@ public class AnkerstonePlacementGameTests {
                         helper.setBlock(wide.below(), Blocks.AIR);
                 }
                 helper.succeed();
-        }
-
-        private void assertTicketLevels(GameTestHelper helper, ChunkPos chunk,
-                        List<Integer> expected) {
-                TicketStorage storage = helper.getLevel().getChunkSource()
-                                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
-                List<Integer> actual = storage.getTickets(chunk.pack()).stream()
-                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
-                                .map(ticket -> ticket.getTicketLevel())
-                                .sorted()
-                                .toList();
-
-                helper.assertTrue(actual.equals(expected),
-                                "Expected ticket levels " + expected + ", got " + actual);
         }
 
         @GameTest(environment = "ankerstone-test:restoration")
@@ -236,4 +179,62 @@ public class AnkerstonePlacementGameTests {
                 }
                 helper.succeed();
         }
+
+        private void setPowerAndAssert(GameTestHelper helper, BlockPos localPos,
+                        int power, AnkerstoneMode expectedMode) {
+                helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
+                                .setValue(DaylightDetectorBlock.POWER, power));
+                helper.assertBlockProperty(localPos, AnkerstoneBlock.MODE, expectedMode);
+
+                AnkerstoneMode actualOwner = AnkerstoneSavedData.get(helper.getLevel())
+                                .getOwnerModes().get(helper.absolutePos(localPos));
+                AnkerstoneMode expectedOwner = expectedMode == AnkerstoneMode.OFF
+                                ? null
+                                : expectedMode;
+
+                helper.assertTrue(actualOwner == expectedOwner,
+                                "Power " + power + " expected owner " + expectedOwner
+                                                + ", got " + actualOwner);
+                BlockState state = helper.getBlockState(localPos);
+                int expectedOutput = switch (expectedMode) {
+                        case OFF -> 0;
+                        case SINGLE -> 7;
+                        case WIDE -> 15;
+                };
+                helper.assertTrue(state.hasAnalogOutputSignal(),
+                                "Ankerstone must advertise a comparator readout");
+                for (Direction direction : Direction.Plane.HORIZONTAL) {
+                        int actual = state.getAnalogOutputSignal(helper.getLevel(),
+                                        helper.absolutePos(localPos), direction);
+                        helper.assertTrue(actual == expectedOutput,
+                                        "Power " + power + ", direction " + direction
+                                                        + " expected readout " + expectedOutput + ", got " + actual);
+                }
+        }
+
+        private void assertTicketCount(GameTestHelper helper, ChunkPos chunk, int expected) {
+                TicketStorage storage = helper.getLevel().getChunkSource()
+                                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+                long actual = storage.getTickets(chunk.pack()).stream()
+                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                                .count();
+
+                helper.assertTrue(actual == expected,
+                                "Expected " + expected + " Ankerstone tickets, got " + actual);
+        }
+
+        private void assertTicketLevels(GameTestHelper helper, ChunkPos chunk,
+                        List<Integer> expected) {
+                TicketStorage storage = helper.getLevel().getChunkSource()
+                                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+                List<Integer> actual = storage.getTickets(chunk.pack()).stream()
+                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                                .map(ticket -> ticket.getTicketLevel())
+                                .sorted()
+                                .toList();
+
+                helper.assertTrue(actual.equals(expected),
+                                "Expected ticket levels " + expected + ", got " + actual);
+        }
+
 }

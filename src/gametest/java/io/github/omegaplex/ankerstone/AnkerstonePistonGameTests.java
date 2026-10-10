@@ -49,11 +49,81 @@ public class AnkerstonePistonGameTests {
                 helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
                 helper.assertBlockProperty(destination,
                         AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                helper.assertFalse(savedData.getOwnerModes().containsKey(
+                        helper.absolutePos(start)),
+                        "Off push must not leave an owner at the old position");
+                helper.assertFalse(savedData.getOwnerModes().containsKey(
+                        helper.absolutePos(destination)),
+                        "Off push must not register an owner at the destination");
             } finally {
                 clearPistonFixture(helper, piston);
             }
             helper.succeed();
         });
+    }
+
+    @GameTest(maxTicks = 40)
+    public void offAnkerstoneCanBePulled(GameTestHelper helper) {
+        BlockPos piston = new BlockPos(2, 2, 2);
+        BlockPos start = piston.east();
+        BlockPos destination = start.east();
+        BlockPos power = piston.west();
+
+        helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
+                .setValue(PistonBaseBlock.FACING, Direction.EAST));
+        helper.setBlock(start, ModBlocks.ANKERSTONE);
+        helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+        helper.setBlock(power, Blocks.REDSTONE_BLOCK);
+
+        helper.runAfterDelay(10, () -> {
+            try {
+                helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
+                helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
+                helper.assertBlockPresent(Blocks.PISTON_HEAD, start);
+                helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
+                helper.assertBlockProperty(destination,
+                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                helper.setBlock(power, Blocks.AIR);
+            } catch (RuntimeException failure) {
+                clearPistonFixture(helper, piston);
+                throw failure;
+            }
+        });
+
+        helper.runAfterDelay(20, () -> {
+            try {
+                helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
+                helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
+                helper.assertBlockPresent(ModBlocks.ANKERSTONE, start);
+                helper.assertBlockProperty(start,
+                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                helper.assertBlockPresent(Blocks.AIR, destination);
+            } finally {
+                clearPistonFixture(helper, piston);
+            }
+            helper.succeed();
+        });
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    public void singleAnkerstoneCannotBePushed(GameTestHelper helper) {
+        assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.SINGLE);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    public void wideAnkerstoneCannotBePushed(GameTestHelper helper) {
+        assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.WIDE);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    public void movedAnkerstoneActivatesSingle(GameTestHelper helper) {
+        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.SINGLE);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    public void movedAnkerstoneActivatesWide(GameTestHelper helper) {
+        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.WIDE);
     }
 
     private void assertActiveAnkerstoneCannotBePushed(GameTestHelper helper,
@@ -83,6 +153,9 @@ public class AnkerstonePistonGameTests {
                     helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, start);
                     helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
+                    helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+                            .getOwnerModes().get(helper.absolutePos(start)) == mode,
+                            "Blocked Ankerstone must retain its owner mode");
                     helper.assertBlockPresent(Blocks.AIR, start.east());
                 } finally {
                     clearPistonFixture(helper, piston);
@@ -139,26 +212,6 @@ public class AnkerstonePistonGameTests {
         }
     }
 
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
-    public void singleAnkerstoneCannotBePushed(GameTestHelper helper) {
-        assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.SINGLE);
-    }
-
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
-    public void wideAnkerstoneCannotBePushed(GameTestHelper helper) {
-        assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.WIDE);
-    }
-
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
-    public void movedAnkerstoneActivatesSingle(GameTestHelper helper) {
-        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.SINGLE);
-    }
-
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
-    public void movedAnkerstoneActivatesWide(GameTestHelper helper) {
-        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.WIDE);
-    }
-
     private void clearPistonFixture(GameTestHelper helper, BlockPos piston) {
         helper.setBlock(piston.east(2), Blocks.AIR);
         helper.setBlock(piston, Blocks.AIR);
@@ -177,46 +230,4 @@ public class AnkerstonePistonGameTests {
         }
     }
 
-    @GameTest(maxTicks = 40)
-    public void offAnkerstoneCanBePulled(GameTestHelper helper) {
-        BlockPos piston = new BlockPos(2, 2, 2);
-        BlockPos start = piston.east();
-        BlockPos destination = start.east();
-        BlockPos power = piston.west();
-
-        helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
-                .setValue(PistonBaseBlock.FACING, Direction.EAST));
-        helper.setBlock(start, ModBlocks.ANKERSTONE);
-        helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-        helper.setBlock(power, Blocks.REDSTONE_BLOCK);
-
-        helper.runAfterDelay(10, () -> {
-            try {
-                helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
-                helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
-                helper.assertBlockPresent(Blocks.PISTON_HEAD, start);
-                helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
-                helper.assertBlockProperty(destination,
-                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                helper.setBlock(power, Blocks.AIR);
-            } catch (RuntimeException failure) {
-                clearPistonFixture(helper, piston);
-                throw failure;
-            }
-        });
-
-        helper.runAfterDelay(20, () -> {
-            try {
-                helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
-                helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
-                helper.assertBlockPresent(ModBlocks.ANKERSTONE, start);
-                helper.assertBlockProperty(start,
-                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                helper.assertBlockPresent(Blocks.AIR, destination);
-            } finally {
-                clearPistonFixture(helper, piston);
-            }
-            helper.succeed();
-        });
-    }
 }

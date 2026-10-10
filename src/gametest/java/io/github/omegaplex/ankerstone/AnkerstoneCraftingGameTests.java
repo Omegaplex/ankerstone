@@ -20,184 +20,12 @@ import net.minecraft.world.item.Items;
 
 public class AnkerstoneCraftingGameTests {
         @GameTest
-        public void stonecuttingRecipesMatch(GameTestHelper helper) {
-                Item stone = ModBlocks.STILLSTONE.asItem();
-                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
-
-                assertStonecuttingRecipe(helper, "stillstone_slab_from_stonecutting", stone,
-                                ModBlocks.STILLSTONE_SLAB.asItem(), 2);
-                assertStonecuttingRecipe(helper, "stillstone_stairs_from_stonecutting", stone,
-                                ModBlocks.STILLSTONE_STAIRS.asItem(), 1);
-                assertStonecuttingRecipe(helper, "stillstone_wall_from_stonecutting", stone,
-                                ModBlocks.STILLSTONE_WALL.asItem(), 1);
-                assertStonecuttingRecipe(helper, "reinforced_stillstone_slab_from_stonecutting", reinforced,
-                                ModBlocks.REINFORCED_STILLSTONE_SLAB.asItem(), 2);
-                assertStonecuttingRecipe(helper, "reinforced_stillstone_stairs_from_stonecutting", reinforced,
-                                ModBlocks.REINFORCED_STILLSTONE_STAIRS.asItem(), 1);
-                assertStonecuttingRecipe(helper, "reinforced_stillstone_wall_from_stonecutting", reinforced,
-                                ModBlocks.REINFORCED_STILLSTONE_WALL.asItem(), 1);
-                helper.succeed();
-        }
-
-        private void assertStonecuttingRecipe(GameTestHelper helper, String name,
-                        Item ingredient, Item expectedItem, int expectedCount) {
-                ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE,
-                                Identifier.fromNamespaceAndPath("ankerstone", name));
-                RecipeHolder<?> holder = helper.getLevel().recipeAccess().byKey(key)
-                                .orElseThrow(() -> new AssertionError("Missing recipe: " + name));
-
-                if (!(holder.value() instanceof StonecutterRecipe recipe)) {
-                        throw new AssertionError("Expected a stonecutting recipe: " + name);
-                }
-                SingleRecipeInput input = new SingleRecipeInput(new ItemStack(ingredient));
-                helper.assertTrue(recipe.matches(input, helper.getLevel()),
-                                name + ": expected ingredient did not match");
-
-                Item otherFamily = ingredient == ModBlocks.STILLSTONE.asItem()
-                                ? ModBlocks.REINFORCED_STILLSTONE.asItem()
-                                : ModBlocks.STILLSTONE.asItem();
-                SingleRecipeInput wrongInput = new SingleRecipeInput(new ItemStack(otherFamily));
-                helper.assertFalse(recipe.matches(wrongInput, helper.getLevel()),
-                                name + ": must reject the other stone family");
-
-                ItemStack result = recipe.assemble(input);
-                helper.assertTrue(result.getItem() == expectedItem,
-                                name + ": wrong output item: " + result);
-                helper.assertTrue(result.getCount() == expectedCount,
-                                name + ": expected " + expectedCount + " items, got " + result.getCount());
-        }
-
-        @GameTest
-        public void variantsRejectWrongLayouts(GameTestHelper helper) {
-                Item stillstone = ModBlocks.STILLSTONE.asItem();
-                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
-                Item empty = Items.AIR;
-
-                for (Item base : new Item[] { stillstone, reinforced }) {
-                        String family = base == stillstone ? "Stillstone" : "Reinforced Stillstone";
-
-                        assertNoRecipe(helper, family + " slabs require a horizontal row", grid(
-                                        base, empty, empty,
-                                        base, empty, empty,
-                                        base, empty, empty));
-
-                        assertNoRecipe(helper, family + " requires a valid six-block pattern", grid(
-                                        base, base, empty,
-                                        base, empty, base,
-                                        empty, base, base));
-
-                        assertNoRecipe(helper, family + " slabs must reject extra ingredients", grid(
-                                        base, base, base,
-                                        empty, base, empty,
-                                        empty, empty, empty));
-                }
-                helper.succeed();
-        }
-
-        @GameTest
-        public void recipesRejectWrongLayouts(GameTestHelper helper) {
-                Item cobbled = Items.COBBLED_DEEPSLATE;
-                Item lapis = Items.LAPIS_LAZULI;
-                Item iron = Items.IRON_NUGGET;
-                Item stillstone = ModBlocks.STILLSTONE.asItem();
-                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
-                Item dust = Items.REDSTONE;
-
-                assertNoRecipe(helper, "Stillstone requires the checkerboard layout", grid(
-                                cobbled, lapis, cobbled,
-                                lapis, lapis, cobbled,
-                                cobbled, lapis, cobbled));
-                assertNoRecipe(helper, "Reinforced Stillstone requires stone in the center", grid(
-                                iron, iron, iron,
-                                stillstone, iron, iron,
-                                iron, iron, iron));
-                assertNoRecipe(helper, "Ankerstone requires the pearl in the center", grid(
-                                reinforced, Items.ENDER_PEARL, reinforced,
-                                dust, dust, dust,
-                                reinforced, dust, reinforced));
-                helper.succeed();
-        }
-
-        @GameTest
-        public void stillstoneVariantsMatch(GameTestHelper helper) {
-                assertVariantRecipes(helper, "stillstone",
-                                ModBlocks.STILLSTONE.asItem(), ModBlocks.STILLSTONE_SLAB.asItem(),
-                                ModBlocks.STILLSTONE_STAIRS.asItem(), ModBlocks.STILLSTONE_WALL.asItem());
-                helper.succeed();
-        }
-
-        @GameTest
-        public void reinforcedStillstoneVariantsMatch(GameTestHelper helper) {
-                assertVariantRecipes(helper, "reinforced_stillstone",
-                                ModBlocks.REINFORCED_STILLSTONE.asItem(),
-                                ModBlocks.REINFORCED_STILLSTONE_SLAB.asItem(),
-                                ModBlocks.REINFORCED_STILLSTONE_STAIRS.asItem(),
-                                ModBlocks.REINFORCED_STILLSTONE_WALL.asItem());
-                helper.succeed();
-        }
-
-        private void assertVariantRecipes(GameTestHelper helper, String family,
-                        Item base, Item slab, Item stairs, Item wall) {
-                Item empty = Items.AIR;
-
-                assertRecipe(helper, family + "_slab", grid(
-                                base, base, base,
-                                empty, empty, empty,
-                                empty, empty, empty), slab, 6);
-
-                assertRecipe(helper, family + "_stairs", grid(
-                                base, empty, empty,
-                                base, base, empty,
-                                base, base, base), stairs, 4);
-
-                assertRecipe(helper, family + "_wall", grid(
-                                base, base, base,
-                                base, base, base,
-                                empty, empty, empty), wall, 6);
-                assertRecipe(helper, family + "_slab", grid(
-                                empty, empty, empty,
-                                base, base, base,
-                                empty, empty, empty), slab, 6);
-
-                assertRecipe(helper, family + "_slab", grid(
-                                empty, empty, empty,
-                                empty, empty, empty,
-                                base, base, base), slab, 6);
-
-                assertRecipe(helper, family + "_wall", grid(
-                                empty, empty, empty,
-                                base, base, base,
-                                base, base, base), wall, 6);
-
-                assertRecipe(helper, family + "_stairs", grid(
-                                empty, empty, base,
-                                empty, base, base,
-                                base, base, base), stairs, 4);
-        }
-
-        @GameTest
-        public void variantsRejectMixedFamilies(GameTestHelper helper) {
-                Item stillstone = ModBlocks.STILLSTONE.asItem();
-                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
-                Item empty = Items.AIR;
-
-                for (Item base : new Item[] { stillstone, reinforced }) {
-                        Item other = base == stillstone ? reinforced : stillstone;
-                        String family = base == stillstone ? "Stillstone" : "Reinforced Stillstone";
-
-                        assertNoRecipe(helper, family + " slabs must reject mixed blocks", grid(
-                                        base, other, base,
-                                        empty, empty, empty,
-                                        empty, empty, empty));
-                        assertNoRecipe(helper, family + " stairs must reject mixed blocks", grid(
-                                        base, empty, empty,
-                                        other, base, empty,
-                                        base, base, base));
-                        assertNoRecipe(helper, family + " walls must reject mixed blocks", grid(
-                                        base, base, base,
-                                        other, base, base,
-                                        empty, empty, empty));
-                }
+        public void stillstoneRecipeMatches(GameTestHelper helper) {
+                CraftingInput input = grid(
+                                Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE,
+                                Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI,
+                                Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE);
+                assertRecipe(helper, "stillstone", input, ModBlocks.STILLSTONE.asItem(), 5);
                 helper.succeed();
         }
 
@@ -250,20 +78,118 @@ public class AnkerstoneCraftingGameTests {
                 helper.succeed();
         }
 
-        private void assertNoRecipe(GameTestHelper helper, String message,
-                        CraftingInput input) {
-                helper.assertTrue(helper.getLevel().recipeAccess()
-                                .getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(),
-                                message);
+        @GameTest
+        public void recipesRejectWrongLayouts(GameTestHelper helper) {
+                Item cobbled = Items.COBBLED_DEEPSLATE;
+                Item lapis = Items.LAPIS_LAZULI;
+                Item iron = Items.IRON_NUGGET;
+                Item stillstone = ModBlocks.STILLSTONE.asItem();
+                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
+                Item dust = Items.REDSTONE;
+
+                assertNoRecipe(helper, "Stillstone requires the checkerboard layout", grid(
+                                cobbled, lapis, cobbled,
+                                lapis, lapis, cobbled,
+                                cobbled, lapis, cobbled));
+                assertNoRecipe(helper, "Reinforced Stillstone requires stone in the center", grid(
+                                iron, iron, iron,
+                                stillstone, iron, iron,
+                                iron, iron, iron));
+                assertNoRecipe(helper, "Ankerstone requires the pearl in the center", grid(
+                                reinforced, Items.ENDER_PEARL, reinforced,
+                                dust, dust, dust,
+                                reinforced, dust, reinforced));
+                helper.succeed();
         }
 
         @GameTest
-        public void stillstoneRecipeMatches(GameTestHelper helper) {
-                CraftingInput input = grid(
-                                Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE,
-                                Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI,
-                                Items.COBBLED_DEEPSLATE, Items.LAPIS_LAZULI, Items.COBBLED_DEEPSLATE);
-                assertRecipe(helper, "stillstone", input, ModBlocks.STILLSTONE.asItem(), 5);
+        public void stillstoneVariantsMatch(GameTestHelper helper) {
+                assertVariantRecipes(helper, "stillstone",
+                                ModBlocks.STILLSTONE.asItem(), ModBlocks.STILLSTONE_SLAB.asItem(),
+                                ModBlocks.STILLSTONE_STAIRS.asItem(), ModBlocks.STILLSTONE_WALL.asItem());
+                helper.succeed();
+        }
+
+        @GameTest
+        public void reinforcedStillstoneVariantsMatch(GameTestHelper helper) {
+                assertVariantRecipes(helper, "reinforced_stillstone",
+                                ModBlocks.REINFORCED_STILLSTONE.asItem(),
+                                ModBlocks.REINFORCED_STILLSTONE_SLAB.asItem(),
+                                ModBlocks.REINFORCED_STILLSTONE_STAIRS.asItem(),
+                                ModBlocks.REINFORCED_STILLSTONE_WALL.asItem());
+                helper.succeed();
+        }
+
+        @GameTest
+        public void variantsRejectMixedFamilies(GameTestHelper helper) {
+                Item stillstone = ModBlocks.STILLSTONE.asItem();
+                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
+                Item empty = Items.AIR;
+
+                for (Item base : new Item[] { stillstone, reinforced }) {
+                        Item other = base == stillstone ? reinforced : stillstone;
+                        String family = base == stillstone ? "Stillstone" : "Reinforced Stillstone";
+
+                        assertNoRecipe(helper, family + " slabs must reject mixed blocks", grid(
+                                        base, other, base,
+                                        empty, empty, empty,
+                                        empty, empty, empty));
+                        assertNoRecipe(helper, family + " stairs must reject mixed blocks", grid(
+                                        base, empty, empty,
+                                        other, base, empty,
+                                        base, base, base));
+                        assertNoRecipe(helper, family + " walls must reject mixed blocks", grid(
+                                        base, base, base,
+                                        other, base, base,
+                                        empty, empty, empty));
+                }
+                helper.succeed();
+        }
+
+        @GameTest
+        public void variantsRejectWrongLayouts(GameTestHelper helper) {
+                Item stillstone = ModBlocks.STILLSTONE.asItem();
+                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
+                Item empty = Items.AIR;
+
+                for (Item base : new Item[] { stillstone, reinforced }) {
+                        String family = base == stillstone ? "Stillstone" : "Reinforced Stillstone";
+
+                        assertNoRecipe(helper, family + " slabs require a horizontal row", grid(
+                                        base, empty, empty,
+                                        base, empty, empty,
+                                        base, empty, empty));
+
+                        assertNoRecipe(helper, family + " requires a valid six-block pattern", grid(
+                                        base, base, empty,
+                                        base, empty, base,
+                                        empty, base, base));
+
+                        assertNoRecipe(helper, family + " slabs must reject extra ingredients", grid(
+                                        base, base, base,
+                                        empty, base, empty,
+                                        empty, empty, empty));
+                }
+                helper.succeed();
+        }
+
+        @GameTest
+        public void stonecuttingRecipesMatch(GameTestHelper helper) {
+                Item stone = ModBlocks.STILLSTONE.asItem();
+                Item reinforced = ModBlocks.REINFORCED_STILLSTONE.asItem();
+
+                assertStonecuttingRecipe(helper, "stillstone_slab_from_stonecutting", stone,
+                                ModBlocks.STILLSTONE_SLAB.asItem(), 2);
+                assertStonecuttingRecipe(helper, "stillstone_stairs_from_stonecutting", stone,
+                                ModBlocks.STILLSTONE_STAIRS.asItem(), 1);
+                assertStonecuttingRecipe(helper, "stillstone_wall_from_stonecutting", stone,
+                                ModBlocks.STILLSTONE_WALL.asItem(), 1);
+                assertStonecuttingRecipe(helper, "reinforced_stillstone_slab_from_stonecutting", reinforced,
+                                ModBlocks.REINFORCED_STILLSTONE_SLAB.asItem(), 2);
+                assertStonecuttingRecipe(helper, "reinforced_stillstone_stairs_from_stonecutting", reinforced,
+                                ModBlocks.REINFORCED_STILLSTONE_STAIRS.asItem(), 1);
+                assertStonecuttingRecipe(helper, "reinforced_stillstone_wall_from_stonecutting", reinforced,
+                                ModBlocks.REINFORCED_STILLSTONE_WALL.asItem(), 1);
                 helper.succeed();
         }
 
@@ -287,4 +213,79 @@ public class AnkerstoneCraftingGameTests {
                 helper.assertTrue(result.getCount() == expectedCount,
                                 name + ": expected " + expectedCount + " items, got " + result.getCount());
         }
+
+        private void assertNoRecipe(GameTestHelper helper, String message,
+                        CraftingInput input) {
+                helper.assertTrue(helper.getLevel().recipeAccess()
+                                .getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel()).isEmpty(),
+                                message);
+        }
+
+        private void assertVariantRecipes(GameTestHelper helper, String family,
+                        Item base, Item slab, Item stairs, Item wall) {
+                Item empty = Items.AIR;
+
+                assertRecipe(helper, family + "_slab", grid(
+                                base, base, base,
+                                empty, empty, empty,
+                                empty, empty, empty), slab, 6);
+
+                assertRecipe(helper, family + "_stairs", grid(
+                                base, empty, empty,
+                                base, base, empty,
+                                base, base, base), stairs, 4);
+
+                assertRecipe(helper, family + "_wall", grid(
+                                base, base, base,
+                                base, base, base,
+                                empty, empty, empty), wall, 6);
+                assertRecipe(helper, family + "_slab", grid(
+                                empty, empty, empty,
+                                base, base, base,
+                                empty, empty, empty), slab, 6);
+
+                assertRecipe(helper, family + "_slab", grid(
+                                empty, empty, empty,
+                                empty, empty, empty,
+                                base, base, base), slab, 6);
+
+                assertRecipe(helper, family + "_wall", grid(
+                                empty, empty, empty,
+                                base, base, base,
+                                base, base, base), wall, 6);
+
+                assertRecipe(helper, family + "_stairs", grid(
+                                empty, empty, base,
+                                empty, base, base,
+                                base, base, base), stairs, 4);
+        }
+
+        private void assertStonecuttingRecipe(GameTestHelper helper, String name,
+                        Item ingredient, Item expectedItem, int expectedCount) {
+                ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE,
+                                Identifier.fromNamespaceAndPath("ankerstone", name));
+                RecipeHolder<?> holder = helper.getLevel().recipeAccess().byKey(key)
+                                .orElseThrow(() -> new AssertionError("Missing recipe: " + name));
+
+                if (!(holder.value() instanceof StonecutterRecipe recipe)) {
+                        throw new AssertionError("Expected a stonecutting recipe: " + name);
+                }
+                SingleRecipeInput input = new SingleRecipeInput(new ItemStack(ingredient));
+                helper.assertTrue(recipe.matches(input, helper.getLevel()),
+                                name + ": expected ingredient did not match");
+
+                Item otherFamily = ingredient == ModBlocks.STILLSTONE.asItem()
+                                ? ModBlocks.REINFORCED_STILLSTONE.asItem()
+                                : ModBlocks.STILLSTONE.asItem();
+                SingleRecipeInput wrongInput = new SingleRecipeInput(new ItemStack(otherFamily));
+                helper.assertFalse(recipe.matches(wrongInput, helper.getLevel()),
+                                name + ": must reject the other stone family");
+
+                ItemStack result = recipe.assemble(input);
+                helper.assertTrue(result.getItem() == expectedItem,
+                                name + ": wrong output item: " + result);
+                helper.assertTrue(result.getCount() == expectedCount,
+                                name + ": expected " + expectedCount + " items, got " + result.getCount());
+        }
+
 }
