@@ -188,7 +188,7 @@ public class AnkerstonePlacementGameTests {
                                 "Expected ticket levels " + expected + ", got " + actual);
         }
 
-        @GameTest
+        @GameTest(environment = "ankerstone-test:restoration")
         public void restoringSavedOwnersRebuildsSharedTickets(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
