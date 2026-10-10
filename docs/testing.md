@@ -36,6 +36,10 @@ Coverage includes:
 - non-player placement does not create attribution
 - Wide activation grants placer credit, including placement into existing power
 - offline activation queues credit; the join event awards it and clears the queue
+- Single and Wide activation grant placer credit, including placement into existing power
+- another player supplying power still credits the original placer
+- replacing a block assigns credit to its new placer
+- offline credit survives block removal; join delivery works in the Overworld and Nether
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
@@ -104,5 +108,4 @@ Checked on 2026-10-10 using Minecraft 26.1.2.
 - Obtaining each full-block item earned its corresponding advancement.
 - The tab, descriptions, icons, and tiled Stillstone background displayed correctly.
 - Stay a While used the Wide appearance; the inventory item stayed Off.
-- Activation credit is not implemented yet.
 - Activation credit has automated coverage; manual activation checks are still pending.
