@@ -1,0 +1,24 @@
+{
+  "parent": "ankerstone:pearl_of_an_idea",
+  "display": {
+    "icon": {
+      "id": "ankerstone:ankerstone",
+      "components": {
+        "minecraft:item_model": "ankerstone:advancement/ankerstone_wide"
+      }
+    },
+    "title": { "translate": "advancement.ankerstone.stay_a_while.title" },
+    "description": {
+      "translate": "advancement.ankerstone.stay_a_while.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "activated": { "trigger": "minecraft:impossible" }
+  },
+  "requirements": [["activated"]],
+  "sends_telemetry_event": false
+}

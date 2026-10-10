@@ -1,0 +1,10 @@
+{
+  "parent": "ankerstone:block/ankerstone_wide",
+  "gui_light": "side",
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "scale": [0.625, 0.625, 0.625]
+    }
+  }
+}

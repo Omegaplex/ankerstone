@@ -2,7 +2,7 @@
 
 This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
 
-**Status (2026-10-10):** Core lore, four advancement names/descriptions, progression, and player-facing activation credit are agreed. Public-facing prose below is a draft for reuse and editing. Advancements and player-placement tracking are **not yet implemented**; existing recipe-book unlocks are separate and already implemented.
+**Status (2026-10-10):** Core lore, four advancement names/descriptions, progression, and player-facing activation credit are agreed. Public-facing prose below is a draft for reuse and editing. The first three advancements work, while Stay a While has its display but still needs player attribution.*; existing recipe-book unlocks are separate and already implemented.
 
 ## Full Lore
 
@@ -91,9 +91,12 @@ Add a **dedicated Ankerstone advancement tab**. These are visible progression mi
 | 3 | Pearl of an Idea | Give an ender pearl a reason to stay put. | Obtain an Ankerstone item | Ankerstone (ordinary Off item appearance) | Goal |
 | 4 | Stay a While | Keep a piece of the world from slipping away. | First activation of an Ankerstone attributed to its placer | **Wide Ankerstone appearance** | Goal |
 
-**Display decisions:** use stillstone as the advancement tab background and a stillstone icon for its root; show all four advancements, allow toast and chat announcement, and give no additional item or experience rewards.
-
-**Icon note:** The current Ankerstone item model renders the Off appearance. Using the block item as the fourth icon may therefore not display Wide. Implement an advancement-specific way to show the existing Wide texture/model **without changing the normal Ankerstone inventory item**; verify the correct approach for the target Minecraft version.
+**Display decisions:**
+- use normal vanilla visibility
+- tab title `A Strange Stillness`; use stillstone as the advancement tab background and a stillstone icon for its root
+- show all four advancements
+- allow toast and chat announcement, and give no additional item or experience rewards.
+- Stay a While uses an advancement-only item model selected through minecraft:item_model. The normal inventory item keeps its Off appearance.
 
 ### Material milestones
 
@@ -118,14 +121,18 @@ Intended persistence and multiplayer behavior:
 
 **Verified existing-code limitation (2026-10-10):** `AnkerstoneSavedData` persists active **block positions and modes** only. `AnkerstoneChunkTickets` calls those blocks *owners* of chunk tickets. Neither currently identifies a **player** or maintains placement credit for an Off block. Player identity/pending-credit persistence must be designed separately or carefully integrated; do not mistake ticket ownership for player ownership.
 
-### Open technical decisions / tests
+### Implementation Decisions
 
-These are implementation questions rather than approved additional advancements:
+- Keep player attribution separate from chunk-ticket ownership.
+- Creative placement by a player counts.
+- Commands and older blocks without a known placer do not earn activation credit.
+- Breaking and replacing a block assigns its new placer.
+- Off Ankerstone keeps its original placer through intact piston movement.
+- Earned offline credit survives removal of the block.
+- Pending credit can be delivered regardless of the player's current dimension.
+- Store only the positions, dimensions, and UUIDs needed for attribution.
+- Placement records can be removed once activation credit is awarded or safely queued.
+- Advancement parents organize the tree; they do not gate item acquisition.
 
-- **Piston movement while Off:** decide whether placer attribution follows the same physical Ankerstone when it is pushed or pulled, and ensure position-based storage cannot credit the wrong block. Preferred experience: keep its original placer if the block moves intact.
-- **Unattributed placement:** decide behavior for commands, world editing, or other placements with no identifiable player. Preferred default: award no placer-based activation credit rather than guessing.
-- **Existing worlds:** decide whether Ankerstones placed before the player-attribution feature can ever earn Stay a While. Without trustworthy attribution, do not guess an owner.
-- **Icon technical support:** check how the target Minecraft version represents advancement icon item-model components before selecting the implementation.
-- **Validation:** test direct and automated activation, placement next to existing power, another player providing power, offline credit and relog, server restart while Off, break-and-replace, two players' blocks, piston movement, and creative/command placement.
-
-Do not implement the advancements or player tracking until these technical paths have been reviewed. Preserve the existing chunk-ticket behavior and recipe unlocks.
+Player attribution, persistence, offline credit, and piston transfers still need
+implementation and tests. Preserve existing chunk tickets and recipe unlocks.

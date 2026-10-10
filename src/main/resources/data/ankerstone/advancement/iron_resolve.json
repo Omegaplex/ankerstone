@@ -1,0 +1,21 @@
+{ "parent": "ankerstone:root",
+  "display": {
+    "icon": { "id": "ankerstone:reinforced_stillstone" },
+    "title": { "translate": "advancement.ankerstone.iron_resolve.title" },
+    "description": { "translate": "advancement.ankerstone.iron_resolve.description" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtained": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{ "items": "ankerstone:reinforced_stillstone" }]
+      }
+    }
+  },
+  "requirements": [["obtained"]],
+  "sends_telemetry_event": false
+}

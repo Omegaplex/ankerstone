@@ -1,0 +1,22 @@
+{
+  "display": {
+    "icon": { "id": "ankerstone:stillstone" },
+    "title": { "translate": "advancement.ankerstone.root.title" },
+    "description": { "translate": "advancement.ankerstone.root.description" },
+    "background": "ankerstone:block/stillstone",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "obtained": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{ "items": "ankerstone:stillstone" }]
+      }
+    }
+  },
+  "requirements": [["obtained"]],
+  "sends_telemetry_event": false
+}

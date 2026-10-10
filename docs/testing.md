@@ -13,6 +13,7 @@ Run from the repository root on Windows:
 on pushes and pull requests.
 
 Coverage includes:
+
 - shared and mixed-mode tickets
 - owner serialization
 - ticket restoration
@@ -23,6 +24,10 @@ Coverage includes:
 - loot item/count checks
 - recipe matching and invalid ingredient/layout rejection
 - crafting output item/count checks
+- advancement acquisition for the three full-block items
+- decorative variants excluded from material milestones
+- obtaining Ankerstone does not grant activation credit
+- Wide model selection for the activation advancement icon
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
@@ -83,3 +88,12 @@ using Minecraft 26.1.2.
 - Recipe-book discovery passed in a fresh world: lapis unlocked Stillstone, Stillstone unlocked Reinforced Stillstone, and Reinforced Stillstone unlocked Ankerstone. _Checked on 2026-10-07 using Minecraft 26.1.2._
 
 - Both families' variant recipes passed in-game checks on 2026-10-09 using Minecraft 26.1.2. Obtaining each base block unlocked its crafting recipes in a fresh Survival world. Crafting produced six slabs, four stairs, or six walls; stonecutting produced two slabs, one stair, or one wall.
+
+## Manual Advancement Check
+
+Checked on 2026-10-10 using Minecraft 26.1.2.
+
+- Obtaining each full-block item earned its corresponding advancement.
+- The tab, descriptions, icons, and tiled Stillstone background displayed correctly.
+- Stay a While used the Wide appearance; the inventory item stayed Off.
+- Activation credit is not implemented yet.
