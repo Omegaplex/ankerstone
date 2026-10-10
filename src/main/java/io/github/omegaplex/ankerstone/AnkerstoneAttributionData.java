@@ -10,10 +10,14 @@ import java.util.Set;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
@@ -68,6 +72,21 @@ public class AnkerstoneAttributionData extends SavedData {
         UUID previous = placers.put(key, placer);
 
         if (!placer.equals(previous)) {
+            setDirty();
+        }
+    }
+
+    public void movePlacers(ResourceKey<Level> dimension,
+            List<BlockPos> positions, Direction movement) {
+        Map<GlobalPos, UUID> moved = new HashMap<>();
+        for (BlockPos pos : positions) {
+            UUID placer = placers.remove(GlobalPos.of(dimension, pos));
+            if (placer != null) {
+                moved.put(GlobalPos.of(dimension, pos.relative(movement)), placer);
+            }
+        }
+        if (!moved.isEmpty()) {
+            placers.putAll(moved);
             setDirty();
         }
     }

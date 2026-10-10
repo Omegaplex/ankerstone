@@ -2,7 +2,7 @@
 
 This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
 
-**Status (2026-10-10):** Lore and advancement wording are agreed. Acquisition and activation credit are implemented, including offline credit and join delivery. Piston attribution and actual restart checks are still pending. Public-facing prose remains a draft; recipe-book unlocks are separate.
+**Status (2026-10-10):** Lore and advancement wording are agreed. Acquisition and activation credit are implemented, including offline credit and join delivery. Piston attribution is implemented and tested. Actual restart and interrupted-movement checks are still pending. Public-facing prose remains a draft; recipe-book unlocks are separate.
 
 ## Full Lore
 
@@ -136,8 +136,8 @@ Chunk-ticket ownership in `AnkerstoneSavedData` and `AnkerstoneChunkTickets` tra
 
 Attribution storage and basic activation credit are implemented and tested. Still to do:
 
-- check the remaining multiplayer and dimension edge cases
-- carry attribution through piston movement
+- check Creative placement and activation without a known placer
+- check interrupted piston movement
 - check saving and loading across an actual restart
 
 Keep existing chunk tickets and recipe unlocks working as they are.

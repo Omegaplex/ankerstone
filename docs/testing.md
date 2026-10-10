@@ -34,12 +34,13 @@ Coverage includes:
 - save flags for placement and pending-credit changes
 - player placement records the placer; ordinary removal clears the record
 - non-player placement does not create attribution
-- Wide activation grants placer credit, including placement into existing power
-- offline activation queues credit; the join event awards it and clears the queue
 - Single and Wide activation grant placer credit, including placement into existing power
 - another player supplying power still credits the original placer
 - replacing a block assigns credit to its new placer
 - offline credit survives block removal; join delivery works in the Overworld and Nether
+- piston pushes and sticky pulls preserve the original placer
+- adjacent moves preserve each block's placer; blocked moves leave attribution unchanged
+- Single and Wide activation after piston movement queue credit for the original placer
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.
