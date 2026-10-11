@@ -37,12 +37,7 @@ public class AnkerstoneActivationGameTests {
 
                 try {
                         helper.setBlock(localPos.below(), Blocks.STONE);
-                        ItemStack stack = new ItemStack(ModBlocks.ANKERSTONE.asItem());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-                        BlockHitResult hit = new BlockHitResult(
-                                        Vec3.atBottomCenterOf(absolutePos),
-                                        Direction.UP, absolutePos.below(), false);
-                        stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+                        placeBlockAsPlayer(helper, player, localPos, ModBlocks.ANKERSTONE);
 
                         helper.assertBlockPresent(ModBlocks.ANKERSTONE, localPos);
                         helper.assertBlockProperty(localPos,
@@ -70,12 +65,7 @@ public class AnkerstoneActivationGameTests {
 
                 try {
                         helper.setBlock(localPos.below(), Blocks.STONE);
-                        ItemStack stack = new ItemStack(ModBlocks.ANKERSTONE.asItem());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-                        BlockHitResult hit = new BlockHitResult(
-                                        Vec3.atBottomCenterOf(absolutePos),
-                                        Direction.UP, absolutePos.below(), false);
-                        stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+                        placeBlockAsPlayer(helper, player, localPos, ModBlocks.ANKERSTONE);
                         helper.assertTrue(player.getUUID().equals(data.getPlacer(position)),
                                         "Placement must record a placer before testing removal");
 
@@ -142,54 +132,6 @@ public class AnkerstoneActivationGameTests {
         @GameTest
         public void wideActivationGrantsPlacerAdvancement(GameTestHelper helper) {
                 assertActivationGrantsPlacer(helper, 15, AnkerstoneMode.WIDE);
-        }
-
-        @SuppressWarnings("removal")
-        private void assertActivationGrantsPlacer(GameTestHelper helper,
-                        int power, AnkerstoneMode expectedMode) {
-                BlockPos localPos = new BlockPos(2, 2, 2);
-                BlockPos absolutePos = helper.absolutePos(localPos);
-                GlobalPos position = GlobalPos.of(
-                                helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
-                AdvancementHolder advancement = helper.getLevel().getServer()
-                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
-                                                "ankerstone", "stay_a_while"));
-                helper.assertTrue(advancement != null, "Missing activation advancement");
-                ServerPlayer player = helper.makeMockServerPlayerInLevel();
-
-                try {
-                        helper.setBlock(localPos.below(), Blocks.STONE);
-                        ItemStack stack = new ItemStack(ModBlocks.ANKERSTONE.asItem());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-                        BlockHitResult hit = new BlockHitResult(
-                                        Vec3.atBottomCenterOf(absolutePos),
-                                        Direction.UP, absolutePos.below(), false);
-                        stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
-
-                        helper.assertBlockProperty(localPos,
-                                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                        helper.assertTrue(player.getUUID().equals(data.getPlacer(position)),
-                                        "Placement must record the original placer");
-                        helper.assertFalse(player.getAdvancements()
-                                        .getOrStartProgress(advancement).isDone(),
-                                        "Unpowered placement must not grant activation");
-
-                        helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
-                                        .setValue(DaylightDetectorBlock.POWER, power));
-
-                        helper.assertBlockProperty(localPos,
-                                        AnkerstoneBlock.MODE, expectedMode);
-                        helper.assertTrue(player.getAdvancements()
-                                        .getOrStartProgress(advancement).isDone(),
-                                        "Activation must grant the placer advancement");
-                } finally {
-                        helper.setBlock(localPos, Blocks.AIR);
-                        helper.setBlock(localPos.below(), Blocks.AIR);
-                        data.removePlacer(position);
-                        helper.getLevel().getServer().getPlayerList().remove(player);
-                }
-                helper.succeed();
         }
 
         @GameTest
@@ -274,63 +216,6 @@ public class AnkerstoneActivationGameTests {
         @GameTest
         public void widePoweredPlacementGrantsAdvancement(GameTestHelper helper) {
                 assertPoweredPlacementGrantsAdvancement(helper, 15, AnkerstoneMode.WIDE);
-        }
-
-        @SuppressWarnings("removal")
-        private void assertPoweredPlacementGrantsAdvancement(GameTestHelper helper,
-                        int power, AnkerstoneMode expectedMode) {
-                BlockPos localPos = new BlockPos(2, 2, 2);
-                BlockPos absolutePos = helper.absolutePos(localPos);
-                GlobalPos position = GlobalPos.of(
-                                helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
-                AdvancementHolder advancement = helper.getLevel().getServer()
-                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
-                                                "ankerstone", "stay_a_while"));
-                helper.assertTrue(advancement != null, "Missing activation advancement");
-                ServerPlayer player = helper.makeMockServerPlayerInLevel();
-
-                try {
-                        helper.assertTrue(player.isCreative(),
-                                        "Powered placement fixture must be Creative");
-                        helper.assertFalse(player.getAdvancements()
-                                        .getOrStartProgress(advancement).isDone(),
-                                        "Activation advancement must start incomplete");
-
-                        helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
-                                        .setValue(DaylightDetectorBlock.POWER, power));
-                        ItemStack stack = new ItemStack(ModBlocks.ANKERSTONE.asItem());
-                        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-                        BlockHitResult hit = new BlockHitResult(
-                                        Vec3.atBottomCenterOf(absolutePos),
-                                        Direction.UP, absolutePos.below(), false);
-                        stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
-
-                        helper.assertBlockProperty(localPos,
-                                        AnkerstoneBlock.MODE, expectedMode);
-                        helper.assertTrue(player.getAdvancements()
-                                        .getOrStartProgress(advancement).isDone(),
-                                        "Powered placement must grant activation credit");
-                        helper.assertTrue(data.getPlacer(position) == null,
-                                        "Credited placement no longer needs its placer record");
-                } finally {
-                        helper.setBlock(localPos, Blocks.AIR);
-                        helper.setBlock(localPos.below(), Blocks.AIR);
-                        data.removePlacer(position);
-                        helper.getLevel().getServer().getPlayerList().remove(player);
-                }
-                helper.succeed();
-        }
-
-        private void placeBlockAsPlayer(GameTestHelper helper, ServerPlayer player,
-                        BlockPos localPos, Block block) {
-                BlockPos absolutePos = helper.absolutePos(localPos);
-                ItemStack stack = new ItemStack(block.asItem());
-                player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-                BlockHitResult hit = new BlockHitResult(
-                                Vec3.atBottomCenterOf(absolutePos),
-                                Direction.UP, absolutePos.below(), false);
-                stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
         }
 
         @GameTest
@@ -457,4 +342,100 @@ public class AnkerstoneActivationGameTests {
                 }
                 helper.succeed();
         }
+
+        @SuppressWarnings("removal")
+        private void assertActivationGrantsPlacer(GameTestHelper helper,
+                        int power, AnkerstoneMode expectedMode) {
+                BlockPos localPos = new BlockPos(2, 2, 2);
+                BlockPos absolutePos = helper.absolutePos(localPos);
+                GlobalPos position = GlobalPos.of(
+                                helper.getLevel().dimension(), absolutePos);
+                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AdvancementHolder advancement = helper.getLevel().getServer()
+                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
+                                                "ankerstone", "stay_a_while"));
+                helper.assertTrue(advancement != null, "Missing activation advancement");
+                ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+                try {
+                        helper.setBlock(localPos.below(), Blocks.STONE);
+                        placeBlockAsPlayer(helper, player, localPos, ModBlocks.ANKERSTONE);
+
+                        helper.assertBlockProperty(localPos,
+                                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                        helper.assertTrue(player.getUUID().equals(data.getPlacer(position)),
+                                        "Placement must record the original placer");
+                        helper.assertFalse(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Unpowered placement must not grant activation");
+
+                        helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
+                                        .setValue(DaylightDetectorBlock.POWER, power));
+
+                        helper.assertBlockProperty(localPos,
+                                        AnkerstoneBlock.MODE, expectedMode);
+                        helper.assertTrue(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Activation must grant the placer advancement");
+                } finally {
+                        helper.setBlock(localPos, Blocks.AIR);
+                        helper.setBlock(localPos.below(), Blocks.AIR);
+                        data.removePlacer(position);
+                        helper.getLevel().getServer().getPlayerList().remove(player);
+                }
+                helper.succeed();
+        }
+
+        @SuppressWarnings("removal")
+        private void assertPoweredPlacementGrantsAdvancement(GameTestHelper helper,
+                        int power, AnkerstoneMode expectedMode) {
+                BlockPos localPos = new BlockPos(2, 2, 2);
+                BlockPos absolutePos = helper.absolutePos(localPos);
+                GlobalPos position = GlobalPos.of(
+                                helper.getLevel().dimension(), absolutePos);
+                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AdvancementHolder advancement = helper.getLevel().getServer()
+                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
+                                                "ankerstone", "stay_a_while"));
+                helper.assertTrue(advancement != null, "Missing activation advancement");
+                ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+                try {
+                        helper.assertTrue(player.isCreative(),
+                                        "Powered placement fixture must be Creative");
+                        helper.assertFalse(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Activation advancement must start incomplete");
+
+                        helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
+                                        .setValue(DaylightDetectorBlock.POWER, power));
+                        placeBlockAsPlayer(helper, player, localPos, ModBlocks.ANKERSTONE);
+
+                        helper.assertBlockProperty(localPos,
+                                        AnkerstoneBlock.MODE, expectedMode);
+                        helper.assertTrue(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Powered placement must grant activation credit");
+                        helper.assertTrue(data.getPlacer(position) == null,
+                                        "Credited placement no longer needs its placer record");
+                } finally {
+                        helper.setBlock(localPos, Blocks.AIR);
+                        helper.setBlock(localPos.below(), Blocks.AIR);
+                        data.removePlacer(position);
+                        helper.getLevel().getServer().getPlayerList().remove(player);
+                }
+                helper.succeed();
+        }
+
+        private void placeBlockAsPlayer(GameTestHelper helper, ServerPlayer player,
+                        BlockPos localPos, Block block) {
+                BlockPos absolutePos = helper.absolutePos(localPos);
+                ItemStack stack = new ItemStack(block.asItem());
+                player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                BlockHitResult hit = new BlockHitResult(
+                                Vec3.atBottomCenterOf(absolutePos),
+                                Direction.UP, absolutePos.below(), false);
+                stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        }
+
 }
