@@ -1,5 +1,6 @@
 package io.github.omegaplex.ankerstone;
 
+import java.util.List;
 import java.util.UUID;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -12,7 +13,9 @@ import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.PistonType;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.level.TicketStorage;
 
 public class AnkerstonePistonGameTests {
     @GameTest
@@ -31,16 +34,25 @@ public class AnkerstonePistonGameTests {
         helper.succeed();
     }
 
-    @GameTest(maxTicks = 40)
-    public void offAnkerstoneCanBePushed(GameTestHelper helper) {
-        BlockPos piston = new BlockPos(2, 2, 2);
-        BlockPos start = piston.east();
-        BlockPos destination = start.east();
-        BlockPos power = piston.west();
+    private void assertOffAnkerstoneCanBePushed(
+            GameTestHelper helper, Direction direction) {
+        BlockPos piston = new BlockPos(3, 3, 3);
+        BlockPos start = piston.relative(direction);
+        BlockPos destination = start.relative(direction);
+        assertNoAnkerstoneTickets(helper, start);
+        assertNoAnkerstoneTickets(helper, destination);
+        BlockPos power = piston.relative(direction.getOpposite());
+        GlobalPos oldPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(start));
+        GlobalPos newPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(destination));
+        UUID placer = UUID.randomUUID();
+        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
-                    .setValue(PistonBaseBlock.FACING, Direction.EAST));
+                    .setValue(PistonBaseBlock.FACING, direction));
             helper.setBlock(start, ModBlocks.ANKERSTONE);
+            data.setPlacer(oldPosition, placer);
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
             helper.assertBlockPresent(Blocks.AIR, destination);
 
@@ -61,28 +73,46 @@ public class AnkerstonePistonGameTests {
                     helper.assertFalse(savedData.getOwnerModes().containsKey(
                             helper.absolutePos(destination)),
                             "Off push must not register an owner at the destination");
+                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
+                            "Off push must preserve the placer at the destination");
+                    helper.assertTrue(data.getPlacer(oldPosition) == null,
+                            "Off push must clear the old placer record");
+                    assertNoAnkerstoneTickets(helper, start);
+                    assertNoAnkerstoneTickets(helper, destination);
                 } finally {
-                    clearPistonFixture(helper, piston);
+                    clearOffPistonFixture(helper, piston, direction);
+                    data.removePlacer(oldPosition);
+                    data.removePlacer(newPosition);
                 }
                 helper.succeed();
             });
         } catch (RuntimeException failure) {
-            clearPistonFixture(helper, piston);
+            clearOffPistonFixture(helper, piston, direction);
+            data.removePlacer(oldPosition);
+            data.removePlacer(newPosition);
             throw failure;
         }
     }
 
-    @GameTest(maxTicks = 40)
-    public void offAnkerstoneCanBePulled(GameTestHelper helper) {
-        BlockPos piston = new BlockPos(2, 2, 2);
-        BlockPos start = piston.east();
-        BlockPos destination = start.east();
-        BlockPos power = piston.west();
+    private void assertOffAnkerstoneCanBePulled(
+            GameTestHelper helper, Direction direction) {
+        BlockPos piston = new BlockPos(3, 3, 3);
+        BlockPos start = piston.relative(direction);
+        BlockPos destination = start.relative(direction);
+        BlockPos power = piston.relative(direction.getOpposite());
+        GlobalPos oldPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(start));
+        GlobalPos newPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(destination));
+        UUID placer = UUID.randomUUID();
+        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
-                    .setValue(PistonBaseBlock.FACING, Direction.EAST));
+                    .setValue(PistonBaseBlock.FACING, direction));
             helper.setBlock(start, ModBlocks.ANKERSTONE);
+            data.setPlacer(oldPosition, placer);
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+            assertNoActiveOwnersOrTickets(helper, start, destination);
             helper.setBlock(power, Blocks.REDSTONE_BLOCK);
 
             helper.runAfterDelay(10, () -> {
@@ -93,9 +123,16 @@ public class AnkerstonePistonGameTests {
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
                     helper.assertBlockProperty(destination,
                             AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
+                            "Sticky extension must preserve the placer");
+                    helper.assertTrue(data.getPlacer(oldPosition) == null,
+                            "Sticky extension must clear the old placer record");
+                    assertNoActiveOwnersOrTickets(helper, start, destination);
                     helper.setBlock(power, Blocks.AIR);
                 } catch (RuntimeException failure) {
-                    clearPistonFixture(helper, piston);
+                    clearOffPistonFixture(helper, piston, direction);
+                    data.removePlacer(oldPosition);
+                    data.removePlacer(newPosition);
                     throw failure;
                 }
             });
@@ -108,13 +145,22 @@ public class AnkerstonePistonGameTests {
                     helper.assertBlockProperty(start,
                             AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
                     helper.assertBlockPresent(Blocks.AIR, destination);
+                    helper.assertTrue(placer.equals(data.getPlacer(oldPosition)),
+                            "Sticky retraction must return the original placer");
+                    helper.assertTrue(data.getPlacer(newPosition) == null,
+                            "Sticky retraction must clear the outer placer record");
+                    assertNoActiveOwnersOrTickets(helper, start, destination);
                 } finally {
-                    clearPistonFixture(helper, piston);
+                    clearOffPistonFixture(helper, piston, direction);
+                    data.removePlacer(oldPosition);
+                    data.removePlacer(newPosition);
                 }
                 helper.succeed();
             });
         } catch (RuntimeException failure) {
-            clearPistonFixture(helper, piston);
+            clearOffPistonFixture(helper, piston, direction);
+            data.removePlacer(oldPosition);
+            data.removePlacer(newPosition);
             throw failure;
         }
     }
@@ -137,6 +183,36 @@ public class AnkerstonePistonGameTests {
     @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
     public void movedAnkerstoneActivatesWide(GameTestHelper helper) {
         assertMovedAnkerstoneActivates(helper, AnkerstoneMode.WIDE);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulled(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.EAST);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulledWest(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.WEST);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulledNorth(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.NORTH);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulledSouth(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.SOUTH);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulledUp(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.UP);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePulledDown(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.DOWN);
     }
 
     @GameTest(maxTicks = 40)
@@ -383,6 +459,59 @@ public class AnkerstonePistonGameTests {
         }
     }
 
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushed(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.EAST);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushedWest(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.WEST);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushedNorth(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.NORTH);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushedSouth(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.SOUTH);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushedUp(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.UP);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void offAnkerstoneCanBePushedDown(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.DOWN);
+    }
+
+    private void assertNoAnkerstoneTickets(GameTestHelper helper, BlockPos localPos) {
+        ChunkPos chunk = ChunkPos.containing(helper.absolutePos(localPos));
+        TicketStorage storage = helper.getLevel().getChunkSource()
+                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+        long count = storage.getTickets(chunk.pack()).stream()
+                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .count();
+
+        helper.assertTrue(count == 0,
+                "Expected no Ankerstone tickets at " + chunk + ", got " + count);
+    }
+
+    private void assertNoActiveOwnersOrTickets(GameTestHelper helper,
+            BlockPos first, BlockPos second) {
+        AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+        for (BlockPos pos : List.of(first, second)) {
+            helper.assertFalse(savedData.getOwnerModes().containsKey(
+                    helper.absolutePos(pos)),
+                    "Off movement must not register an owner at " + pos);
+            assertNoAnkerstoneTickets(helper, pos);
+        }
+    }
+
     private void assertActiveAnkerstoneCannotBePushed(GameTestHelper helper,
             AnkerstoneMode mode) {
         BlockPos piston = new BlockPos(2, 2, 2);
@@ -506,4 +635,11 @@ public class AnkerstonePistonGameTests {
         }
     }
 
+    private void clearOffPistonFixture(GameTestHelper helper,
+            BlockPos piston, Direction direction) {
+        helper.setBlock(piston.relative(direction, 2), Blocks.AIR);
+        helper.setBlock(piston, Blocks.AIR);
+        helper.setBlock(piston.relative(direction), Blocks.AIR);
+        helper.setBlock(piston.relative(direction.getOpposite()), Blocks.AIR);
+    }
 }

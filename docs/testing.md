@@ -33,7 +33,7 @@ Coverage includes:
 - shared attribution storage across dimensions
 - pending credit serialization, clearing, and retention after placement-record removal
 - save flags for placement and pending-credit changes
-- player placement records the placer; ordinary removal clears the record
+- Off pushes and sticky-piston round trips in all six directions preserve the placer and leave no active owners or Ankerstone tickets
 - activation without a known placer does not credit the player supplying power
 - Single and Wide activation grant placer credit, including placement into existing power
 - another player supplying power still credits the original placer
@@ -46,6 +46,8 @@ Coverage includes:
 - moved attribution requires saving and survives serialization at its destination
 - Observer pulses and connected lamp output on activation, upgrade to Wide, and deactivation
 - real comparator circuits updating to 0, 7, and 15, including decreases
+
+Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.

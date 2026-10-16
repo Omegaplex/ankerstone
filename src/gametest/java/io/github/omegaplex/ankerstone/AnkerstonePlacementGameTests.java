@@ -70,7 +70,7 @@ public class AnkerstonePlacementGameTests {
                 helper.succeed();
         }
 
-        @GameTest
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
         public void sharedTicketRemainsUntilLastOwnerIsRemoved(GameTestHelper helper) {
                 BlockPos first = new BlockPos(2, 2, 2);
                 BlockPos second = new BlockPos(2, 4, 2);
@@ -99,7 +99,7 @@ public class AnkerstonePlacementGameTests {
                 helper.succeed();
         }
 
-        @GameTest
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
         public void mixedModesKeepTheirOwnTickets(GameTestHelper helper) {
                 BlockPos single = new BlockPos(2, 2, 2);
                 BlockPos wide = new BlockPos(2, 6, 2);
@@ -232,10 +232,7 @@ public class AnkerstonePlacementGameTests {
                         helper.setBlock(anchor.below(), Blocks.AIR);
                 };
                 try {
-                        helper.setBlock(anchor.below(),
-                                        Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
-                                                        .setValue(DaylightDetectorBlock.POWER,
-                                                                        initialPower));
+                        setTestPower(helper, anchor, initialPower);
                         helper.setBlock(anchor, ModBlocks.ANKERSTONE);
                         helper.setBlock(observer, Blocks.OBSERVER.defaultBlockState()
                                         .setValue(ObserverBlock.FACING, Direction.EAST));
@@ -274,8 +271,7 @@ public class AnkerstonePlacementGameTests {
 
         private void setPowerAndAssert(GameTestHelper helper, BlockPos localPos,
                         int power, AnkerstoneMode expectedMode) {
-                helper.setBlock(localPos.below(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
-                                .setValue(DaylightDetectorBlock.POWER, power));
+                setTestPower(helper, localPos, power);
                 helper.assertBlockProperty(localPos, AnkerstoneBlock.MODE, expectedMode);
 
                 AnkerstoneMode actualOwner = AnkerstoneSavedData.get(helper.getLevel())
@@ -340,6 +336,16 @@ public class AnkerstonePlacementGameTests {
                 helper.succeed();
         }
 
+        private void setTestPower(GameTestHelper helper,
+                        BlockPos anchor, int power) {
+                helper.setBlock(anchor.below(),
+                                Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
+                                                .setValue(DaylightDetectorBlock.POWER, power));
+                // Keep the chosen signal instead of recalculating it from sunlight.
+                helper.getLevel().removeBlockEntity(
+                                helper.absolutePos(anchor.below()));
+        }
+
         private void assertTicketCount(GameTestHelper helper, ChunkPos chunk, int expected) {
                 TicketStorage storage = helper.getLevel().getChunkSource()
                                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
@@ -375,12 +381,10 @@ public class AnkerstonePlacementGameTests {
                                 comparator.below(), output.below(), anchor.below());
                 Runnable cleanup = () -> fixture.forEach(
                                 pos -> helper.setBlock(pos, Blocks.AIR));
-                BlockState source = Blocks.DAYLIGHT_DETECTOR.defaultBlockState();
                 try {
                         helper.setBlock(comparator.below(), Blocks.STONE);
                         helper.setBlock(output.below(), Blocks.STONE);
-                        helper.setBlock(anchor.below(),
-                                        source.setValue(DaylightDetectorBlock.POWER, initialPower));
+                        setTestPower(helper, anchor, initialPower);
                         helper.setBlock(anchor, ModBlocks.ANKERSTONE);
                         helper.setBlock(comparator, Blocks.COMPARATOR.defaultBlockState()
                                         .setValue(ComparatorBlock.FACING, Direction.EAST));
@@ -390,9 +394,7 @@ public class AnkerstonePlacementGameTests {
                                 try {
                                         helper.assertBlockProperty(output,
                                                         RedStoneWireBlock.POWER, initialOutput);
-                                        helper.setBlock(anchor.below(),
-                                                        source.setValue(DaylightDetectorBlock.POWER,
-                                                                        targetPower));
+                                        setTestPower(helper, anchor, targetPower);
                                         helper.runAfterDelay(3, () -> {
                                                 try {
                                                         helper.assertBlockProperty(output,
