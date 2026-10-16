@@ -34,9 +34,68 @@ public class AnkerstonePistonGameTests {
         helper.succeed();
     }
 
+    @GameTest(environment = "ankerstone-test:off_movement", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void offPushCrossesXChunkBoundary(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.EAST,
+                pistonBeforeChunkBoundary(helper, Direction.EAST));
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void offPushCrossesZChunkBoundary(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePushed(helper, Direction.SOUTH,
+                pistonBeforeChunkBoundary(helper, Direction.SOUTH));
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void stickyRoundTripCrossesXChunkBoundary(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.EAST,
+                pistonBeforeChunkBoundary(helper, Direction.EAST));
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void stickyRoundTripCrossesZChunkBoundary(GameTestHelper helper) {
+        assertOffAnkerstoneCanBePulled(helper, Direction.SOUTH,
+                pistonBeforeChunkBoundary(helper, Direction.SOUTH));
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void crossingChunkBoundaryActivatesSingle(GameTestHelper helper) {
+        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.SINGLE,
+                pistonBeforeChunkBoundary(helper, Direction.EAST));
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void crossingChunkBoundaryActivatesWide(GameTestHelper helper) {
+        assertMovedAnkerstoneActivates(helper, AnkerstoneMode.WIDE,
+                pistonBeforeChunkBoundary(helper, Direction.EAST));
+    }
+
+    private BlockPos pistonBeforeChunkBoundary(GameTestHelper helper, Direction direction) {
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        boolean alongX = direction == Direction.EAST;
+        int coordinate = alongX ? origin.getX() : origin.getZ();
+        int boundary = (Math.floorDiv(coordinate + 4, 16) + 1) * 16;
+        int offset = boundary - coordinate - 2;
+        BlockPos piston = alongX
+                ? new BlockPos(offset, 3, 3)
+                : new BlockPos(3, 3, offset);
+        ChunkPos start = ChunkPos.containing(
+                helper.absolutePos(piston.relative(direction)));
+        ChunkPos destination = ChunkPos.containing(
+                helper.absolutePos(piston.relative(direction, 2)));
+
+        helper.assertFalse(start.equals(destination),
+                "The fixture must cross an actual chunk boundary");
+        return piston;
+    }
+
     private void assertOffAnkerstoneCanBePushed(
             GameTestHelper helper, Direction direction) {
-        BlockPos piston = new BlockPos(3, 3, 3);
+        assertOffAnkerstoneCanBePushed(helper, direction, new BlockPos(3, 3, 3));
+    }
+
+    private void assertOffAnkerstoneCanBePushed(
+            GameTestHelper helper, Direction direction, BlockPos piston) {
         BlockPos start = piston.relative(direction);
         BlockPos destination = start.relative(direction);
         assertNoAnkerstoneTickets(helper, start);
@@ -94,9 +153,29 @@ public class AnkerstonePistonGameTests {
         }
     }
 
+    private void assertAnkerstoneTicketLevel(GameTestHelper helper,
+            BlockPos localPos, int expectedLevel) {
+        ChunkPos chunk = ChunkPos.containing(helper.absolutePos(localPos));
+        TicketStorage storage = helper.getLevel().getChunkSource()
+                .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
+        List<Integer> levels = storage.getTickets(chunk.pack()).stream()
+                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .map(ticket -> ticket.getTicketLevel())
+                .sorted()
+                .toList();
+
+        helper.assertTrue(levels.equals(List.of(expectedLevel)),
+                "Expected Ankerstone ticket level " + expectedLevel
+                        + " at " + chunk + ", got " + levels);
+    }
+
     private void assertOffAnkerstoneCanBePulled(
             GameTestHelper helper, Direction direction) {
-        BlockPos piston = new BlockPos(3, 3, 3);
+        assertOffAnkerstoneCanBePulled(helper, direction, new BlockPos(3, 3, 3));
+    }
+
+    private void assertOffAnkerstoneCanBePulled(
+            GameTestHelper helper, Direction direction, BlockPos piston) {
         BlockPos start = piston.relative(direction);
         BlockPos destination = start.relative(direction);
         BlockPos power = piston.relative(direction.getOpposite());
@@ -165,22 +244,22 @@ public class AnkerstonePistonGameTests {
         }
     }
 
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
     public void singleAnkerstoneCannotBePushed(GameTestHelper helper) {
         assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.SINGLE);
     }
 
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
     public void wideAnkerstoneCannotBePushed(GameTestHelper helper) {
         assertActiveAnkerstoneCannotBePushed(helper, AnkerstoneMode.WIDE);
     }
 
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
     public void movedAnkerstoneActivatesSingle(GameTestHelper helper) {
         assertMovedAnkerstoneActivates(helper, AnkerstoneMode.SINGLE);
     }
 
-    @GameTest(environment = "ankerstone-test:pistons", maxTicks = 40)
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
     public void movedAnkerstoneActivatesWide(GameTestHelper helper) {
         assertMovedAnkerstoneActivates(helper, AnkerstoneMode.WIDE);
     }
@@ -556,7 +635,12 @@ public class AnkerstonePistonGameTests {
 
     private void assertMovedAnkerstoneActivates(GameTestHelper helper,
             AnkerstoneMode mode) {
-        BlockPos piston = new BlockPos(2, 2, 2);
+        assertMovedAnkerstoneActivates(helper, mode, new BlockPos(2, 2, 2));
+    }
+
+    private void assertMovedAnkerstoneActivates(GameTestHelper helper,
+            AnkerstoneMode mode, BlockPos piston) {
+
         BlockPos start = piston.east();
         BlockPos destination = start.east();
         AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
@@ -580,6 +664,7 @@ public class AnkerstonePistonGameTests {
             attribution.setPlacer(oldPosition, placer);
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
             helper.assertBlockPresent(Blocks.AIR, destination);
+            assertNoActiveOwnersOrTickets(helper, start, destination);
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
             helper.runAfterDelay(10, () -> {
                 try {
@@ -591,6 +676,12 @@ public class AnkerstonePistonGameTests {
                     helper.assertTrue(savedData.getOwnerModes().get(
                             helper.absolutePos(destination)) == mode,
                             "Destination must register the expected owner mode");
+                    assertAnkerstoneTicketLevel(helper, destination,
+                            mode == AnkerstoneMode.WIDE ? 30 : 31);
+                    if (!ChunkPos.containing(oldPosition.pos()).equals(
+                            ChunkPos.containing(newPosition.pos()))) {
+                        assertNoAnkerstoneTickets(helper, start);
+                    }
                     helper.assertFalse(savedData.getOwnerModes().containsKey(
                             helper.absolutePos(start)),
                             "Old position must not retain an owner");
@@ -606,6 +697,7 @@ public class AnkerstonePistonGameTests {
                     attribution.removePlacer(newPosition);
                     attribution.removePendingCredit(placer);
                 }
+                assertNoActiveOwnersOrTickets(helper, start, destination);
                 helper.succeed();
             });
         } catch (RuntimeException failure) {

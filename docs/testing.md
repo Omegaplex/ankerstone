@@ -46,6 +46,8 @@ Coverage includes:
 - moved attribution requires saving and survives serialization at its destination
 - Observer pulses and connected lamp output on activation, upgrade to Wide, and deactivation
 - real comparator circuits updating to 0, 7, and 15, including decreases
+- Off pushes and sticky-piston round trips across actual X and Z chunk boundaries
+- Single and Wide activation after crossing an X chunk boundary, with tickets centered on the destination and released on removal
 
 Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 
