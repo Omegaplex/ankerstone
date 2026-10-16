@@ -12,6 +12,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
+import net.minecraft.world.level.block.ObserverBlock;
+import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class AnkerstonePlacementGameTests {
@@ -178,6 +180,74 @@ public class AnkerstonePlacementGameTests {
                                         AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
                 }
                 helper.succeed();
+        }
+
+        @GameTest(maxTicks = 40)
+        public void observerDetectsActivation(GameTestHelper helper) {
+                assertObserverTransition(helper, 0, 1, AnkerstoneMode.SINGLE);
+        }
+
+        @GameTest(maxTicks = 40)
+        public void observerDetectsUpgradeToWide(GameTestHelper helper) {
+                assertObserverTransition(helper, 1, 15, AnkerstoneMode.WIDE);
+        }
+
+        @GameTest(maxTicks = 40)
+        public void observerDetectsDeactivation(GameTestHelper helper) {
+                assertObserverTransition(helper, 15, 0, AnkerstoneMode.OFF);
+        }
+
+        private void assertObserverTransition(GameTestHelper helper,
+                        int initialPower, int targetPower,
+                        AnkerstoneMode targetMode) {
+                BlockPos anchor = new BlockPos(3, 2, 2);
+                BlockPos observer = anchor.west();
+                BlockPos lamp = observer.west();
+                Runnable cleanup = () -> {
+                        helper.setBlock(observer, Blocks.AIR);
+                        helper.setBlock(lamp, Blocks.AIR);
+                        helper.setBlock(anchor, Blocks.AIR);
+                        helper.setBlock(anchor.below(), Blocks.AIR);
+                };
+                try {
+                        helper.setBlock(anchor.below(),
+                                        Blocks.DAYLIGHT_DETECTOR.defaultBlockState()
+                                                        .setValue(DaylightDetectorBlock.POWER,
+                                                                        initialPower));
+                        helper.setBlock(anchor, ModBlocks.ANKERSTONE);
+                        helper.setBlock(observer, Blocks.OBSERVER.defaultBlockState()
+                                        .setValue(ObserverBlock.FACING, Direction.EAST));
+                        helper.setBlock(lamp, Blocks.REDSTONE_LAMP);
+
+                        helper.runAfterDelay(10, () -> {
+                                try {
+                                        helper.assertBlockProperty(observer,
+                                                        ObserverBlock.POWERED, false);
+                                        helper.assertBlockProperty(lamp,
+                                                        RedstoneLampBlock.LIT, false);
+                                        setPowerAndAssert(helper, anchor,
+                                                        targetPower, targetMode);
+
+                                        helper.runAfterDelay(3, () -> {
+                                                try {
+                                                        helper.assertBlockProperty(observer,
+                                                                        ObserverBlock.POWERED, true);
+                                                        helper.assertBlockProperty(lamp,
+                                                                        RedstoneLampBlock.LIT, true);
+                                                } finally {
+                                                        cleanup.run();
+                                                }
+                                                helper.succeed();
+                                        });
+                                } catch (RuntimeException failure) {
+                                        cleanup.run();
+                                        throw failure;
+                                }
+                        });
+                } catch (RuntimeException failure) {
+                        cleanup.run();
+                        throw failure;
+                }
         }
 
         private void setPowerAndAssert(GameTestHelper helper, BlockPos localPos,

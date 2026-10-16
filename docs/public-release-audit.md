@@ -43,8 +43,8 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 ### Focused test follow-ups
 
-- [*] Test mutable input positions in both saved and runtime owner maps. Changing the supplied position must not move the stored owner or prevent removal of its ticket. Protect both storage paths when fixing this.
-- [ ] Test an Observer watching actual Ankerstone mode changes. Let setup pulses finish before checking the transition. Keep the existing update flags unless a failing test demonstrates a problem.
+- [x] Test mutable input positions in both saved and runtime owner maps. Changing the supplied position must not move the stored owner or prevent removal of its ticket. Protect both storage paths when fixing this.
+- [x] Test an Observer watching actual Ankerstone mode changes. Let setup pulses finish before checking the transition. Keep the existing update flags unless a failing test demonstrates a problem.
 - [ ] Test a real comparator circuit updating to 0, 7, and 15, including decreasing power. The existing tests call the readout method directly.
 - [ ] Cover Off piston pushes and sticky pulls in all six directions: east, west, north, south, up, and down. Check physical positions, mode, placer transfer, and absence of active ownership/tickets.
 - [ ] Test movement across actual X and Z chunk boundaries, including negative coordinates. Check absolute positions rather than assuming local coordinate zero is a chunk boundary. Include a powered destination and check actual tickets as well as saved owners.
