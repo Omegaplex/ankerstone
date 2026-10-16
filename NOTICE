@@ -1,0 +1,33 @@
+Ankerstone
+Copyright 2026 Omegaplex
+Source: https://github.com/Omegaplex/ankerstone
+
+CODE AND DATA
+
+Original source code, build scripts, and JSON resources are licensed
+under the Mozilla Public License 2.0. See LICENSE.
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+TEXTURES AND ARTWORK
+
+Original textures, PBR material maps, and logo artwork by Omegaplex
+are licensed under Creative Commons Attribution-ShareAlike 4.0:
+https://creativecommons.org/licenses/by-sa/4.0/
+
+This includes original artwork in the mod icon and banner.
+For attribution, credit Omegaplex and link to the source repository.
+
+The banner and icon include Minecraft screenshots. The artwork
+license covers Omegaplex's original contributions, not Minecraft
+content or other third-party material shown in those screenshots.
+
+FONT
+
+The logo lettering was created using Tektur by The Tektur Project
+Authors, licensed under the SIL Open Font License 1.1.
+https://github.com/hyvyys/Tektur
+
+The font files are not included in this project.

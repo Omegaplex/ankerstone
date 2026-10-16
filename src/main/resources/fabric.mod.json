@@ -8,7 +8,7 @@
   "contact": {
     "sources": "https://github.com/Omegaplex/ankerstone"
   },
-  "license": "CC0-1.0",
+  "license": ["MPL-2.0", "CC-BY-SA-4.0"],
   "icon": "assets/ankerstone/icon.png",
   "environment": "*",
   "entrypoints": {

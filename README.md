@@ -1,161 +1,71 @@
-<img width="1583" height="365" alt="ankerstone_gen_logo-v1" src="https://github.com/user-attachments/assets/7b869887-6d9d-4985-bf1f-9474bd1d6fe2" />
-
+![Ankerstone logo above an active Ankerstone in an Ancient City](docs/images/ankerstone-banner.png)
 
 # Ankerstone
 
-A Fabric mod with redstone-controlled chunk anchors and two
-decorative block families: Stillstone and Reinforced Stillstone.
+A Fabric mod with redstone-controlled chunk anchors, plus Stillstone and Reinforced Stillstone blocks for building.
 
-## Current Behavior
+## Chunk Anchoring
 
-| Mode | Redstone Input | Comparator Output | Piston Movable |
-|---|---|---|---|
-| Off | 0 | 0 | Yes |
-| Single | 1-14 | 7 | No |
-| Wide | 15 | 15 | No |
+Place an Ankerstone and supply redstone power to keep chunks active without a player nearby.
 
-Active anchors keep chunks loaded and ticking. Saved ownership
-restores their tickets when the dimension loads.
+| Mode | Redstone Input | Entity-Ticking Coverage | Comparator Output | Piston Movable |
+|---|---|---|---|---|
+| Off | 0 | None | 0 | Yes |
+| Single | 1–14 | 1 chunk | 7 | No |
+| Wide | 15 | 3×3 chunks | 15 | No |
 
-Both decorative families include blocks, slabs, stairs, and walls.
-Textures include LabPBR material maps for compatible shaders.
+Single keeps the chunk containing the Ankerstone entity-ticking. Wide keeps a 3×3 area entity-ticking, centered on that chunk, matching a portal chunk loader's entity-ticking coverage. Vanilla chunk loading also maintains supporting outer rings beyond these areas.
 
-All blocks require a pickaxe to drop items. Stillstone accepts any
-pickaxe; Reinforced Stillstone and Ankerstone require iron or better.
-Double slabs drop two slab items.
+Both modes affect only the dimension where the Ankerstone is placed. Loading chunks in another dimension requires a separate anchor there.
+
+Turning off the power releases the anchor. Active Ankerstones resume chunk loading automatically after a server restart.
+
+Ankerstone has its own advancement tab. Activation credit goes to the player who placed the block, even if someone else powers it. If the placer is offline, they receive credit when they return.
+
+## Building Blocks
+
+Stillstone and Reinforced Stillstone each include full blocks, slabs, stairs, and walls.
+
+Stillstone full blocks do not conduct redstone power. Reinforced Stillstone full blocks use normal solid-block conduction. Slabs, stairs, and walls follow ordinary Minecraft rules for their shapes.
+
+All blocks require a pickaxe to drop items:
+- Stillstone: any pickaxe.
+- Reinforced Stillstone and Ankerstone: iron or better.
+- Double slabs drop two slab items.
+
+## Crafting
+
+All recipes have recipe-book unlocks.
+
+| Result | Ingredients and Arrangement | Output |
+|---|---|---|
+| Stillstone | Five cobbled deepslate and four lapis lazuli in a checkerboard, with deepslate in the corners and center | 5 |
+| Reinforced Stillstone | One Stillstone surrounded by eight iron nuggets | 1 |
+| Ankerstone | Reinforced Stillstone in the corners, redstone dust along the four sides, and an ender pearl in the center | 1 |
+
+Both building-block families have crafting recipes for slabs, stairs, and walls. Their full blocks can also be cut into those shapes with a stonecutter.
+
+## A Little Lore
+
+Stillstone is deepslate altered with lapis to resist dimensional flux. Ironwork turns that resistance into a structure capable of containing the dimensional energies of an ender pearl. Redstone controls the finished Ankerstone.
+
+Read the [full lore and advancement notes](docs/lore-and-advancements.md) for more.
+
+## Requirements
+
+- Minecraft Java Edition 26.1.2
+- Fabric Loader 0.19.2 or later
+- Fabric API
+- Java 25 or later
+
+LabPBR material maps are included for compatible shaders. Shaders and PBR resource packs are optional.
 
 ## Development
 
-See [Testing](docs/testing.md) for automated tests and manual
-restart checks.
+See [Testing](docs/testing.md) for automated coverage and manual restart checks.
 
-## Lore & Crafting
+## License
 
-The three core blocks and both families' slabs, stairs, and walls have
-Survival crafting recipes and recipe-book unlocks. Each family's full
-block can also be stonecut into slabs, stairs, and walls.
-
----
-
-## A History Written in Stone
-
-No one civilization invented the Ankerstone. It is the end of a very long story — one that began with violence, passed through fear, and arrived at understanding only after centuries of lost knowledge and rediscovery.
-
-The world has always contained a kind of energy that does not belong entirely to it. It bleeds through from somewhere else, or perhaps from the spaces between places. It resists being named. What it does, however, is observable: it destabilizes. It pushes through. It refuses to stay still.
-
-Different peoples, in different ages, noticed this. Although they never spoke to each other, they all reached for the same thing.
-
----
-
-### The Spawner Builders
-
-They came first, and they came with iron.
-
-Scattered across the world in crude dungeons and fortresses, these builders discovered something fundamental: dimensional energy could be caught. If you built the cage right — wrought iron with the correct geometry — you could force something through from the other side. Weaponized. Repeatable. Useful in the way that a trap is useful.
-
-They did not understand what they were doing. They did not need to. It worked, and that was enough.
-
-It is always easier to make a bomb than a power source. The spawner builders found the bomb first.
-
----
-
-### The Ancient City Builders
-
-They came later, and they came with something the dungeon builders never had: awareness that what they were dealing with was dangerous.
-
-The sculk is not decoration. It is a sensing network — deliberate, architectural, vast. The ancient cities are built deep and dark and defensively, by a civilization that understood dimensional energy well enough to be afraid of it. They may have been responding, in their own way, to what the spawner builders had set loose.
-
-They did not solve the problem. But they were the first to admit there was one.
-
----
-
-### The Enchanting Tradition
-
-Somewhere between the ancient cities and the present, someone stopped trying to contain the energy or survive it and started trying to *understand* it.
-
-Lapis lazuli became the medium. Already used in enchanting as a catalyst — already carrying some affinity for focusing and transferring this kind of energy — it became the fingerprint of a new tradition. Academic. Patient. Interested in the phenomenon itself rather than its applications.
-
-This tradition did not build weapons or cities. It built knowledge. And that knowledge, passed forward through time in fragments and half-understood methods, is what made stillstone possible.
-
----
-
-## Field Notes — Materials
-
----
-
-**stillstone**
-*Crafted from cobbled deepslate and lapis lazuli*
-
-Not invented. Discovered. A dense, lapis-altered deepslate that resists dimensional flux by nature — quiet, heavy, and inert. It does not generate in the world. No vein of it exists waiting to be found. Someone had to learn to make it, which means someone had to understand why lapis and deepslate together produce something that refuses to change.
-
-The enchanting tradition's fingerprint is all over it. The lapis is not incidental.
-
-*Primary property: passive resistance to dimensional flux.*
-*It does not do anything. It simply refuses to become anything else.*
-
----
-
-**reinforced stillstone**
-*Crafted by surrounding stillstone with iron nuggets*
-
-The first act of intent. stillstone resists change on its own — reinforced stillstone is what happens when someone decided that resistance needs to last. Ancient ironwork, bound around the stillstone in a repeating lattice, turns a found material into a structural one. Load-bearing. Architectural. Permanent in a way that raw stillstone is not.
-
-The iron does not add power. It adds commitment.
-
-*This is where the material tradition becomes an engineering tradition.*
-*stillstone is what was found. reinforced stillstone is what was built.*
-
----
-
-**Ankerstone**
-*Crafted from reinforced stillstone, redstone dust, and an ender pearl*
-
-The realized mechanism. Everything the enchanting tradition learned about dimensional energy, expressed through stillstone's resistance, activated by redstone, and centered on an ender pearl that has been contained rather than thrown.
-
-The pearl is not powering the device. The device is holding the pearl. The pearl wants to go somewhere. The Ankerstone simply refuses to let it.
-
-A chunk anchor. A fixed point. The world remembers where it is because the Ankerstone will not let it forget.
-
-The spawner builders pushed energy through a hole in the world. The Ankerstone holds the world still around that hole.
-
-*Same physics. Opposite intent.*
-
----
-
-## Crafting Reference
-
-### stillstone
-`cobbled deepslate` + `lapis lazuli` = `stillstone x5`
-
-| | | |
-|---|---|---|
-| cobbled deepslate | lapis lazuli | cobbled deepslate |
-| lapis lazuli | cobbled deepslate | lapis lazuli |
-| cobbled deepslate | lapis lazuli | cobbled deepslate |
-
----
-
-### reinforced stillstone
-`stillstone` + `iron nugget` = `reinforced stillstone x1`
-
-| | | |
-|---|---|---|
-| iron nugget | iron nugget | iron nugget |
-| iron nugget | stillstone | iron nugget |
-| iron nugget | iron nugget | iron nugget |
-
----
-
-### Ankerstone
-`reinforced stillstone` + `redstone dust` + `ender pearl` = `Ankerstone x1`
-
-| | | |
-|---|---|---|
-| reinforced stillstone | redstone dust | reinforced stillstone |
-| redstone dust | ender pearl | redstone dust |
-| reinforced stillstone | redstone dust | reinforced stillstone |
-
-*Shaped recipe. Positional.*
-*The redstone cardinal axes mirror the indicator gem on the physical block.*
-*The reinforced stillstone anchors the corners.*
-*The ender pearl sits at the intersection of all four activation lines.*
+- Code: [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
+- Original textures and artwork: [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- See [NOTICE](NOTICE) for artwork credits and license scope.
