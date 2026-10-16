@@ -15,7 +15,8 @@ on pushes and pull requests.
 Coverage includes:
 
 - shared and mixed-mode tickets
-- owner serialization
+- owner serialization and protection from mutable input positions
+- ticket removal after the caller changes its input position
 - ticket restoration
 - piston reactions; `OFF` piston pushing & sticky-piston pulling, `SINGLE` & `WIDE` resisting pushes
 - ownership at powered destinations, `OFF` pushes, and blocked pushes

@@ -48,7 +48,7 @@ public class AnkerstoneChunkTickets {
         Map<BlockPos, AnkerstoneMode> owners = dimensionOwners.computeIfAbsent(chunkPos, ignored -> new HashMap<>());
         boolean alreadyHasThisMode = owners.containsValue(mode);
 
-        owners.put(ownerPos, mode);
+        owners.put(ownerPos.immutable(), mode);
 
         if (!alreadyHasThisMode) {
             level.getChunkSource().addTicketWithRadius(ANKERSTONE_TICKET, chunkPos, radiusFor(mode));

@@ -212,6 +212,42 @@ public class AnkerstonePlacementGameTests {
                 }
         }
 
+        @GameTest(environment = "ankerstone-test:restoration")
+        public void changingInputPositionDoesNotPreventTicketRemoval(
+                        GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                BlockPos originalPosition = helper.absolutePos(
+                                new BlockPos(2, 2, 2)).immutable();
+                BlockPos.MutableBlockPos cursor = originalPosition.mutable();
+                ChunkPos chunk = ChunkPos.containing(originalPosition);
+                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+
+                assertTicketCount(helper, chunk, 0);
+                try {
+                        AnkerstoneChunkTickets.add(
+                                        level, cursor, AnkerstoneMode.WIDE);
+                        assertTicketCount(helper, chunk, 1);
+
+                        cursor.set(originalPosition.getX() + 32,
+                                        originalPosition.getY(),
+                                        originalPosition.getZ());
+
+                        AnkerstoneChunkTickets.remove(
+                                        level, originalPosition, AnkerstoneMode.WIDE);
+
+                        helper.assertFalse(
+                                        savedData.getOwnerModes().containsKey(originalPosition),
+                                        "Removal must clear the saved owner");
+                        assertTicketCount(helper, chunk, 0);
+                } finally {
+                        // Restore the key so cleanup also works before the fix.
+                        cursor.set(originalPosition);
+                        AnkerstoneChunkTickets.remove(
+                                        level, originalPosition, AnkerstoneMode.WIDE);
+                }
+                helper.succeed();
+        }
+
         private void assertTicketCount(GameTestHelper helper, ChunkPos chunk, int expected) {
                 TicketStorage storage = helper.getLevel().getChunkSource()
                                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);

@@ -29,6 +29,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Clearly separate current features from future plans.
 - [ ] Make sure installation requirements and supported Minecraft/Fabric versions are easy to find.
 - [ ] Check that the license, source links, project description, and `fabric.mod.json` metadata are correct.
+- [ ] Add an administrator note about placer credit: it uses world SavedData in the Overworld, keyed by dimension and position, not block-entity or item data. Explain piston movement, breaking and replacing blocks, and pending offline credit. Mark WorldEdit cloning as untested.
 
 ## Testing and release readiness
 
@@ -39,6 +40,27 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Check models, textures, particles, lighting, comparator behavior, pistons, recipes, advancements, and shader compatibility where applicable.
 - [ ] Make sure important gameplay bugs have regression tests where practical.
 - [ ] Review `docs/testing.md` and update it if test coverage or manual checks changed.
+
+### Focused test follow-ups
+
+- [*] Test mutable input positions in both saved and runtime owner maps. Changing the supplied position must not move the stored owner or prevent removal of its ticket. Protect both storage paths when fixing this.
+- [ ] Test an Observer watching actual Ankerstone mode changes. Let setup pulses finish before checking the transition. Keep the existing update flags unless a failing test demonstrates a problem.
+- [ ] Test a real comparator circuit updating to 0, 7, and 15, including decreasing power. The existing tests call the readout method directly.
+- [ ] Cover Off piston pushes and sticky pulls in all six directions: east, west, north, south, up, and down. Check physical positions, mode, placer transfer, and absence of active ownership/tickets.
+- [ ] Test movement across actual X and Z chunk boundaries, including negative coordinates. Check absolute positions rather than assuming local coordinate zero is a chunk boundary. Include a powered destination and check actual tickets as well as saved owners.
+- [ ] Test a sticky piston retracting on the same tick Single or Wide Ankerstone loses power. Try both update orders and check block positions, chunk ownership/tickets, and placer records. Also check in-game for ghost blocks or client/server disagreement.
+- [ ] Check actual entity ticking in Single and Wide coverage, including Wide's corners, positions just outside the footprint, Off mode, and another dimension. Keep player, spawn, and test-runner tickets from making the check pass accidentally.
+
+### Other useful cases
+
+- [ ] Test sticky retraction against Single and Wide blocks that remain powered. Active push blocking is covered, but active sticky-pull blocking is not directly tested.
+- [ ] Test an anchor changing mode while another anchor shares its chunk. Check the actual ticket levels through upgrades, downgrades, and removal so one owner cannot release another's ticket.
+- [ ] Automate the manual no-repeat-credit check: deliver pending credit, revoke the advancement, and invoke JOIN again. The consumed pending entry must not award it again.
+
+### Decisions for later
+
+- [ ] Decide whether to repair stale owners left by external world edits that bypass removal hooks. If supported, test reconciliation timing before adding a chunk-load cleanup hook.
+- [ ] Review retry behavior when an advancement resource is missing. Do not discard the placer or earned credit merely to clear the record; normal power cycling can retry after the resource is fixed.
 
 ## Version and release packaging
 

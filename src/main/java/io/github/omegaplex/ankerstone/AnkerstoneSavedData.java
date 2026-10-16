@@ -56,7 +56,7 @@ public class AnkerstoneSavedData extends SavedData {
     }
 
     public void addOwner(BlockPos ownerPos, AnkerstoneMode mode) {
-        AnkerstoneMode oldMode = ownerModes.put(ownerPos, mode);
+        AnkerstoneMode oldMode = ownerModes.put(ownerPos.immutable(), mode);
 
         if (oldMode != mode) {
             setDirty();
