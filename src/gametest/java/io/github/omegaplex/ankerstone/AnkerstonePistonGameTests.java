@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
@@ -18,6 +19,9 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.TicketStorage;
 
 public class AnkerstonePistonGameTests {
+    private static final TicketType NEGATIVE_TEST_TICKET = new TicketType(
+            240, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION);
+
     @GameTest
     public void pistonReactionMatchesMode(GameTestHelper helper) {
         for (AnkerstoneMode mode : AnkerstoneMode.values()) {
@@ -568,6 +572,141 @@ public class AnkerstonePistonGameTests {
         assertOffAnkerstoneCanBePushed(helper, Direction.DOWN);
     }
 
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 200)
+    public void offPushCrossesNegativeXChunkBoundary(GameTestHelper helper) {
+        assertNegativeBoundaryMove(helper,
+                new BlockPos(-18, 100, -1024), Direction.EAST, false);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 200)
+    public void offPushCrossesNegativeZChunkBoundary(GameTestHelper helper) {
+        assertNegativeBoundaryMove(helper,
+                new BlockPos(-1024, 100, -18), Direction.SOUTH, false);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 200)
+    public void stickyRoundTripCrossesNegativeXChunkBoundary(GameTestHelper helper) {
+        assertNegativeBoundaryMove(helper,
+                new BlockPos(-18, 100, -2048), Direction.EAST, true);
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 200)
+    public void stickyRoundTripCrossesNegativeZChunkBoundary(GameTestHelper helper) {
+        assertNegativeBoundaryMove(helper,
+                new BlockPos(-2048, 100, -18), Direction.SOUTH, true);
+    }
+
+    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 60)
+    public void negativeBoundaryArrivalActivatesSingle(GameTestHelper helper) {
+        assertNegativeBoundaryActivation(helper,
+                new BlockPos(-18, 100, -3072), AnkerstoneMode.SINGLE);
+    }
+
+    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 60)
+    public void negativeBoundaryArrivalActivatesWide(GameTestHelper helper) {
+        assertNegativeBoundaryActivation(helper,
+                new BlockPos(-18, 100, -4096), AnkerstoneMode.WIDE);
+    }
+
+    private void assertNegativeBoundaryActivation(GameTestHelper helper,
+            BlockPos worldPiston, AnkerstoneMode mode) {
+        BlockPos piston = worldPiston.subtract(helper.absolutePos(BlockPos.ZERO));
+        ChunkPos start = ChunkPos.containing(worldPiston.east());
+        ChunkPos destination = ChunkPos.containing(worldPiston.east(2));
+        helper.assertTrue(start.x() < 0 && start.z() < 0
+                && destination.x() < 0 && destination.z() < 0,
+                "Both chunks must have negative coordinates");
+        helper.assertFalse(start.equals(destination),
+                "Powered arrival must cross a negative chunk boundary");
+
+        try {
+            loadNegativeBoundaryChunks(helper, piston, Direction.EAST);
+            helper.startSequence()
+                    .thenWaitUntil(() -> {
+
+                        helper.assertTrue(
+                                helper.getLevel().isPositionEntityTicking(worldPiston),
+                                "Source chunk must be ticking before movement starts");
+                        helper.assertTrue(
+                                helper.getLevel().isPositionEntityTicking(worldPiston.east(2)),
+                                "Destination chunk must be ticking before movement starts");
+                    })
+                    .thenExecute(() -> {
+                        try {
+                            assertMovedAnkerstoneActivates(helper, mode, piston);
+                        } catch (RuntimeException failure) {
+                            clearPistonFixture(helper, piston);
+                            throw failure;
+                        }
+                    });
+        } catch (RuntimeException failure) {
+            clearPistonFixture(helper, piston);
+            throw failure;
+        }
+    }
+
+    private void loadNegativeBoundaryChunks(GameTestHelper helper,
+            BlockPos piston, Direction direction) {
+        for (BlockPos pos : List.of(piston.relative(direction),
+                piston.relative(direction, 2))) {
+            ChunkPos chunk = ChunkPos.containing(helper.absolutePos(pos));
+            helper.getLevel().getChunkSource().addTicketWithRadius(
+                    NEGATIVE_TEST_TICKET, chunk, 2);
+            helper.getLevel().getChunk(chunk.x(), chunk.z());
+        }
+    }
+
+    private void releaseNegativeTestTickets(GameTestHelper helper,
+            BlockPos piston, Direction direction) {
+        for (BlockPos pos : List.of(piston.relative(direction),
+                piston.relative(direction, 2))) {
+            ChunkPos chunk = ChunkPos.containing(helper.absolutePos(pos));
+            helper.getLevel().getChunkSource().removeTicketWithRadius(
+                    NEGATIVE_TEST_TICKET, chunk, 2);
+        }
+    }
+
+    private void assertNegativeBoundaryMove(GameTestHelper helper,
+            BlockPos worldPiston, Direction direction, boolean sticky) {
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        BlockPos piston = worldPiston.subtract(origin);
+        ChunkPos startChunk = ChunkPos.containing(worldPiston.relative(direction));
+        ChunkPos destinationChunk = ChunkPos.containing(worldPiston.relative(direction, 2));
+        helper.assertTrue(startChunk.x() < 0 && startChunk.z() < 0
+                && destinationChunk.x() < 0 && destinationChunk.z() < 0,
+                "Both chunks must have negative coordinates");
+        helper.assertFalse(startChunk.equals(destinationChunk),
+                "The negative-coordinate fixture must cross a chunk boundary");
+        try {
+            loadNegativeBoundaryChunks(helper, piston, direction);
+            helper.startSequence()
+                    .thenWaitUntil(() -> {
+                        helper.assertTrue(
+                                helper.getLevel().isPositionEntityTicking(worldPiston),
+                                "Source chunk must be ticking before movement starts");
+                        helper.assertTrue(
+                                helper.getLevel().isPositionEntityTicking(
+                                        worldPiston.relative(direction, 2)),
+                                "Destination chunk must be ticking before movement starts");
+                    })
+                    .thenExecute(() -> {
+                        try {
+                            if (sticky) {
+                                assertOffAnkerstoneCanBePulled(helper, direction, piston);
+                            } else {
+                                assertOffAnkerstoneCanBePushed(helper, direction, piston);
+                            }
+                        } catch (RuntimeException failure) {
+                            clearOffPistonFixture(helper, piston, direction);
+                            throw failure;
+                        }
+                    });
+        } catch (RuntimeException failure) {
+            clearOffPistonFixture(helper, piston, direction);
+            throw failure;
+        }
+    }
+
     private void assertNoAnkerstoneTickets(GameTestHelper helper, BlockPos localPos) {
         ChunkPos chunk = ChunkPos.containing(helper.absolutePos(localPos));
         TicketStorage storage = helper.getLevel().getChunkSource()
@@ -725,6 +864,7 @@ public class AnkerstonePistonGameTests {
             helper.setBlock(pos, Blocks.AIR);
             helper.setBlock(pos.below(), Blocks.AIR);
         }
+        releaseNegativeTestTickets(helper, piston, Direction.EAST);
     }
 
     private void clearOffPistonFixture(GameTestHelper helper,
@@ -733,5 +873,6 @@ public class AnkerstonePistonGameTests {
         helper.setBlock(piston, Blocks.AIR);
         helper.setBlock(piston.relative(direction), Blocks.AIR);
         helper.setBlock(piston.relative(direction.getOpposite()), Blocks.AIR);
+        releaseNegativeTestTickets(helper, piston, direction);
     }
 }

@@ -48,6 +48,7 @@ Coverage includes:
 - real comparator circuits updating to 0, 7, and 15, including decreases
 - Off pushes and sticky-piston round trips across actual X and Z chunk boundaries
 - Single and Wide activation after crossing an X chunk boundary, with tickets centered on the destination and released on removal
+- guaranteed negative-coordinate X/Z boundary pushes and sticky round trips, plus Single/Wide powered arrivals with destination ticket checks
 
 Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 
@@ -56,6 +57,12 @@ and counts, mixed ingredients, and incorrect layouts.
 
 Stonecutting tests check all six recipes, their outputs and counts, and rejection of the
 other stone family. Recipe-book discovery is checked manually.
+
+### Test Timing
+
+Wait for observable readiness conditions when setup depends on asynchronous work. Use bounded timeouts that identify the condition that failed.
+
+Use fixed delays only when deliberately checking timing, such as sampling a redstone pulse. Review existing piston waits to distinguish intentional timing checks from assumptions that movement has finished.
 
 ## Manual Restart Check
 
