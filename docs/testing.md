@@ -44,7 +44,8 @@ Coverage includes:
 - Single and Wide activation after piston movement queue credit for the original placer
 - removing Ankerstone during piston movement clears its attribution
 - moved attribution requires saving and survives serialization at its destination
-- - Observer pulses and connected lamp output on activation, upgrade to Wide, and deactivation
+- Observer pulses and connected lamp output on activation, upgrade to Wide, and deactivation
+- real comparator circuits updating to 0, 7, and 15, including decreases
 
 Variant crafting tests check shifted and mirrored patterns, output items
 and counts, mixed ingredients, and incorrect layouts.

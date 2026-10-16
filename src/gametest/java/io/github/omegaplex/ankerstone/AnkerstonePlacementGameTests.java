@@ -11,9 +11,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.TicketStorage;
+import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.ObserverBlock;
 import net.minecraft.world.level.block.RedstoneLampBlock;
+import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class AnkerstonePlacementGameTests {
@@ -197,6 +199,26 @@ public class AnkerstonePlacementGameTests {
                 assertObserverTransition(helper, 15, 0, AnkerstoneMode.OFF);
         }
 
+        @GameTest(maxTicks = 40)
+        public void comparatorDetectsActivation(GameTestHelper helper) {
+                assertComparatorTransition(helper, 0, 1, 7);
+        }
+
+        @GameTest(maxTicks = 40)
+        public void comparatorDetectsUpgradeToWide(GameTestHelper helper) {
+                assertComparatorTransition(helper, 1, 15, 15);
+        }
+
+        @GameTest(maxTicks = 40)
+        public void comparatorDetectsDowngradeToSingle(GameTestHelper helper) {
+                assertComparatorTransition(helper, 15, 1, 7);
+        }
+
+        @GameTest(maxTicks = 40)
+        public void comparatorDetectsDeactivation(GameTestHelper helper) {
+                assertComparatorTransition(helper, 1, 0, 0);
+        }
+
         private void assertObserverTransition(GameTestHelper helper,
                         int initialPower, int targetPower,
                         AnkerstoneMode targetMode) {
@@ -343,4 +365,52 @@ public class AnkerstonePlacementGameTests {
                                 "Expected ticket levels " + expected + ", got " + actual);
         }
 
+        private void assertComparatorTransition(GameTestHelper helper,
+                        int initialPower, int targetPower, int expectedOutput) {
+                BlockPos anchor = new BlockPos(3, 2, 2);
+                BlockPos comparator = anchor.west();
+                BlockPos output = comparator.west();
+                int initialOutput = initialPower == 0 ? 0 : initialPower == 15 ? 15 : 7;
+                List<BlockPos> fixture = List.of(comparator, output, anchor,
+                                comparator.below(), output.below(), anchor.below());
+                Runnable cleanup = () -> fixture.forEach(
+                                pos -> helper.setBlock(pos, Blocks.AIR));
+                BlockState source = Blocks.DAYLIGHT_DETECTOR.defaultBlockState();
+                try {
+                        helper.setBlock(comparator.below(), Blocks.STONE);
+                        helper.setBlock(output.below(), Blocks.STONE);
+                        helper.setBlock(anchor.below(),
+                                        source.setValue(DaylightDetectorBlock.POWER, initialPower));
+                        helper.setBlock(anchor, ModBlocks.ANKERSTONE);
+                        helper.setBlock(comparator, Blocks.COMPARATOR.defaultBlockState()
+                                        .setValue(ComparatorBlock.FACING, Direction.EAST));
+                        helper.setBlock(output, Blocks.REDSTONE_WIRE);
+
+                        helper.runAfterDelay(3, () -> {
+                                try {
+                                        helper.assertBlockProperty(output,
+                                                        RedStoneWireBlock.POWER, initialOutput);
+                                        helper.setBlock(anchor.below(),
+                                                        source.setValue(DaylightDetectorBlock.POWER,
+                                                                        targetPower));
+                                        helper.runAfterDelay(3, () -> {
+                                                try {
+                                                        helper.assertBlockProperty(output,
+                                                                        RedStoneWireBlock.POWER,
+                                                                        expectedOutput);
+                                                } finally {
+                                                        cleanup.run();
+                                                }
+                                                helper.succeed();
+                                        });
+                                } catch (RuntimeException failure) {
+                                        cleanup.run();
+                                        throw failure;
+                                }
+                        });
+                } catch (RuntimeException failure) {
+                        cleanup.run();
+                        throw failure;
+                }
+        }
 }
