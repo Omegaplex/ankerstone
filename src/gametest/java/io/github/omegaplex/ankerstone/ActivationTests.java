@@ -209,6 +209,56 @@ public class ActivationTests {
         }
 
         @GameTest
+        @SuppressWarnings("removal")
+        public void joiningDoesNotRepeatDeliveredCredit(GameTestHelper helper) {
+                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AdvancementHolder advancement = helper.getLevel().getServer()
+                                .getAdvancements().get(Identifier.fromNamespaceAndPath(
+                                                "ankerstone", "stay_a_while"));
+                helper.assertTrue(advancement != null, "Missing activation advancement");
+                ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+                try {
+                        helper.assertFalse(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Activation advancement must start incomplete");
+                        data.queueCredit(player.getUUID());
+
+                        ServerPlayConnectionEvents.JOIN.invoker().onPlayReady(
+                                        player.connection,
+                                        ServerPlayNetworking.getSender(player),
+                                        helper.getLevel().getServer());
+
+                        helper.assertTrue(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "First join must deliver pending credit");
+                        helper.assertFalse(data.hasPendingCredit(player.getUUID()),
+                                        "Delivered credit must leave the pending queue");
+
+                        helper.assertTrue(player.getAdvancements().revoke(advancement, "activated"),
+                                        "Test must successfully revoke the delivered advancement");
+                        helper.assertFalse(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Advancement must be incomplete before the second join");
+
+                        ServerPlayConnectionEvents.JOIN.invoker().onPlayReady(
+                                        player.connection,
+                                        ServerPlayNetworking.getSender(player),
+                                        helper.getLevel().getServer());
+
+                        helper.assertFalse(player.getAdvancements()
+                                        .getOrStartProgress(advancement).isDone(),
+                                        "Second join must not award consumed credit again");
+                        helper.assertFalse(data.hasPendingCredit(player.getUUID()),
+                                        "Second join must not recreate pending credit");
+                } finally {
+                        data.removePendingCredit(player.getUUID());
+                        helper.getLevel().getServer().getPlayerList().remove(player);
+                }
+                helper.succeed();
+        }
+
+        @GameTest
         public void singlePoweredPlacementGrantsAdvancement(GameTestHelper helper) {
                 assertPoweredPlacementGrantsAdvancement(helper, 1, AnkerstoneMode.SINGLE);
         }

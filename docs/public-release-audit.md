@@ -42,6 +42,12 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Make sure important gameplay bugs have regression tests where practical.
 - [ ] Review `docs/testing.md` and update it if test coverage or manual checks changed.
 
+### Test quality review
+
+- [ ] Review what each test proves and whether it would catch a real mod failure. Check that setup or unrelated Minecraft behavior cannot make it pass accidentally.
+- [ ] Remove tests that repeat coverage without protecting a different risk. Keep useful edge cases and readable repetition; do not add abstractions just to reduce the line count.
+- [ ] Check reliability, useful failure messages, cleanup on failure or timeout, and maintenance cost. Judge the suite by these checks, not test count or the test-to-mod line ratio.
+
 ### Focused test follow-ups
 
 - [x] Test mutable input positions in both saved and runtime owner maps. Changing the supplied position must not move the stored owner or prevent removal of its ticket. Protect both storage paths when fixing this.
@@ -57,7 +63,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 - [x] Test sticky retraction against Single and Wide blocks that remain powered. The piston retracts while the block, owner mode, ticket, and earned offline credit remain intact.
 - [ ] Test an anchor changing mode while another anchor shares its chunk. Check the actual ticket levels through upgrades, downgrades, and removal so one owner cannot release another's ticket.
-- [ ] Automate the manual no-repeat-credit check: deliver pending credit, revoke the advancement, and invoke JOIN again. The consumed pending entry must not award it again.
+- [x] Automate the manual no-repeat-credit check: deliver pending credit, revoke the advancement, and invoke JOIN again. The consumed pending entry must not award it again.
 
 ### Decisions for later
 
