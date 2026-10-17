@@ -17,6 +17,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Remove stale template comments and unused boilerplate.
 - [ ] Look for unnecessary abstractions or over-engineered code.
 - [ ] Check that names and terminology are consistent with the project: Off, Single, Wide, owners, tickets, etc.
+- [ ] After the test work, go through the main and client code and shorten redundant class, method, and variable names. Keep useful distinctions and normal Java conventions. Update references and run the full build; leave registry IDs and saved-data keys unchanged.
 - [ ] Check for dead code, abandoned experiments, and unused files.
 - [ ] Flag important code that I do not understand well enough to explain before publishing.
 - [ ] Keep working code simple rather than refactoring only to make it look more "professional."

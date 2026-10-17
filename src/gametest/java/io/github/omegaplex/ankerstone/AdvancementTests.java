@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public class AnkerstoneAdvancementGameTests {
+public class AdvancementTests {
     @GameTest
     public void obtainingStillstoneGrantsAdvancement(GameTestHelper helper) {
         assertObtainingGrants(helper, "root", ModBlocks.STILLSTONE.asItem());

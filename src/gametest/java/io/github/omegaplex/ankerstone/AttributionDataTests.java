@@ -13,7 +13,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
-public class AnkerstoneAttributionDataGameTests {
+public class AttributionDataTests {
         @GameTest
         public void dimensionsKeepSeparatePlacers(GameTestHelper helper) {
                 BlockPos coordinates = new BlockPos(10, 64, 10);

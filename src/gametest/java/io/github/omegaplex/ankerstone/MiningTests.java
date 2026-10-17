@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class AnkerstoneMiningGameTests {
+public class MiningTests {
     @GameTest
     public void toolsRespectMiningTiers(GameTestHelper helper) {
         for (Block block : List.of(

@@ -8,7 +8,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 
-public class AnkerstoneSavedDataGameTests {
+public class SavedDataTests {
         @GameTest
         public void changingInputPositionDoesNotMoveStoredOwner(GameTestHelper helper) {
                 BlockPos originalPosition = new BlockPos(-17, 64, -1);

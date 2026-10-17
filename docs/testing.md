@@ -58,13 +58,17 @@ and counts, mixed ingredients, and incorrect layouts.
 Stonecutting tests check all six recipes, their outputs and counts, and rejection of the
 other stone family. Recipe-book discovery is checked manually.
 
+### Naming
+
+Use short, descriptive class names ending in `Tests`. Omit the mod prefix and `Game` when the package and source folder already provide that context. Keep qualifiers that distinguish test groups, such as `PistonActivationTests` and `ActivationTests`. Shared helpers use names such as `PistonTestSupport`.
+
 ### Test Timing
 
 Wait for observable readiness conditions when setup depends on asynchronous work. Use bounded timeouts that identify the condition that failed.
 
 Piston movement tests wait for the completed block arrangement, then check mode, ownership, tickets, and attribution. Movement deadlines run the final assertions and cleanup even when movement never finishes. Callback guards prevent later ticks from checking an already-cleared fixture.
 
-Negative-coordinate fixtures have a separate chunk-readiness deadline, leaving time for movement and cleanup.
+Negative-coordinate fixtures wait for both chunks to be entity-ticking and for their entity data to finish loading. Minecraft can report entity-ticking status before that data is ready, but moving piston block entities do not tick until it is loaded. A separate setup deadline leaves time for movement and cleanup.
 
 Fixed delays remain for blocked movement, deliberate interruption during movement, and redstone pulse sampling.
 

@@ -18,7 +18,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-public class AnkerstoneCraftingGameTests {
+public class CraftingTests {
         @GameTest
         public void stillstoneRecipeMatches(GameTestHelper helper) {
                 CraftingInput input = grid(

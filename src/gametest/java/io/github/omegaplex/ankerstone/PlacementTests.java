@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class AnkerstonePlacementGameTests {
+public class PlacementTests {
         @GameTest
         public void alreadyWidePlacementRegistersAndReleasesOwner(GameTestHelper helper) {
                 BlockPos localPos = new BlockPos(2, 2, 2);
