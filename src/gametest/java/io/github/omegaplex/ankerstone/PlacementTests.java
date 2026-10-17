@@ -135,6 +135,114 @@ public class PlacementTests {
                 helper.succeed();
         }
 
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
+        public void singleOwnerSurvivesModeChanges(GameTestHelper helper) {
+                BlockPos steady = new BlockPos(2, 2, 2);
+                BlockPos changing = new BlockPos(2, 6, 2);
+                ChunkPos chunk = ChunkPos.containing(helper.absolutePos(steady));
+                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+
+                assertTicketLevels(helper, chunk, List.of());
+                try {
+                        helper.setBlock(steady, ModBlocks.ANKERSTONE);
+                        helper.setBlock(changing, ModBlocks.ANKERSTONE);
+                        setPowerAndAssert(helper, steady, 1, AnkerstoneMode.SINGLE);
+                        setPowerAndAssert(helper, changing, 1, AnkerstoneMode.SINGLE);
+                        assertTicketLevels(helper, chunk, List.of(31));
+
+                        setPowerAndAssert(helper, changing, 15, AnkerstoneMode.WIDE);
+                        assertTicketLevels(helper, chunk, List.of(30, 31));
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.SINGLE,
+                                        "Upgrade must preserve the other Single owner");
+
+                        setPowerAndAssert(helper, changing, 1, AnkerstoneMode.SINGLE);
+                        assertTicketLevels(helper, chunk, List.of(31));
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.SINGLE,
+                                        "Downgrade must preserve the other Single owner");
+
+                        setPowerAndAssert(helper, changing, 0, AnkerstoneMode.OFF);
+                        assertTicketLevels(helper, chunk, List.of(31));
+                        helper.assertBlockProperty(steady, AnkerstoneBlock.MODE, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.SINGLE,
+                                        "Deactivation must preserve the other Single owner");
+
+                        helper.setBlock(changing, Blocks.AIR);
+                        assertTicketLevels(helper, chunk, List.of(31));
+                        helper.setBlock(steady, Blocks.AIR);
+                        assertTicketLevels(helper, chunk, List.of());
+                } finally {
+                        helper.setBlock(steady, Blocks.AIR);
+                        helper.setBlock(changing, Blocks.AIR);
+                        helper.setBlock(steady.below(), Blocks.AIR);
+                        helper.setBlock(changing.below(), Blocks.AIR);
+                }
+                helper.assertFalse(savedData.getOwnerModes().containsKey(helper.absolutePos(steady)),
+                                "Removed steady owner must not remain saved");
+                helper.assertFalse(savedData.getOwnerModes().containsKey(helper.absolutePos(changing)),
+                                "Removed changing owner must not remain saved");
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
+        public void wideOwnerSurvivesModeChanges(GameTestHelper helper) {
+                BlockPos steady = new BlockPos(2, 2, 2);
+                BlockPos changing = new BlockPos(2, 6, 2);
+                ChunkPos chunk = ChunkPos.containing(helper.absolutePos(steady));
+                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+
+                assertTicketLevels(helper, chunk, List.of());
+                try {
+                        helper.setBlock(steady, ModBlocks.ANKERSTONE);
+                        helper.setBlock(changing, ModBlocks.ANKERSTONE);
+                        setPowerAndAssert(helper, steady, 15, AnkerstoneMode.WIDE);
+                        setPowerAndAssert(helper, changing, 15, AnkerstoneMode.WIDE);
+                        assertTicketLevels(helper, chunk, List.of(30));
+
+                        setPowerAndAssert(helper, changing, 1, AnkerstoneMode.SINGLE);
+                        assertTicketLevels(helper, chunk, List.of(30, 31));
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.WIDE,
+                                        "Downgrade must preserve the other Wide owner");
+
+                        setPowerAndAssert(helper, changing, 15, AnkerstoneMode.WIDE);
+                        assertTicketLevels(helper, chunk, List.of(30));
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.WIDE,
+                                        "Upgrade must preserve the other Wide owner");
+
+                        setPowerAndAssert(helper, changing, 0, AnkerstoneMode.OFF);
+                        assertTicketLevels(helper, chunk, List.of(30));
+                        helper.assertBlockProperty(steady, AnkerstoneBlock.MODE, AnkerstoneMode.WIDE);
+                        helper.assertTrue(
+                                        savedData.getOwnerModes()
+                                                        .get(helper.absolutePos(steady)) == AnkerstoneMode.WIDE,
+                                        "Deactivation must preserve the other Wide owner");
+
+                        helper.setBlock(changing, Blocks.AIR);
+                        assertTicketLevels(helper, chunk, List.of(30));
+                        helper.setBlock(steady, Blocks.AIR);
+                        assertTicketLevels(helper, chunk, List.of());
+                } finally {
+                        helper.setBlock(steady, Blocks.AIR);
+                        helper.setBlock(changing, Blocks.AIR);
+                        helper.setBlock(steady.below(), Blocks.AIR);
+                        helper.setBlock(changing.below(), Blocks.AIR);
+                }
+                helper.assertFalse(savedData.getOwnerModes().containsKey(helper.absolutePos(steady)),
+                                "Removed steady owner must not remain saved");
+                helper.assertFalse(savedData.getOwnerModes().containsKey(helper.absolutePos(changing)),
+                                "Removed changing owner must not remain saved");
+                helper.succeed();
+        }
+
         @GameTest(environment = "ankerstone-test:restoration")
         public void restoringSavedOwnersRebuildsSharedTickets(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();

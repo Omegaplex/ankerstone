@@ -51,6 +51,7 @@ Coverage includes:
 - guaranteed negative-coordinate X/Z boundary pushes and sticky round trips, plus Single/Wide powered arrivals with destination ticket checks
 - Single and Wide sticky retraction after both power sources are removed in the same tick, in either order; checks Off movement, owner/ticket cleanup, and retained offline credit
 - delivered activation credit is not awarded again when JOIN handling runs after the advancement is revoked
+- Single and Wide owners retain their tickets while another owner in the same chunk changes mode, turns Off, and is removed
 
 Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 
