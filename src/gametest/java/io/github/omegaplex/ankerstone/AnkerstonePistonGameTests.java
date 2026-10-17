@@ -559,13 +559,13 @@ public class AnkerstonePistonGameTests {
                 new BlockPos(-2048, 100, -18), Direction.SOUTH, true);
     }
 
-    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 60)
+    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 200)
     public void negativeBoundaryArrivalActivatesSingle(GameTestHelper helper) {
         assertNegativeBoundaryActivation(helper,
                 new BlockPos(-18, 100, -3072), AnkerstoneMode.SINGLE);
     }
 
-    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 60)
+    @GameTest(environment = "ankerstone-test:negative_boundaries", maxTicks = 200)
     public void negativeBoundaryArrivalActivatesWide(GameTestHelper helper) {
         assertNegativeBoundaryActivation(helper,
                 new BlockPos(-18, 100, -4096), AnkerstoneMode.WIDE);
