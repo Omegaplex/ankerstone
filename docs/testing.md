@@ -18,7 +18,7 @@ Coverage includes:
 - owner serialization and protection from mutable input positions
 - ticket removal after the caller changes its input position
 - ticket restoration
-- piston reactions; `OFF` piston pushing & sticky-piston pulling, `SINGLE` & `WIDE` resisting pushes
+- piston reactions; `OFF` piston pushing and sticky pulling, with `SINGLE` and `WIDE` resisting both pushes and sticky pulls
 - ownership at powered destinations, `OFF` pushes, and blocked pushes
 - active placement, power transitions and comparator readouts
 - tool eligibility

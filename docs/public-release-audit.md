@@ -55,7 +55,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 ### Other useful cases
 
-- [ ] Test sticky retraction against Single and Wide blocks that remain powered. Active push blocking is covered, but active sticky-pull blocking is not directly tested.
+- [x] Test sticky retraction against Single and Wide blocks that remain powered. The piston retracts while the block, owner mode, ticket, and earned offline credit remain intact.
 - [ ] Test an anchor changing mode while another anchor shares its chunk. Check the actual ticket levels through upgrades, downgrades, and removal so one owner cannot release another's ticket.
 - [ ] Automate the manual no-repeat-credit check: deliver pending credit, revoke the advancement, and invoke JOIN again. The consumed pending entry must not award it again.
 
