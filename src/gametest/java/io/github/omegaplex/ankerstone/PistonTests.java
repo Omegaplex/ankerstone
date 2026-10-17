@@ -1,5 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
+import static io.github.omegaplex.ankerstone.PistonTestSupport.assertAnkerstoneTicketLevel;
+import static io.github.omegaplex.ankerstone.PistonTestSupport.assertNoActiveOwnersOrTickets;
 import static io.github.omegaplex.ankerstone.PistonTestSupport.assertOffAnkerstoneCanBePulled;
 import static io.github.omegaplex.ankerstone.PistonTestSupport.assertOffAnkerstoneCanBePushed;
 import static io.github.omegaplex.ankerstone.PistonTestSupport.clearPistonFixture;
@@ -13,10 +15,122 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.material.PushReaction;
 
 public class PistonTests {
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void singleAnchorPowerLossFirst(GameTestHelper helper) {
+        assertSameTickPowerLoss(helper, AnkerstoneMode.SINGLE, true);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void singlePistonPowerLossFirst(GameTestHelper helper) {
+        assertSameTickPowerLoss(helper, AnkerstoneMode.SINGLE, false);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void wideAnchorPowerLossFirst(GameTestHelper helper) {
+        assertSameTickPowerLoss(helper, AnkerstoneMode.WIDE, true);
+    }
+
+    @GameTest(environment = "ankerstone-test:pistons", structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+    public void widePistonPowerLossFirst(GameTestHelper helper) {
+        assertSameTickPowerLoss(helper, AnkerstoneMode.WIDE, false);
+    }
+
+    private void assertSameTickPowerLoss(
+            GameTestHelper helper, AnkerstoneMode mode, boolean anchorFirst) {
+        BlockPos piston = new BlockPos(2, 2, 2);
+        BlockPos start = piston.east(2);
+        BlockPos returned = piston.east();
+        int wireLength = mode == AnkerstoneMode.SINGLE ? 2 : 1;
+        BlockPos anchorPower = start.east(wireLength + 1);
+        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        GlobalPos startPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(start));
+        GlobalPos returnedPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(returned));
+        UUID placer = UUID.randomUUID();
+
+        Runnable cleanup = () -> {
+            clearPistonFixture(helper, piston);
+            data.removePlacer(startPosition);
+            data.removePlacer(returnedPosition);
+            data.removePendingCredit(placer);
+        };
+        try {
+            helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
+            helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
+                    .setValue(PistonBaseBlock.FACING, Direction.EAST)
+                    .setValue(PistonBaseBlock.EXTENDED, true));
+            helper.setBlock(returned, Blocks.PISTON_HEAD.defaultBlockState()
+                    .setValue(PistonHeadBlock.FACING, Direction.EAST)
+                    .setValue(PistonHeadBlock.TYPE, PistonType.STICKY));
+            for (int distance = 1; distance <= wireLength; distance++) {
+                BlockPos wire = start.east(distance);
+                helper.setBlock(wire.below(), Blocks.GLASS);
+                helper.setBlock(wire, Blocks.REDSTONE_WIRE);
+            }
+            helper.setBlock(anchorPower, Blocks.REDSTONE_BLOCK);
+            data.setPlacer(startPosition, placer);
+            helper.setBlock(start, ModBlocks.ANKERSTONE);
+            helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
+            assertAnkerstoneTicketLevel(helper, start,
+                    mode == AnkerstoneMode.WIDE ? 30 : 31);
+            helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+                    .getOwnerModes().get(helper.absolutePos(start)) == mode,
+                    "Powered fixture must register its owner mode");
+            helper.assertTrue(data.hasPendingCredit(placer),
+                    "Initial activation must queue credit for the offline placer");
+            helper.assertTrue(data.getPlacer(startPosition) == null,
+                    "Queued activation credit must consume the placer record");
+            if (anchorFirst) {
+                helper.setBlock(anchorPower, Blocks.AIR);
+                helper.setBlock(piston.west(), Blocks.AIR);
+            } else {
+                helper.setBlock(piston.west(), Blocks.AIR);
+                helper.setBlock(anchorPower, Blocks.AIR);
+            }
+            helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+            long movementDeadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                boolean movementFinished = helper.getBlockState(piston).is(Blocks.STICKY_PISTON)
+                        && helper.getBlockState(returned).is(ModBlocks.ANKERSTONE)
+                        && helper.getBlockState(start).is(Blocks.AIR);
+                if (!movementFinished && helper.getTick() < movementDeadline) {
+                    return;
+                }
+                finished[0] = true;
+                try {
+                    helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
+                    helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
+                    helper.assertBlockPresent(ModBlocks.ANKERSTONE, returned);
+                    helper.assertBlockProperty(returned, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                    helper.assertBlockPresent(Blocks.AIR, start);
+                    assertNoActiveOwnersOrTickets(helper, start, returned);
+                    helper.assertTrue(
+                            data.getPlacer(startPosition) == null
+                                    && data.getPlacer(returnedPosition) == null,
+                            "Retraction must not leave or recreate placer records");
+                    helper.assertTrue(data.hasPendingCredit(placer),
+                            "Retraction must preserve already-earned offline credit");
+                } finally {
+                    cleanup.run();
+                }
+                helper.succeed();
+            });
+        } catch (RuntimeException failure) {
+            cleanup.run();
+            throw failure;
+        }
+    }
 
     @GameTest
     public void pistonReactionMatchesMode(GameTestHelper helper) {

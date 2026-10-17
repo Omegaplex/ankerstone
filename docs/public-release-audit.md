@@ -49,7 +49,8 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [x] Test a real comparator circuit updating to 0, 7, and 15, including decreasing power.
 - [x] Cover Off piston pushes and sticky pulls in all six directions: east, west, north, south, up, and down. Check physical positions, mode, placer transfer, and absence of active ownership/tickets.
 - [x ] Test movement across actual X and Z chunk boundaries, including negative coordinates. Check absolute positions rather than assuming local coordinate zero is a chunk boundary. Include a powered destination and check actual tickets as well as saved owners.
-- [ ] Test a sticky piston retracting on the same tick Single or Wide Ankerstone loses power. Try both update orders and check block positions, chunk ownership/tickets, and placer records. Also check in-game for ghost blocks or client/server disagreement.
+- [x] Test Single and Wide sticky retraction with both power-removal orders in the same tick, before the queued retraction runs. Check block positions, owners, tickets, placer records, and pending credit.
+- [ ] Check the same power-loss cases in-game for ghost blocks or client/server disagreement.
 - [ ] Check actual entity ticking in Single and Wide coverage, including Wide's corners, positions just outside the footprint, Off mode, and another dimension. Keep player, spawn, and test-runner tickets from making the check pass accidentally.
 
 ### Other useful cases
