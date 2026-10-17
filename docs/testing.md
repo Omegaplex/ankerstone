@@ -62,7 +62,13 @@ other stone family. Recipe-book discovery is checked manually.
 
 Wait for observable readiness conditions when setup depends on asynchronous work. Use bounded timeouts that identify the condition that failed.
 
-Use fixed delays only when deliberately checking timing, such as sampling a redstone pulse. Review existing piston waits to distinguish intentional timing checks from assumptions that movement has finished.
+Piston movement tests wait for the completed block arrangement, then check mode, ownership, tickets, and attribution. Movement deadlines run the final assertions and cleanup even when movement never finishes. Callback guards prevent later ticks from checking an already-cleared fixture.
+
+Negative-coordinate fixtures have a separate chunk-readiness deadline, leaving time for movement and cleanup.
+
+Fixed delays remain for blocked movement, deliberate interruption during movement, and redstone pulse sampling.
+
+A temporary blocked-push check confirmed that the push deadline preserves the original failure and clears the fixture, placer records, owners, and Ankerstone tickets.
 
 ## Manual Restart Check
 

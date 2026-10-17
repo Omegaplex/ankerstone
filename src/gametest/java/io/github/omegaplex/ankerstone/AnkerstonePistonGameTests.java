@@ -11,9 +11,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
-import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.TicketStorage;
@@ -118,10 +116,25 @@ public class AnkerstonePistonGameTests {
             data.setPlacer(oldPosition, placer);
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
             helper.assertBlockPresent(Blocks.AIR, destination);
-
             helper.setBlock(power, Blocks.REDSTONE_BLOCK);
 
-            helper.runAfterDelay(10, () -> {
+            long movementDeadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+
+                boolean movementFinished = helper.getBlockState(start).is(Blocks.PISTON_HEAD)
+                        && helper.getBlockState(destination).is(ModBlocks.ANKERSTONE);
+
+                if (!movementFinished && helper.getTick() < movementDeadline) {
+                    return;
+                }
+
+                finished[0] = true;
+
                 try {
                     helper.assertBlockPresent(Blocks.PISTON, piston);
                     helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
@@ -198,29 +211,56 @@ public class AnkerstonePistonGameTests {
             assertNoActiveOwnersOrTickets(helper, start, destination);
             helper.setBlock(power, Blocks.REDSTONE_BLOCK);
 
-            helper.runAfterDelay(10, () -> {
-                try {
-                    helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
-                    helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
-                    helper.assertBlockPresent(Blocks.PISTON_HEAD, start);
-                    helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
-                    helper.assertBlockProperty(destination,
-                            AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
-                            "Sticky extension must preserve the placer");
-                    helper.assertTrue(data.getPlacer(oldPosition) == null,
-                            "Sticky extension must clear the old placer record");
-                    assertNoActiveOwnersOrTickets(helper, start, destination);
-                    helper.setBlock(power, Blocks.AIR);
-                } catch (RuntimeException failure) {
-                    clearOffPistonFixture(helper, piston, direction);
-                    data.removePlacer(oldPosition);
-                    data.removePlacer(newPosition);
-                    throw failure;
-                }
-            });
+            long extensionDeadline = helper.getTick() + 15;
+            long retractionDeadline = helper.getTick() + 30;
+            boolean[] retracting = { false };
+            boolean[] finished = { false };
 
-            helper.runAfterDelay(20, () -> {
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+
+                if (!retracting[0]) {
+                    boolean extensionFinished = helper.getBlockState(start).is(Blocks.PISTON_HEAD)
+                            && helper.getBlockState(destination).is(ModBlocks.ANKERSTONE);
+
+                    if (!extensionFinished && helper.getTick() < extensionDeadline) {
+                        return;
+                    }
+
+                    try {
+                        helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
+                        helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
+                        helper.assertBlockPresent(Blocks.PISTON_HEAD, start);
+                        helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
+                        helper.assertBlockProperty(destination,
+                                AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                        helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
+                                "Sticky extension must preserve the placer");
+                        helper.assertTrue(data.getPlacer(oldPosition) == null,
+                                "Sticky extension must clear the old placer record");
+                        assertNoActiveOwnersOrTickets(helper, start, destination);
+                        helper.setBlock(power, Blocks.AIR);
+                        retracting[0] = true;
+                    } catch (RuntimeException failure) {
+                        finished[0] = true;
+                        clearOffPistonFixture(helper, piston, direction);
+                        data.removePlacer(oldPosition);
+                        data.removePlacer(newPosition);
+                        throw failure;
+                    }
+
+                    return;
+                }
+
+                boolean retractionFinished = helper.getBlockState(start).is(ModBlocks.ANKERSTONE)
+                        && helper.getBlockState(destination).is(Blocks.AIR);
+
+                if (!retractionFinished && helper.getTick() < retractionDeadline) {
+                    return;
+                }
+                finished[0] = true;
                 try {
                     helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
                     helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
@@ -299,100 +339,6 @@ public class AnkerstonePistonGameTests {
     }
 
     @GameTest(maxTicks = 40)
-    public void pistonPushKeepsPlacer(GameTestHelper helper) {
-        BlockPos piston = new BlockPos(2, 2, 2);
-        BlockPos start = piston.east();
-        BlockPos destination = start.east();
-        GlobalPos oldPosition = GlobalPos.of(
-                helper.getLevel().dimension(), helper.absolutePos(start));
-        GlobalPos newPosition = GlobalPos.of(
-                helper.getLevel().dimension(), helper.absolutePos(destination));
-        UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
-        try {
-            helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
-                    .setValue(PistonBaseBlock.FACING, Direction.EAST));
-            helper.setBlock(start, ModBlocks.ANKERSTONE);
-            data.setPlacer(oldPosition, placer);
-
-            helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
-
-            helper.runAfterDelay(10, () -> {
-                try {
-                    helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
-                    helper.assertBlockProperty(destination,
-                            AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
-                            "Piston push must keep the original placer at the destination");
-                    helper.assertTrue(data.getPlacer(oldPosition) == null,
-                            "Piston push must clear attribution at the old position");
-                } finally {
-                    clearPistonFixture(helper, piston);
-                    data.removePlacer(oldPosition);
-                    data.removePlacer(newPosition);
-                }
-                helper.succeed();
-            });
-        } catch (RuntimeException failure) {
-            clearPistonFixture(helper, piston);
-            data.removePlacer(oldPosition);
-            data.removePlacer(newPosition);
-            throw failure;
-        }
-    }
-
-    @GameTest(maxTicks = 40)
-    public void stickyPistonPullKeepsPlacer(GameTestHelper helper) {
-        BlockPos piston = new BlockPos(2, 2, 2);
-        BlockPos start = piston.east(2);
-        BlockPos destination = piston.east();
-        GlobalPos oldPosition = GlobalPos.of(
-                helper.getLevel().dimension(), helper.absolutePos(start));
-        GlobalPos newPosition = GlobalPos.of(
-                helper.getLevel().dimension(), helper.absolutePos(destination));
-        UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
-        try {
-            helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
-            helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
-                    .setValue(PistonBaseBlock.FACING, Direction.EAST)
-                    .setValue(PistonBaseBlock.EXTENDED, true));
-            helper.setBlock(destination, Blocks.PISTON_HEAD.defaultBlockState()
-                    .setValue(PistonHeadBlock.FACING, Direction.EAST)
-                    .setValue(PistonHeadBlock.TYPE, PistonType.STICKY));
-            helper.setBlock(start, ModBlocks.ANKERSTONE);
-            data.setPlacer(oldPosition, placer);
-
-            helper.setBlock(piston.west(), Blocks.AIR);
-
-            helper.runAfterDelay(10, () -> {
-                try {
-                    helper.assertBlockPresent(Blocks.STICKY_PISTON, piston);
-                    helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
-                    helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
-                    helper.assertBlockProperty(destination,
-                            AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                    helper.assertBlockPresent(Blocks.AIR, start);
-                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
-                            "Sticky pull must keep the original placer at the destination");
-                    helper.assertTrue(data.getPlacer(oldPosition) == null,
-                            "Sticky pull must clear attribution at the old position");
-                } finally {
-                    clearPistonFixture(helper, piston);
-                    data.removePlacer(oldPosition);
-                    data.removePlacer(newPosition);
-                }
-                helper.succeed();
-            });
-        } catch (RuntimeException failure) {
-            clearPistonFixture(helper, piston);
-            data.removePlacer(oldPosition);
-            data.removePlacer(newPosition);
-            throw failure;
-        }
-    }
-
-    @GameTest(maxTicks = 40)
     public void adjacentPushKeepsBothPlacers(GameTestHelper helper) {
         BlockPos piston = new BlockPos(2, 2, 2);
         BlockPos first = piston.east();
@@ -417,7 +363,22 @@ public class AnkerstonePistonGameTests {
 
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
 
-            helper.runAfterDelay(10, () -> {
+            long movementDeadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                boolean movementFinished = helper.getBlockState(first).is(Blocks.PISTON_HEAD)
+                        && helper.getBlockState(second).is(ModBlocks.ANKERSTONE)
+                        && helper.getBlockState(destination).is(ModBlocks.ANKERSTONE);
+
+                if (!movementFinished && helper.getTick() < movementDeadline) {
+                    return;
+                }
+                finished[0] = true;
+
                 try {
                     helper.assertBlockPresent(Blocks.PISTON_HEAD, first);
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, second);
@@ -468,6 +429,7 @@ public class AnkerstonePistonGameTests {
             // Obstruct the queued push before its block event runs.
             helper.setBlock(destination, Blocks.OBSIDIAN);
 
+            // Give the powered piston time to attempt movement.
             helper.runAfterDelay(10, () -> {
                 try {
                     helper.assertTrue(helper.getLevel().getBestNeighborSignal(
@@ -514,6 +476,7 @@ public class AnkerstonePistonGameTests {
             data.setPlacer(oldPosition, placer);
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
 
+            // Remove the block during movement, before it settles.
             helper.runAfterDelay(1, () -> {
                 try {
                     helper.assertBlockPresent(Blocks.MOVING_PISTON, destination);
@@ -621,6 +584,18 @@ public class AnkerstonePistonGameTests {
 
         try {
             loadNegativeBoundaryChunks(helper, piston, Direction.EAST);
+            helper.runAtTickTime(160, () -> {
+                try {
+                    helper.assertTrue(
+                            helper.getLevel().isPositionEntityTicking(worldPiston)
+                                    && helper.getLevel().isPositionEntityTicking(
+                                            worldPiston.east(2)),
+                            "Negative arrival chunks were not ready by tick 160");
+                } catch (RuntimeException failure) {
+                    clearPistonFixture(helper, piston);
+                    throw failure;
+                }
+            });
             helper.startSequence()
                     .thenWaitUntil(() -> {
 
@@ -679,6 +654,18 @@ public class AnkerstonePistonGameTests {
                 "The negative-coordinate fixture must cross a chunk boundary");
         try {
             loadNegativeBoundaryChunks(helper, piston, direction);
+            helper.runAtTickTime(160, () -> {
+                try {
+                    helper.assertTrue(
+                            helper.getLevel().isPositionEntityTicking(worldPiston)
+                                    && helper.getLevel().isPositionEntityTicking(
+                                            worldPiston.relative(direction, 2)),
+                            "Negative boundary chunks were not ready by tick 160");
+                } catch (RuntimeException failure) {
+                    clearOffPistonFixture(helper, piston, direction);
+                    throw failure;
+                }
+            });
             helper.startSequence()
                     .thenWaitUntil(() -> {
                         helper.assertTrue(
@@ -749,6 +736,8 @@ public class AnkerstonePistonGameTests {
             helper.setBlock(start, ModBlocks.ANKERSTONE);
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
+
+            // Give the powered piston time to attempt movement.
             helper.runAfterDelay(10, () -> {
                 try {
                     helper.assertTrue(helper.getLevel().getBestNeighborSignal(
@@ -805,7 +794,21 @@ public class AnkerstonePistonGameTests {
             helper.assertBlockPresent(Blocks.AIR, destination);
             assertNoActiveOwnersOrTickets(helper, start, destination);
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
-            helper.runAfterDelay(10, () -> {
+            long movementDeadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                boolean movementFinished = helper.getBlockState(start).is(Blocks.PISTON_HEAD)
+                        && helper.getBlockState(destination).is(ModBlocks.ANKERSTONE);
+
+                if (!movementFinished && helper.getTick() < movementDeadline) {
+                    return;
+                }
+
+                finished[0] = true;
                 try {
                     helper.assertBlockPresent(Blocks.PISTON, piston);
                     helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, true);
