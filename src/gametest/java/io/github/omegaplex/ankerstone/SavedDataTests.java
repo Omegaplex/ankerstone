@@ -61,6 +61,37 @@ public class SavedDataTests {
                 helper.succeed();
         }
 
+        @GameTest
+        public void ownerSaveFlagTracksChanges(GameTestHelper helper) {
+                BlockPos position = new BlockPos(-17, 64, -1);
+                AnkerstoneSavedData data = new AnkerstoneSavedData();
+
+                data.setDirty(false);
+                data.addOwner(position, AnkerstoneMode.SINGLE);
+                helper.assertTrue(data.isDirty(),
+                                "Adding an owner must require saving");
+
+                data.setDirty(false);
+                data.addOwner(position, AnkerstoneMode.SINGLE);
+                helper.assertFalse(data.isDirty(),
+                                "An unchanged owner must not require saving");
+
+                data.addOwner(position, AnkerstoneMode.WIDE);
+                helper.assertTrue(data.isDirty(),
+                                "Changing an owner mode must require saving");
+
+                data.setDirty(false);
+                data.removeOwner(position);
+                helper.assertTrue(data.isDirty(),
+                                "Removing an owner must require saving");
+
+                data.setDirty(false);
+                data.removeOwner(position);
+                helper.assertFalse(data.isDirty(),
+                                "Removing an absent owner must change nothing");
+                helper.succeed();
+        }
+
         private AnkerstoneSavedData roundTrip(AnkerstoneSavedData original) {
                 Tag encoded = AnkerstoneSavedData.CODEC
                                 .encodeStart(NbtOps.INSTANCE, original).getOrThrow();

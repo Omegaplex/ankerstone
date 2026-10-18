@@ -44,9 +44,9 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 ### Test quality review
 
-- [ ] Review what each test proves and whether it would catch a real mod failure. Check that setup or unrelated Minecraft behavior cannot make it pass accidentally.
-- [ ] Remove tests that repeat coverage without protecting a different risk. Keep useful edge cases and readable repetition; do not add abstractions just to reduce the line count.
-- [ ] Check reliability, useful failure messages, cleanup on failure or timeout, and maintenance cost. Judge the suite by these checks, not test count or the test-to-mod line ratio.
+- [x] Review what each test proves and whether it would catch a real mod failure. Check that setup or unrelated Minecraft behavior cannot make it pass accidentally.
+- [x] Remove tests that repeat coverage without protecting a different risk. Keep useful edge cases and readable repetition; do not add abstractions just to reduce the line count.
+- [x] Check reliability, useful failure messages, cleanup on failure or timeout, and maintenance cost. Judge the suite by these checks, not test count or the test-to-mod line ratio.
 
 ### Focused test follow-ups
 

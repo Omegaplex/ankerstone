@@ -21,12 +21,12 @@ public class ChunkTickingTests {
 
     @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
     public void singleTicksOnlyCenter(GameTestHelper helper) {
-        assertFootprint(helper, helper.getLevel(), AnkerstoneMode.SINGLE, 1024);
+        assertFootprint(helper, helper.getLevel(), AnkerstoneMode.SINGLE, 1024, 5);
     }
 
     @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
     public void wideTicksThreeByThree(GameTestHelper helper) {
-        assertFootprint(helper, helper.getLevel(), AnkerstoneMode.WIDE, 2048);
+        assertFootprint(helper, helper.getLevel(), AnkerstoneMode.WIDE, 2048, 5);
     }
 
     @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
@@ -180,16 +180,18 @@ public class ChunkTickingTests {
         }
     }
 
-    @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
-    public void wideTicksInNether(GameTestHelper helper) {
+    @GameTest(environment = "ankerstone-test:nether_ticking", maxTicks = 600)
+    public void wideKeepsNetherTicking(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         helper.assertTrue(nether != null, "Nether must be available");
-        assertFootprint(helper, nether, AnkerstoneMode.WIDE, 4096);
+        helper.assertFalse(nether.getChunkSource().hasActiveTickets(),
+                "Nether must start without dimension-keeping tickets");
+        assertFootprint(helper, nether, AnkerstoneMode.WIDE, 4096, 320);
     }
 
     private void assertFootprint(
             GameTestHelper helper, ServerLevel level,
-            AnkerstoneMode mode, int chunkOffset) {
+            AnkerstoneMode mode, int chunkOffset, int minimumTicks) {
         boolean wide = mode == AnkerstoneMode.WIDE;
         BlockPos anchor = remoteAnchor(helper, chunkOffset);
         ArmorStand probe = newProbe(level, anchor.above(2));
@@ -216,6 +218,7 @@ public class ChunkTickingTests {
         probes.addAll(outside);
         boolean[] added = { false };
         boolean[] finished = { false };
+        long[] observationDeadline = { 0 };
 
         try {
             helper.assertFalse(level.isPositionEntityTicking(anchor),
@@ -251,14 +254,15 @@ public class ChunkTickingTests {
                             helper.assertTrue(level.addFreshEntity(entity),
                                     "Probe must be added at " + entity.blockPosition());
                         }
+                        observationDeadline[0] = helper.getTick() + minimumTicks + 20;
                         added[0] = true;
                         return;
                     }
 
-                    boolean observed = probe.tickCount >= 5
+                    boolean observed = probe.tickCount >= minimumTicks
                             && (!wide || neighbors.stream().allMatch(
-                                    neighbor -> neighbor.tickCount >= 5));
-                    if (!observed && helper.getTick() < 180) {
+                                    neighbor -> neighbor.tickCount >= minimumTicks));
+                    if (!observed && helper.getTick() < observationDeadline[0]) {
                         return;
                     }
 
@@ -268,15 +272,15 @@ public class ChunkTickingTests {
                             "Anchor must remain in " + mode + " during measurement");
                     helper.assertFalse(probe.isRemoved(),
                             "Probe must remain present during measurement");
-                    helper.assertTrue(probe.tickCount >= 5,
-                            "Center must tick the probe at least five times; got "
+                    helper.assertTrue(probe.tickCount >= minimumTicks,
+                            "Center must tick at least " + minimumTicks + " times; got "
                                     + probe.tickCount);
                     for (ArmorStand neighbor : neighbors) {
                         ChunkPos chunk = ChunkPos.containing(neighbor.blockPosition());
                         helper.assertTrue(level.getEntity(neighbor.getUUID()) == neighbor,
                                 "Neighbor probe must remain tracked in " + chunk);
                         helper.assertTrue(
-                                wide ? neighbor.tickCount >= 5 : neighbor.tickCount == 0,
+                                wide ? neighbor.tickCount >= minimumTicks : neighbor.tickCount == 0,
                                 mode + " unexpected ticks in neighboring chunk " + chunk
                                         + ": " + neighbor.tickCount);
                     }

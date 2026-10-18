@@ -202,7 +202,7 @@ public class CraftingTests {
                         CraftingInput input, Item expectedItem, int expectedCount) {
                 RecipeHolder<CraftingRecipe> recipe = helper.getLevel().recipeAccess()
                                 .getRecipeFor(RecipeType.CRAFTING, input, helper.getLevel())
-                                .orElseThrow(() -> new AssertionError("No recipe matched " + name));
+                                .orElseThrow(() -> helper.assertionException("No recipe matched " + name));
                 Identifier expectedId = Identifier.fromNamespaceAndPath("ankerstone", name);
                 helper.assertTrue(recipe.id().identifier().equals(expectedId),
                                 "Wrong recipe for " + name + ": " + recipe.id());
@@ -265,10 +265,10 @@ public class CraftingTests {
                 ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE,
                                 Identifier.fromNamespaceAndPath("ankerstone", name));
                 RecipeHolder<?> holder = helper.getLevel().recipeAccess().byKey(key)
-                                .orElseThrow(() -> new AssertionError("Missing recipe: " + name));
+                                .orElseThrow(() -> helper.assertionException("Missing recipe: " + name));
 
                 if (!(holder.value() instanceof StonecutterRecipe recipe)) {
-                        throw new AssertionError("Expected a stonecutting recipe: " + name);
+                        throw helper.assertionException("Expected a stonecutting recipe: " + name);
                 }
                 SingleRecipeInput input = new SingleRecipeInput(new ItemStack(ingredient));
                 helper.assertTrue(recipe.matches(input, helper.getLevel()),
