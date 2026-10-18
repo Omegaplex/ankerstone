@@ -58,7 +58,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [x] Test Single and Wide sticky retraction with both power-removal orders in the same tick, before the queued retraction runs. Check block positions, owners, tickets, placer records, and pending credit.
 - [ ] Check the same power-loss cases in-game for ghost blocks or client/server disagreement.
 - [x] Check actual entity ticking in Single and Wide coverage, including Wide's corners, positions just outside the footprint, Off mode, and another dimension. Keep player, spawn, and test-runner tickets from making the check pass accidentally.
-- [ ] Directly check that a Nether anchor does not tick entities at matching Overworld coordinates. Nether footprint coverage alone does not prove dimension isolation.
+- [x] Directly check that a Nether anchor does not tick entities at matching Overworld coordinates. Nether footprint coverage alone does not prove dimension isolation.
 
 ### Other useful cases
 

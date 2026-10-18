@@ -56,6 +56,7 @@ Coverage includes:
 - Wide ticks entities throughout its 3×3 area, including corners, but not the 16-chunk outer ring
 - Off leaves a tracked entity unticked while a separate control entity advances
 - Wide's ticking footprint also works in the Nether
+- A Wide Nether anchor ticks its Nether probe without ticking a tracked Overworld probe at matching coordinates
 
 Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 

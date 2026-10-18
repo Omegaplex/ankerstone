@@ -99,6 +99,88 @@ public class ChunkTickingTests {
     }
 
     @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
+    public void netherDoesNotTickOverworld(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerLevel nether = level.getServer().getLevel(Level.NETHER);
+        helper.assertTrue(nether != null, "Nether must be available");
+        BlockPos anchor = remoteAnchor(helper, 5120);
+        ArmorStand probe = newProbe(level, anchor.above(2));
+        ArmorStand control = newProbe(nether, anchor.above(2));
+        List<ArmorStand> probes = List.of(probe, control);
+        boolean[] added = { false };
+        boolean[] finished = { false };
+        Runnable cleanup = () -> {
+            try {
+                clearFixture(nether, anchor, probes);
+            } finally {
+                clearFixture(level, anchor, List.of());
+            }
+        };
+        try {
+            helper.assertFalse(level.isPositionEntityTicking(anchor),
+                    "Remote fixture must not already be entity-ticking");
+            prepareTerrain(level, anchor);
+            level.getChunkSource().addTicketWithRadius(
+                    LOAD_ONLY_TICKET, ChunkPos.containing(anchor), 2);
+            helper.assertFalse(nether.isPositionEntityTicking(anchor),
+                    "Nether fixture must not already be entity-ticking");
+            prepareTerrain(nether, anchor);
+            setAnchorPower(nether, anchor, 15);
+            nether.setBlock(anchor, ModBlocks.ANKERSTONE.defaultBlockState(),
+                    Block.UPDATE_ALL);
+
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                try {
+                    if (!added[0]) {
+                        boolean ready = level.areEntitiesLoaded(
+                                ChunkPos.containing(anchor).pack())
+                                && nether.areEntitiesLoaded(
+                                        ChunkPos.containing(anchor).pack())
+                                && nether.isPositionEntityTicking(anchor);
+                        if (!ready && helper.getTick() < 160) {
+                            return;
+                        }
+                        helper.assertTrue(ready,
+                                "Both dimension fixtures must be ready");
+                        helper.assertTrue(level.addFreshEntity(probe),
+                                "Overworld probe must be added");
+                        helper.assertTrue(nether.addFreshEntity(control),
+                                "Nether probe must be added");
+                        added[0] = true;
+                        return;
+                    }
+
+                    if (control.tickCount < 10 && helper.getTick() < 180) {
+                        return;
+                    }
+                    finished[0] = true;
+                    helper.assertTrue(control.tickCount >= 10,
+                            "Nether probe must tick at least ten times");
+                    helper.assertTrue(level.getEntity(probe.getUUID()) == probe,
+                            "Overworld probe must remain tracked during measurement");
+                    helper.assertTrue(probe.tickCount == 0,
+                            "Nether anchor must not tick the Overworld probe; got " + probe.tickCount);
+                    helper.assertTrue(nether.getBlockState(anchor)
+                            .getValue(AnkerstoneBlock.MODE) == AnkerstoneMode.WIDE,
+                            "Nether anchor must remain Wide during measurement");
+                    cleanup.run();
+                    helper.succeed();
+                } catch (RuntimeException failure) {
+                    finished[0] = true;
+                    cleanup.run();
+                    throw failure;
+                }
+            });
+        } catch (RuntimeException failure) {
+            cleanup.run();
+            throw failure;
+        }
+    }
+
+    @GameTest(environment = "ankerstone-test:entity_ticking", maxTicks = 200)
     public void wideTicksInNether(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         helper.assertTrue(nether != null, "Nether must be available");
