@@ -52,6 +52,10 @@ Coverage includes:
 - Single and Wide sticky retraction after both power sources are removed in the same tick, in either order; checks Off movement, owner/ticket cleanup, and retained offline credit
 - delivered activation credit is not awarded again when JOIN handling runs after the advancement is revoked
 - Single and Wide owners retain their tickets while another owner in the same chunk changes mode, turns Off, and is removed
+- Single ticks entities in its center chunk, but not the surrounding 24 chunks checked
+- Wide ticks entities throughout its 3×3 area, including corners, but not the 16-chunk outer ring
+- Off leaves a tracked entity unticked while a separate control entity advances
+- Wide's ticking footprint also works in the Nether
 
 Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
 
@@ -76,6 +80,8 @@ Negative-coordinate fixtures wait for both chunks to be entity-ticking and for t
 Fixed delays remain for blocked movement, deliberate interruption during movement, and redstone pulse sampling.
 
 A temporary blocked-push check confirmed that the push deadline preserves the original failure and clears the fixture, placer records, owners, and Ankerstone tickets.
+
+Entity-ticking tests prepare terrain before measurement and wait for entity data to load. They measure armor stands' actual tick counters. Active fixtures receive no helper simulation tickets. The Off check uses a loading-only ticket to keep its probe present and a separate ticking control. Probes are removed during cleanup and are not saved.
 
 ## Manual Restart Check
 

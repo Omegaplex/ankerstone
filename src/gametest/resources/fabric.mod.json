@@ -13,7 +13,8 @@
       "io.github.omegaplex.ankerstone.CraftingTests",
       "io.github.omegaplex.ankerstone.AdvancementTests",
       "io.github.omegaplex.ankerstone.AttributionDataTests",
-      "io.github.omegaplex.ankerstone.ActivationTests"
+      "io.github.omegaplex.ankerstone.ActivationTests",
+      "io.github.omegaplex.ankerstone.ChunkTickingTests"
     ]
   },
   "depends": {
