@@ -49,7 +49,7 @@ Coverage includes:
 - Off pushes and sticky-piston round trips across actual X and Z chunk boundaries
 - Single and Wide activation after crossing an X chunk boundary, with tickets centered on the destination and released on removal
 - guaranteed negative-coordinate X/Z boundary pushes and sticky round trips, plus Single/Wide powered arrivals with destination ticket checks
-- Single and Wide sticky retraction after both power sources are removed in the same tick, in either order; checks Off movement, owner/ticket cleanup, and retained offline credit
+- Single and Wide sticky retraction with both immediate power-removal orders; checks the intermediate mode, owner, ticket, and extended piston before removing the second source, then verifies Off movement, cleanup, and retained offline credit. Both sources are removed in the same tick before queued retraction runs.
 - delivered activation credit is not awarded again when JOIN handling runs after the advancement is revoked
 - Single and Wide owners retain their tickets while another owner in the same chunk changes mode, turns Off, and is removed
 - Single ticks entities in its center chunk, but not the surrounding 24 chunks checked
@@ -59,13 +59,47 @@ Coverage includes:
 - Wide's Nether footprint continues ticking for at least 320 entity ticks, beyond the idle-dimension grace period, without another dimension-keeping ticket present at setup
 - owner additions, mode changes, and removals require saving; unchanged or absent entries do not
 
-Off movement and exact ticket-count tests use separate batches to avoid interference from active fixtures. Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
+Off movement and exact ticket-count tests use separate batches to reduce interference. These batches share a server; they are not separate worlds. The `ticket_ownership` and `restoration` tests also rely on running synchronously. Revisit their isolation before adding delayed callbacks.
 
-Variant crafting tests check shifted and mirrored patterns, output items
-and counts, mixed ingredients, and incorrect layouts.
+Adjustable test power uses daylight-detector states with automatic sunlight updates disabled.
+
+Variant crafting tests check each family's slab, stair, and wall recipes,
+output items and counts, mixed ingredients, and incorrect layouts.
 
 Stonecutting tests check all six recipes, their outputs and counts, and rejection of the
 other stone family. Recipe-book discovery is checked manually.
+
+### Outside Review Follow-up
+
+Additional checks cover:
+
+- negative owner coordinates where floor division and ordinary integer division produce different chunks
+- registered LOAD and UNLOAD callbacks rebuilding tickets while preserving saved owners
+- Stillstone and Reinforced Stillstone full-block conduction properties, plus real circuits with a vanilla stone control
+- intermediate states between the two immediate power-removal calls
+- removing an Ankerstone during sticky retraction, after attribution has reached the pull destination
+- Nether saved ownership and tickets stay separate from Overworld storage at the same coordinates
+
+Temporary production changes confirmed that the tests detect:
+
+- ordinary division replacing floor division
+- missing LOAD registration
+- missing UNLOAD registration or runtime clearing
+- Stillstone becoming conductive
+- Reinforced Stillstone losing conduction
+- moving-block cleanup handling extension but ignoring retraction
+- missing keep-dimension-active flag, detected by Nether probes stopping before 320 ticks
+- missing simulation flag, detected by loaded chunks not becoming entity-ticking
+- missing loading flag, detected by fixture readiness failing
+- Nether ownership incorrectly using Overworld saved-data storage
+
+All temporary changes were reverted before the final passing build.
+
+Owner saved data no longer selects vanilla's forced-chunk data fixer. Its saved-data ID and existing position/mode list format are unchanged.
+
+Recipe checks retain one valid pattern per variant recipe, plus output and rejection checks. Explicit row-shifting and mirroring checks were removed. Mining checks still cover every block variant and the existing tool matrix.
+
+Lifecycle callback checks do not simulate a disk restart or a fresh chunk manager. Piston interruption checks verify immediate removal and attribution cleanup, not client rendering or later recovery from every possible interruption.
 
 ### Naming
 
@@ -79,7 +113,7 @@ Piston movement tests wait for the completed block arrangement, then check mode,
 
 Negative-coordinate fixtures wait for both chunks to be entity-ticking and for their entity data to finish loading. Minecraft can report entity-ticking status before that data is ready, but moving piston block entities do not tick until it is loaded. A separate setup deadline leaves time for movement and cleanup.
 
-Fixed delays remain for blocked movement, deliberate interruption during movement, and redstone pulse sampling.
+Fixed delays remain for blocked movement and redstone pulse sampling. Both interruption tests wait to observe a moving piston at the destination before removing it.
 
 A temporary blocked-push check confirmed that the push deadline preserves the original failure and clears the fixture, placer records, owners, and Ankerstone tickets.
 

@@ -71,9 +71,28 @@ public class PistonTests {
                     "Queued activation credit must consume the placer record");
             if (anchorFirst) {
                 helper.setBlock(anchorPower, Blocks.AIR);
+
+                helper.assertBlockProperty(start,
+                        AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+                assertNoActiveOwnersOrTickets(helper, start, returned);
+                helper.assertBlockProperty(piston,
+                        PistonBaseBlock.EXTENDED, true);
+                helper.assertBlockPresent(Blocks.PISTON_HEAD, returned);
+
                 helper.setBlock(piston.west(), Blocks.AIR);
             } else {
                 helper.setBlock(piston.west(), Blocks.AIR);
+
+                helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
+                helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+                        .getOwnerModes().get(helper.absolutePos(start)) == mode,
+                        "Removing piston power must preserve the active owner");
+                assertAnkerstoneTicketLevel(helper, start,
+                        mode == AnkerstoneMode.WIDE ? 30 : 31);
+                helper.assertBlockProperty(piston,
+                        PistonBaseBlock.EXTENDED, true);
+                helper.assertBlockPresent(Blocks.PISTON_HEAD, returned);
+
                 helper.setBlock(anchorPower, Blocks.AIR);
             }
             helper.assertBlockProperty(start, AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
@@ -421,8 +440,17 @@ public class PistonTests {
             data.setPlacer(oldPosition, placer);
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
 
-            // Remove the block during movement, before it settles.
-            helper.runAfterDelay(1, () -> {
+            long deadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                if (!helper.getBlockState(destination).is(Blocks.MOVING_PISTON)
+                        && helper.getTick() < deadline) {
+                    return;
+                }
+                finished[0] = true;
                 try {
                     helper.assertBlockPresent(Blocks.MOVING_PISTON, destination);
                     helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
@@ -431,6 +459,71 @@ public class PistonTests {
                     helper.setBlock(destination, Blocks.AIR);
 
                     helper.assertBlockPresent(Blocks.AIR, destination);
+                    helper.assertTrue(data.getPlacer(newPosition) == null,
+                            "Removing moving Ankerstone must clear destination attribution");
+                    helper.assertTrue(data.getPlacer(oldPosition) == null,
+                            "Interrupted movement must not restore old attribution");
+                } finally {
+                    clearPistonFixture(helper, piston);
+                    data.removePlacer(oldPosition);
+                    data.removePlacer(newPosition);
+                }
+                helper.succeed();
+            });
+        } catch (RuntimeException failure) {
+            clearPistonFixture(helper, piston);
+            data.removePlacer(oldPosition);
+            data.removePlacer(newPosition);
+            throw failure;
+        }
+    }
+
+    @GameTest(environment = "ankerstone-test:off_movement", maxTicks = 40)
+    public void removingRetractingAnkerstoneClearsPlacer(GameTestHelper helper) {
+        BlockPos piston = new BlockPos(2, 2, 2);
+        BlockPos start = piston.east(2);
+        BlockPos destination = piston.east();
+        GlobalPos oldPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(start));
+        GlobalPos newPosition = GlobalPos.of(
+                helper.getLevel().dimension(), helper.absolutePos(destination));
+        UUID placer = UUID.randomUUID();
+        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        try {
+            helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
+            helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
+                    .setValue(PistonBaseBlock.FACING, Direction.EAST)
+                    .setValue(PistonBaseBlock.EXTENDED, true));
+            helper.setBlock(destination, Blocks.PISTON_HEAD.defaultBlockState()
+                    .setValue(PistonHeadBlock.FACING, Direction.EAST)
+                    .setValue(PistonHeadBlock.TYPE, PistonType.STICKY));
+            helper.setBlock(start, ModBlocks.ANKERSTONE);
+            helper.assertBlockProperty(start,
+                    AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
+            data.setPlacer(oldPosition, placer);
+            helper.setBlock(piston.west(), Blocks.AIR);
+
+            long deadline = helper.getTick() + 20;
+            boolean[] finished = { false };
+            helper.onEachTick(() -> {
+                if (finished[0]) {
+                    return;
+                }
+                if (!helper.getBlockState(destination).is(Blocks.MOVING_PISTON)
+                        && helper.getTick() < deadline) {
+                    return;
+                }
+                finished[0] = true;
+                try {
+                    helper.assertBlockPresent(Blocks.MOVING_PISTON, destination);
+                    helper.assertTrue(placer.equals(data.getPlacer(newPosition)),
+                            "Moving Ankerstone must already have destination attribution");
+
+                    helper.setBlock(destination, Blocks.AIR);
+
+                    helper.assertBlockPresent(Blocks.AIR, destination);
+                    helper.assertBlockPresent(Blocks.AIR, start);
+                    assertNoActiveOwnersOrTickets(helper, start, destination);
                     helper.assertTrue(data.getPlacer(newPosition) == null,
                             "Removing moving Ankerstone must clear destination attribution");
                     helper.assertTrue(data.getPlacer(oldPosition) == null,

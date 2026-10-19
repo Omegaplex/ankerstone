@@ -239,25 +239,6 @@ public class CraftingTests {
                                 base, base, base,
                                 base, base, base,
                                 empty, empty, empty), wall, 6);
-                assertRecipe(helper, family + "_slab", grid(
-                                empty, empty, empty,
-                                base, base, base,
-                                empty, empty, empty), slab, 6);
-
-                assertRecipe(helper, family + "_slab", grid(
-                                empty, empty, empty,
-                                empty, empty, empty,
-                                base, base, base), slab, 6);
-
-                assertRecipe(helper, family + "_wall", grid(
-                                empty, empty, empty,
-                                base, base, base,
-                                base, base, base), wall, 6);
-
-                assertRecipe(helper, family + "_stairs", grid(
-                                empty, empty, base,
-                                empty, base, base,
-                                base, base, base), stairs, 4);
         }
 
         private void assertStonecuttingRecipe(GameTestHelper helper, String name,

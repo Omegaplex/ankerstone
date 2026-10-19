@@ -1,21 +1,25 @@
 package io.github.omegaplex.ankerstone;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TicketStorage;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.ObserverBlock;
-import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.RedstoneLampBlock;
+import net.minecraft.world.level.block.RepeaterBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class PlacementTests {
@@ -67,6 +71,77 @@ public class PlacementTests {
                         helper.setBlock(localPos.below(), Blocks.AIR);
                 }
 
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
+        public void negativeOwnerUsesFloorDivision(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                BlockPos owner = new BlockPos(-1, 64, -17);
+                ChunkPos expected = new ChunkPos(-1, -2);
+                ChunkPos truncated = new ChunkPos(0, -1);
+
+                assertTicketLevels(helper, expected, List.of());
+                assertTicketLevels(helper, truncated, List.of());
+
+                try {
+                        AnkerstoneChunkTickets.add(
+                                        level, owner, AnkerstoneMode.WIDE);
+
+                        assertTicketLevels(helper, expected, List.of(30));
+                        assertTicketLevels(helper, truncated, List.of());
+                } finally {
+                        AnkerstoneChunkTickets.remove(
+                                        level, owner, AnkerstoneMode.WIDE);
+                        level.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        expected, 3);
+                        level.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        truncated, 3);
+                }
+
+                assertTicketLevels(helper, expected, List.of());
+                assertTicketLevels(helper, truncated, List.of());
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:ticket_ownership")
+        public void netherOwnerStaysInItsDimension(GameTestHelper helper) {
+                ServerLevel overworld = helper.getLevel().getServer().overworld();
+                ServerLevel nether = overworld.getServer().getLevel(Level.NETHER);
+                helper.assertTrue(nether != null, "Nether must be available");
+                BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
+                ChunkPos chunk = ChunkPos.containing(owner);
+                AnkerstoneSavedData overworldData = AnkerstoneSavedData.get(overworld);
+                AnkerstoneSavedData netherData = AnkerstoneSavedData.get(nether);
+
+                helper.assertFalse(
+                                overworldData.getOwnerModes().containsKey(owner)
+                                                || netherData.getOwnerModes().containsKey(owner),
+                                "Fixture position must start without a saved owner");
+                assertTicketLevels(helper, overworld, chunk, List.of());
+                assertTicketLevels(helper, nether, chunk, List.of());
+                try {
+                        AnkerstoneChunkTickets.add(nether, owner, AnkerstoneMode.WIDE);
+                        helper.assertTrue(
+                                        netherData.getOwnerModes().get(owner) == AnkerstoneMode.WIDE,
+                                        "Nether must store its owner");
+                        helper.assertFalse(overworldData.getOwnerModes().containsKey(owner),
+                                        "Nether owner must not appear in Overworld data");
+                        assertTicketLevels(helper, nether, chunk, List.of(30));
+                        assertTicketLevels(helper, overworld, chunk, List.of());
+
+                        AnkerstoneChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        helper.assertFalse(netherData.getOwnerModes().containsKey(owner),
+                                        "Removing the Nether owner must clear its saved entry");
+                        assertTicketLevels(helper, nether, chunk, List.of());
+                        assertTicketLevels(helper, overworld, chunk, List.of());
+                } finally {
+                        AnkerstoneChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        nether.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
+                }
                 helper.succeed();
         }
 
@@ -244,6 +319,56 @@ public class PlacementTests {
         }
 
         @GameTest(environment = "ankerstone-test:restoration")
+        public void levelEventsRebuildTickets(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
+                ChunkPos chunk = ChunkPos.containing(owner);
+                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+
+                helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                                "Lifecycle test requires an empty saved owner table");
+                assertTicketLevels(helper, chunk, List.of());
+
+                try {
+                        savedData.addOwner(owner, AnkerstoneMode.WIDE);
+
+                        ServerLevelEvents.LOAD.invoker()
+                                        .onLevelLoad(level.getServer(), level);
+                        assertTicketLevels(helper, chunk, List.of(30));
+
+                        // Remove the ticket without clearing the runtime owner.
+                        level.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        chunk, 3);
+                        assertTicketLevels(helper, chunk, List.of());
+
+                        ServerLevelEvents.UNLOAD.invoker()
+                                        .onLevelUnload(level.getServer(), level);
+                        helper.assertTrue(
+                                        savedData.getOwnerModes().get(owner) == AnkerstoneMode.WIDE,
+                                        "Unloading must preserve the saved owner");
+
+                        ServerLevelEvents.LOAD.invoker()
+                                        .onLevelLoad(level.getServer(), level);
+                        assertTicketLevels(helper, chunk, List.of(30));
+
+                        AnkerstoneChunkTickets.remove(
+                                        level, owner, AnkerstoneMode.WIDE);
+                        assertTicketLevels(helper, chunk, List.of());
+                } finally {
+                        AnkerstoneChunkTickets.remove(
+                                        level, owner, AnkerstoneMode.WIDE);
+                        level.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        chunk, 2);
+                        level.getChunkSource().removeTicketWithRadius(
+                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        chunk, 3);
+                }
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:restoration")
         public void restoringSavedOwnersRebuildsSharedTickets(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -290,6 +415,91 @@ public class PlacementTests {
                                         AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
                 }
                 helper.succeed();
+        }
+
+        @GameTest
+        public void stillstoneConductionMatchesFamily(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                BlockPos position = helper.absolutePos(new BlockPos(2, 2, 2));
+
+                helper.assertFalse(
+                                ModBlocks.STILLSTONE.defaultBlockState()
+                                                .isRedstoneConductor(level, position),
+                                "Stillstone full blocks must not conduct redstone");
+                helper.assertTrue(
+                                ModBlocks.REINFORCED_STILLSTONE.defaultBlockState()
+                                                .isRedstoneConductor(level, position),
+                                "Reinforced Stillstone full blocks must conduct redstone");
+
+                helper.succeed();
+        }
+
+        @GameTest(structure = "ankerstone-test:chunk_boundary", maxTicks = 40)
+        public void fullBlocksTransmitExpectedPower(GameTestHelper helper) {
+                List<BlockPos> repeaters = List.of(
+                                new BlockPos(3, 2, 2),
+                                new BlockPos(3, 2, 6),
+                                new BlockPos(3, 2, 10));
+                List<BlockState> materials = List.of(
+                                Blocks.STONE.defaultBlockState(),
+                                ModBlocks.STILLSTONE.defaultBlockState(),
+                                ModBlocks.REINFORCED_STILLSTONE.defaultBlockState());
+                List<BlockPos> fixture = new ArrayList<>();
+                Runnable cleanup = () -> fixture.reversed().forEach(
+                                pos -> helper.setBlock(pos, Blocks.AIR));
+                try {
+                        for (int i = 0; i < repeaters.size(); i++) {
+                                BlockPos repeater = repeaters.get(i);
+                                for (int offset = -1; offset <= 2; offset++) {
+                                        BlockPos part = repeater.offset(offset, 0, 0);
+                                        fixture.add(part.below());
+                                        fixture.add(part);
+                                        helper.setBlock(part.below(), Blocks.GLASS);
+                                }
+                                helper.setBlock(repeater, Blocks.REPEATER.defaultBlockState()
+                                                .setValue(RepeaterBlock.FACING, Direction.WEST));
+                                helper.setBlock(repeater.east(), materials.get(i));
+                                helper.setBlock(repeater.east(2), Blocks.REDSTONE_WIRE);
+                                helper.assertBlockProperty(repeater.east(2),
+                                                RedStoneWireBlock.POWER, 0);
+                        }
+                        repeaters.forEach(pos -> helper.setBlock(pos.west(), Blocks.REDSTONE_BLOCK));
+                        long deadline = helper.getTick() + 20;
+                        boolean[] finished = { false };
+                        helper.onEachTick(() -> {
+                                if (finished[0]) {
+                                        return;
+                                }
+                                try {
+                                        boolean ready = repeaters.stream().allMatch(pos -> helper.getBlockState(pos)
+                                                        .getValue(RepeaterBlock.POWERED));
+                                        if (!ready && helper.getTick() < deadline) {
+                                                return;
+                                        }
+                                        finished[0] = true;
+                                        try {
+                                                for (int i = 0; i < repeaters.size(); i++) {
+                                                        BlockPos repeater = repeaters.get(i);
+                                                        helper.assertBlockProperty(repeater,
+                                                                        RepeaterBlock.POWERED, true);
+                                                        helper.assertBlockProperty(repeater.east(2),
+                                                                        RedStoneWireBlock.POWER,
+                                                                        i == 1 ? 0 : 15);
+                                                }
+                                        } finally {
+                                                cleanup.run();
+                                        }
+                                        helper.succeed();
+                                } catch (RuntimeException failure) {
+                                        finished[0] = true;
+                                        cleanup.run();
+                                        throw failure;
+                                }
+                        });
+                } catch (RuntimeException failure) {
+                        cleanup.run();
+                        throw failure;
+                }
         }
 
         @GameTest(maxTicks = 40)
@@ -467,7 +677,12 @@ public class PlacementTests {
 
         private void assertTicketLevels(GameTestHelper helper, ChunkPos chunk,
                         List<Integer> expected) {
-                TicketStorage storage = helper.getLevel().getChunkSource()
+                assertTicketLevels(helper, helper.getLevel(), chunk, expected);
+        }
+
+        private void assertTicketLevels(GameTestHelper helper, ServerLevel level,
+                        ChunkPos chunk, List<Integer> expected) {
+                TicketStorage storage = level.getChunkSource()
                                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
                 List<Integer> actual = storage.getTickets(chunk.pack()).stream()
                                 .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)

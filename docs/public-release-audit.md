@@ -66,6 +66,24 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [x] Test an anchor changing mode while another anchor shares its chunk. Check the actual ticket levels through upgrades, downgrades, and removal so one owner cannot release another's ticket.
 - [x] Automate the manual no-repeat-credit check: deliver pending credit, revoke the advancement, and invoke JOIN again. The consumed pending entry must not award it again.
 
+### Second-opinion follow-up
+
+- [x] Add a focused negative-coordinate ticket test that distinguishes floor division from truncation.
+- [x] Test LOAD/UNLOAD registration and runtime clearing without letting surviving tickets mask a failure.
+- [x] Test full-block conduction properties and real circuits with a vanilla stone control.
+- [x] Check intermediate states between the two immediate power-removal calls.
+- [x] Test attribution cleanup when Ankerstone is removed during sticky retraction.
+- [x] Confirm targeted tests fail under deliberate production mistakes, then restore the code and pass the full build.
+- [x] Trim repeated recipe shifts and mirroring checks. Retain the mining matrix, direction coverage, and Observer/comparator transitions after reviewing their maintenance cost.
+- [ ] Extend the manual restart check to a Wide corner chunk and record the result.
+- [x] Repeat the outside review using current production code, tests, and all test resources.
+- [x] Confirm existing ticking tests detect removal of each required ticket flag.
+- [x] Test dimension-local saved ownership and ticket storage, including a deliberate shared-storage failure.
+- [x] Remove the vanilla forced-chunk data fixer without changing the owner save format.
+- [x] Replace the extension-interruption delay with bounded movement detection.
+- [ ] Check Wide loading after returning to the title screen and reopening the world without closing Minecraft.
+- [ ] Check Nether anchor persistence across a full Minecraft restart.
+
 ### Decisions for later
 
 - [ ] Decide whether to repair stale owners left by external world edits that bypass removal hooks. If supported, test reconciliation timing before adding a chunk-load cleanup hook.
