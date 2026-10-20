@@ -164,6 +164,24 @@ It does not verify the full surrounding coverage of Wide mode.
 Manual Off, Single, and Wide restart checks passed on 2026-10-06
 using Minecraft 26.1.2.
 
+## Additional Manual Checks
+
+Passed on 2026-10-19 using Minecraft 26.1.2:
+
+- Wide continued ticking after returning to the title screen and
+  reopening the world without closing Minecraft.
+- An item entity in an Overworld Wide corner chunk increased in
+  age before and after a full Minecraft restart, with the player remote.
+- An item entity in a Nether Wide corner chunk increased in age
+  before and after a full restart, with the player in the Overworld.
+- Single and Wide sticky retraction passed with both power-removal
+  orders. An impulse/chain command-block pair removed both sources
+  in the same tick. After movement settled, the visible blocks
+  matched server block checks before touching blocks or reloading.
+
+These checks cover the tested arrangements, not every possible
+piston interruption or client desynchronization.
+
 ## Manual Crafting Check
 
 - Survival crafting passed for all three core recipes with outputs of

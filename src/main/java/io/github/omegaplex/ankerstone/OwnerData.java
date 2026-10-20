@@ -13,9 +13,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-// Persistent saved data for active Ankerstone owner block positions.
-public class AnkerstoneSavedData extends SavedData {
-    public AnkerstoneSavedData() {
+public class OwnerData extends SavedData {
+    public OwnerData() {
     }
 
     private record OwnerEntry(BlockPos pos, AnkerstoneMode mode) {
@@ -27,22 +26,20 @@ public class AnkerstoneSavedData extends SavedData {
             .apply(instance, OwnerEntry::new));
 
     // Stores position/mode pairs as a list; decoding rebuilds the owner map.
-    public static final Codec<AnkerstoneSavedData> CODEC = OWNER_ENTRY_CODEC
+    public static final Codec<OwnerData> CODEC = OWNER_ENTRY_CODEC
             .listOf()
-            .xmap(AnkerstoneSavedData::new, AnkerstoneSavedData::ownerEntries);
+            .xmap(OwnerData::new, OwnerData::ownerEntries);
 
     // Vanilla's forced-chunk data fixes don't apply to our owner format.
-    public static final SavedDataType<AnkerstoneSavedData> TYPE = new SavedDataType<>(
+    public static final SavedDataType<OwnerData> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath(Ankerstone.MOD_ID, "chunk_tickets"),
-            AnkerstoneSavedData::new,
+            OwnerData::new,
             CODEC,
             null);
 
-    // Maps each active Ankerstone owner block position to the mode it should
-    // restore.
     private final Map<BlockPos, AnkerstoneMode> ownerModes = new HashMap<>();
 
-    private AnkerstoneSavedData(List<OwnerEntry> ownerEntries) {
+    private OwnerData(List<OwnerEntry> ownerEntries) {
         for (OwnerEntry entry : ownerEntries) {
             ownerModes.put(entry.pos(), entry.mode());
         }
@@ -74,8 +71,7 @@ public class AnkerstoneSavedData extends SavedData {
         return Map.copyOf(ownerModes);
     }
 
-    // Gets this dimension's saved Ankerstone ownership data, creating it if needed.
-    public static AnkerstoneSavedData get(ServerLevel level) {
+    public static OwnerData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(TYPE);
     }
 }

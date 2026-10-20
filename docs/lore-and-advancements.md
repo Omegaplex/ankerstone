@@ -1,14 +1,12 @@
 # Ankerstone — Lore and Advancements
 
-This document separates the mod's full fictional lore, material suitable for players and the project website, and the planned gameplay advancements.
+This document separates the mod's full fictional lore, material suitable for players and the project website, and the gameplay advancements.
 
 **Status (2026-10-10):** Acquisition and activation advancements are implemented. Automated tests cover player attribution, offline credit, and removal during piston movement. Manual restart checks passed for ordinary and piston-moved placements. Offline credit also passed restart and repeat-delivery checks. Public-facing prose remains a draft.
 
 ## Full Lore
 
 ### Interpretation and central principle
-
-This is Ankerstone's interpretation of the Minecraft world, **not official Minecraft canon**. The history connects familiar world elements into one proposed explanation; it does not claim that their creators or purposes are established by Mojang.
 
 The world is subject to *dimensional flux*: a tendency for things and places to shift across the boundaries between places. This can be forced, detected, studied, resisted, or contained. Ankerstone's defining achievement is resistance, not a new source of energy.
 
@@ -36,7 +34,7 @@ Crafting: cobbled deepslate and lapis lazuli produce five stillstone blocks. Dec
 
 Crafting: one stillstone surrounded by eight iron nuggets produces one reinforced stillstone.
 
-**Ankerstone — movement contained.** Reinforced stillstone, redstone, and an ender pearl make the finished mechanism. An ender pearl naturally tends toward movement between places. The device contains that tendency and holds it still. **The pearl is not a battery.** Redstone governs activation and the extent of the device's effect.
+**Ankerstone — movement contained.** Reinforced stillstone, redstone, and an ender pearl make the finished mechanism. An ender pearl naturally tends toward movement between places. The device contains that tendency and holds it still. Redstone governs activation and the extent of the device's effect.
 
 Crafting: four reinforced stillstone at the corners, four redstone dust at the cardinal sides, and an ender pearl in the center produce one Ankerstone. The construction surrounds the pearl with resistant material and a controllable redstone arrangement.
 
@@ -66,7 +64,7 @@ Ankerstone uses redstone to hold nearby chunks active, built from stillstone, ir
 
 ### Site / mod-page introduction
 
-Long before the Ankerstone, others had found ways to work with the forces between places. Some forced things through. Others learned to fear what might emerge. Over time, study of lapis and deepslate revealed stillstone: a material that resists dimensional flux.
+Early civilizations found different ways to use dimensional energy. Some built spawners. Others learned to fear what might emerge. Later, work with lapis and deepslate led to stillstone, a material that resists dimensional flux.
 
 Reinforced with iron and built around an ender pearl, stillstone becomes something more. A little redstone, and the Ankerstone holds a piece of the world in place.
 
@@ -76,15 +74,13 @@ Reinforced with iron and built around an ender pearl, stillstone becomes somethi
 - **reinforced stillstone:** A passive discovery made useful through ironwork.
 - **Ankerstone:** A contained ender pearl and a redstone-controlled anchor.
 
-Public copy can hint at the earlier civilizations without presenting the interpretation as established Minecraft canon. It should not suggest that the pearl supplies electrical power or that the block literally stops time.
-
 ## Advancements
 
 ### Progression and display
 
-Add a **dedicated Ankerstone advancement tab**. These are visible progression milestones, **not** the existing recipe-book unlock advancements. Keep a single parent-child chain and do not add separate Single or Wide milestones just to fill the tree.
+The four advancements share a dedicated Ankerstone tab and follow a single parent-child chain. Recipe-book unlocks are separate.
 
-| Order | Name | Description (approved) | Criterion (intended) | Icon | Frame |
+| Order | Name | Description (approved) | Criterion | Icon | Frame |
 |---|---|---|---|---|---|
 | 1 (root) | A Strange Stillness | Craft stillstone from deepslate and lapis. | Obtain a stillstone full-block item | Stillstone | Task |
 | 2 | Iron Resolve | Strengthen stillstone with iron. | Obtain a reinforced stillstone full-block item | Reinforced Stillstone | Task |
@@ -112,14 +108,14 @@ Recipe-book unlocks continue to operate as already implemented and tested.
 
 A qualifying activation is the block's first transition from **Off (0)** to **Single (1–14)** or **Wide (15)**. Immediate activation on placement into an already powered position must count. Neither Single-to-Wide nor Wide-to-Single requires a second advancement. As with other advancements, a player earns Stay a While only once.
 
-Intended persistence and multiplayer behavior:
+Persistence and multiplayer behavior:
 
 - Remember the placing player's identity even when the Ankerstone is Off, and across server restarts.
 - If the block activates while its placer is offline, retain pending credit and award it when that player returns.
 - Breaking and placing an Ankerstone again attributes the newly placed block to its new placer.
 - Do not require the placer to stand nearby, activate a lever, or be online at the moment redstone changes.
 
-Chunk-ticket ownership in `AnkerstoneSavedData` and `AnkerstoneChunkTickets` tracks block positions and modes, not players. `AnkerstoneAttributionData` separately stores placer UUIDs and pending advancement credit.
+Chunk-ticket ownership in `OwnerData` and `ChunkTickets` tracks block positions and modes, not players. `AttributionData` separately stores placer UUIDs and pending advancement credit.
 
 ### Implementation Decisions
 
@@ -138,4 +134,16 @@ Attribution storage and activation credit are implemented and tested.
 Manual restart checks passed for ordinary placements, piston-moved
 placements, and offline credit.
 
-Keep existing chunk tickets and recipe unlocks working as they are.
+### Administrator Notes
+
+Ankerstone has no block entity. Placer credit is stored in the world's Overworld SavedData, using the block's dimension and position to associate it with a player UUID.
+
+- Off Ankerstone retains its placer across server restarts.
+- Intact piston movement transfers the placer record to the new position.
+- Breaking the block removes its placement record. The dropped item carries no placer data.
+- Placing the item again assigns the new placing player.
+- Once activation credit is awarded or queued for an offline player, the placement record is removed.
+- Queued offline credit survives removal of the block and is delivered when the player joins, regardless of dimension.
+- WorldEdit cloning and edits that bypass normal block-removal hooks are untested. Do not assume they copy or clear attribution correctly.
+
+Active chunk-ticket ownership is stored separately in each dimension. It tracks block positions and operating modes, not players.

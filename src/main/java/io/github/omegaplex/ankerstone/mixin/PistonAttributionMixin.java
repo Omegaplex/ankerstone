@@ -3,7 +3,7 @@ package io.github.omegaplex.ankerstone.mixin;
 import java.util.List;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import io.github.omegaplex.ankerstone.AnkerstoneAttributionData;
+import io.github.omegaplex.ankerstone.AttributionData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(PistonBaseBlock.class)
-public abstract class AnkerstonePistonAttributionMixin {
+public abstract class PistonAttributionMixin {
     @ModifyExpressionValue(method = "moveBlocks", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/level/block/piston/PistonStructureResolver;getToPush()Ljava/util/List;"))
@@ -21,7 +21,7 @@ public abstract class AnkerstonePistonAttributionMixin {
             Level level, BlockPos piston, Direction facing, boolean extending) {
         if (level instanceof ServerLevel serverLevel) {
             Direction movement = extending ? facing : facing.getOpposite();
-            AnkerstoneAttributionData.get(serverLevel).movePlacers(
+            AttributionData.get(serverLevel).movePlacers(
                     serverLevel.dimension(), positions, movement);
         }
         return positions;

@@ -16,7 +16,7 @@ public class SavedDataTests {
                                 originalPosition.getX(),
                                 originalPosition.getY(),
                                 originalPosition.getZ());
-                AnkerstoneSavedData data = new AnkerstoneSavedData();
+                OwnerData data = new OwnerData();
 
                 data.addOwner(cursor, AnkerstoneMode.WIDE);
                 cursor.set(32, 70, 48);
@@ -39,10 +39,10 @@ public class SavedDataTests {
                 Map<BlockPos, AnkerstoneMode> expected = Map.of(
                                 new BlockPos(-17, 64, -1), AnkerstoneMode.SINGLE,
                                 new BlockPos(16, -20, 31), AnkerstoneMode.WIDE);
-                AnkerstoneSavedData original = new AnkerstoneSavedData();
+                OwnerData original = new OwnerData();
                 expected.forEach(original::addOwner);
 
-                AnkerstoneSavedData restored = roundTrip(original);
+                OwnerData restored = roundTrip(original);
                 helper.assertTrue(restored.getOwnerModes().equals(expected),
                                 "Owner positions and modes must survive encoding and decoding");
                 helper.succeed();
@@ -51,11 +51,11 @@ public class SavedDataTests {
         @GameTest
         public void removedOwnerStaysAbsentAfterRoundTrip(GameTestHelper helper) {
                 BlockPos ownerPos = new BlockPos(-17, 64, -1);
-                AnkerstoneSavedData original = new AnkerstoneSavedData();
+                OwnerData original = new OwnerData();
                 original.addOwner(ownerPos, AnkerstoneMode.WIDE);
                 original.removeOwner(ownerPos);
 
-                AnkerstoneSavedData restored = roundTrip(original);
+                OwnerData restored = roundTrip(original);
                 helper.assertTrue(restored.getOwnerModes().isEmpty(),
                                 "A removed owner must not reappear after encoding and decoding");
                 helper.succeed();
@@ -64,7 +64,7 @@ public class SavedDataTests {
         @GameTest
         public void ownerSaveFlagTracksChanges(GameTestHelper helper) {
                 BlockPos position = new BlockPos(-17, 64, -1);
-                AnkerstoneSavedData data = new AnkerstoneSavedData();
+                OwnerData data = new OwnerData();
 
                 data.setDirty(false);
                 data.addOwner(position, AnkerstoneMode.SINGLE);
@@ -92,10 +92,10 @@ public class SavedDataTests {
                 helper.succeed();
         }
 
-        private AnkerstoneSavedData roundTrip(AnkerstoneSavedData original) {
-                Tag encoded = AnkerstoneSavedData.CODEC
+        private OwnerData roundTrip(OwnerData original) {
+                Tag encoded = OwnerData.CODEC
                                 .encodeStart(NbtOps.INSTANCE, original).getOrThrow();
-                return AnkerstoneSavedData.CODEC
+                return OwnerData.CODEC
                                 .parse(NbtOps.INSTANCE, encoded).getOrThrow();
         }
 }

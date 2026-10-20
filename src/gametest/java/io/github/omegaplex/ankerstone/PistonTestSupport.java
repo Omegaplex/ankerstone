@@ -27,7 +27,7 @@ final class PistonTestSupport {
         TicketStorage storage = helper.getLevel().getChunkSource()
                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
         List<Integer> levels = storage.getTickets(chunk.pack()).stream()
-                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .filter(ticket -> ticket.getType() == ChunkTickets.ANKERSTONE_TICKET)
                 .map(ticket -> ticket.getTicketLevel())
                 .sorted()
                 .toList();
@@ -42,7 +42,7 @@ final class PistonTestSupport {
         TicketStorage storage = helper.getLevel().getChunkSource()
                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
         long count = storage.getTickets(chunk.pack()).stream()
-                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                .filter(ticket -> ticket.getType() == ChunkTickets.ANKERSTONE_TICKET)
                 .count();
 
         helper.assertTrue(count == 0,
@@ -51,7 +51,7 @@ final class PistonTestSupport {
 
     static void assertNoActiveOwnersOrTickets(GameTestHelper helper,
             BlockPos first, BlockPos second) {
-        AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+        OwnerData savedData = OwnerData.get(helper.getLevel());
         for (BlockPos pos : List.of(first, second)) {
             helper.assertFalse(savedData.getOwnerModes().containsKey(
                     helper.absolutePos(pos)),
@@ -159,7 +159,7 @@ final class PistonTestSupport {
         GlobalPos newPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
                     .setValue(PistonBaseBlock.FACING, direction));
@@ -193,7 +193,7 @@ final class PistonTestSupport {
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, destination);
                     helper.assertBlockProperty(destination,
                             AnkerstoneBlock.MODE, AnkerstoneMode.OFF);
-                    AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                    OwnerData savedData = OwnerData.get(helper.getLevel());
                     helper.assertFalse(savedData.getOwnerModes().containsKey(
                             helper.absolutePos(start)),
                             "Off push must not leave an owner at the old position");
@@ -236,7 +236,7 @@ final class PistonTestSupport {
         GlobalPos newPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
                     .setValue(PistonBaseBlock.FACING, direction));

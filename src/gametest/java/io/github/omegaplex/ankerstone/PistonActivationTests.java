@@ -64,8 +64,8 @@ public class PistonActivationTests {
 
         BlockPos start = piston.east();
         BlockPos destination = start.east();
-        AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
-        AnkerstoneAttributionData attribution = AnkerstoneAttributionData.get(helper.getLevel());
+        OwnerData savedData = OwnerData.get(helper.getLevel());
+        AttributionData attribution = AttributionData.get(helper.getLevel());
         GlobalPos oldPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(start));
         GlobalPos newPosition = GlobalPos.of(

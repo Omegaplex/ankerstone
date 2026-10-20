@@ -3,9 +3,9 @@
   "package": "io.github.omegaplex.ankerstone.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "AnkerstonePistonReactionMixin",
-    "AnkerstonePistonAttributionMixin",
-    "AnkerstoneMovingPistonMixin"
+    "PistonReactionMixin",
+    "PistonAttributionMixin",
+    "MovingPistonMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }

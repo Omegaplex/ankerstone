@@ -13,24 +13,24 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 ## Source code audit
 
-- [ ] Review source for comments that only restate obvious code.
-- [ ] Remove stale template comments and unused boilerplate.
-- [ ] Look for unnecessary abstractions or over-engineered code.
-- [ ] Check that names and terminology are consistent with the project: Off, Single, Wide, owners, tickets, etc.
-- [ ] After the test work, go through the main and client code and shorten redundant class, method, and variable names. Keep useful distinctions and normal Java conventions. Update references and run the full build; leave registry IDs and saved-data keys unchanged.
-- [ ] Check for dead code, abandoned experiments, and unused files.
+- [x] Review source for comments that only restate obvious code.
+- [x] Remove stale template comments and unused boilerplate.
+- [x] Look for unnecessary abstractions or over-engineered code.
+- [x] Check that names and terminology are consistent with the project: Off, Single, Wide, owners, tickets, etc.
+- [x] After the test work, go through the main and client code and shorten redundant class, method, and variable names. Keep useful distinctions and normal Java conventions. Update references and run the full build; leave registry IDs and saved-data keys unchanged.
+- [x] Check for dead code, abandoned experiments, and unused files.
 - [ ] Flag important code that I do not understand well enough to explain before publishing.
-- [ ] Keep working code simple rather than refactoring only to make it look more "professional."
+- [x] Keep working code simple rather than refactoring only to make it look more "professional."
 
 ## Documentation and issue audit
 
-- [ ] Review the README for canned or overly formal wording.
+- [x] Review the README for canned or overly formal wording.
 - [ ] Review issues for specification-style language that does not sound natural for the project.
 - [ ] Make sure documentation reflects the final 1.0 behavior and crafting progression.
 - [ ] Clearly separate current features from future plans.
 - [ ] Make sure installation requirements and supported Minecraft/Fabric versions are easy to find.
 - [ ] Check that the license, source links, project description, and `fabric.mod.json` metadata are correct.
-- [ ] Add an administrator note about placer credit: it uses world SavedData in the Overworld, keyed by dimension and position, not block-entity or item data. Explain piston movement, breaking and replacing blocks, and pending offline credit. Mark WorldEdit cloning as untested.
+- [x] Add an administrator note about placer credit: it uses world SavedData in the Overworld, keyed by dimension and position, not block-entity or item data. Explain piston movement, breaking and replacing blocks, and pending offline credit. Mark WorldEdit cloning as untested.
 
 ## Testing and release readiness
 
@@ -40,7 +40,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Test the actual built release jar in a normal Minecraft instance, not only the development environment.
 - [ ] Check models, textures, particles, lighting, comparator behavior, pistons, recipes, advancements, and shader compatibility where applicable.
 - [ ] Make sure important gameplay bugs have regression tests where practical.
-- [ ] Review `docs/testing.md` and update it if test coverage or manual checks changed.
+- [x] Review `docs/testing.md` and update it if test coverage or manual checks changed.
 
 ### Test quality review
 
@@ -56,7 +56,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [x] Cover Off piston pushes and sticky pulls in all six directions: east, west, north, south, up, and down. Check physical positions, mode, placer transfer, and absence of active ownership/tickets.
 - [x] Test movement across actual X and Z chunk boundaries, including negative coordinates. Check absolute positions rather than assuming local coordinate zero is a chunk boundary. Include a powered destination and check actual tickets as well as saved owners.
 - [x] Test Single and Wide sticky retraction with both power-removal orders in the same tick, before the queued retraction runs. Check block positions, owners, tickets, placer records, and pending credit.
-- [ ] Check the same power-loss cases in-game for ghost blocks or client/server disagreement.
+- [x] Check the same power-loss cases in-game for ghost blocks or client/server disagreement.
 - [x] Check actual entity ticking in Single and Wide coverage, including Wide's corners, positions just outside the footprint, Off mode, and another dimension. Keep player, spawn, and test-runner tickets from making the check pass accidentally.
 - [x] Directly check that a Nether anchor does not tick entities at matching Overworld coordinates. Nether footprint coverage alone does not prove dimension isolation.
 
@@ -75,14 +75,14 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [x] Test attribution cleanup when Ankerstone is removed during sticky retraction.
 - [x] Confirm targeted tests fail under deliberate production mistakes, then restore the code and pass the full build.
 - [x] Trim repeated recipe shifts and mirroring checks. Retain the mining matrix, direction coverage, and Observer/comparator transitions after reviewing their maintenance cost.
-- [ ] Extend the manual restart check to a Wide corner chunk and record the result.
+- [x] Extend the manual restart check to a Wide corner chunk and record the result.
 - [x] Repeat the outside review using current production code, tests, and all test resources.
 - [x] Confirm existing ticking tests detect removal of each required ticket flag.
 - [x] Test dimension-local saved ownership and ticket storage, including a deliberate shared-storage failure.
 - [x] Remove the vanilla forced-chunk data fixer without changing the owner save format.
 - [x] Replace the extension-interruption delay with bounded movement detection.
-- [ ] Check Wide loading after returning to the title screen and reopening the world without closing Minecraft.
-- [ ] Check Nether anchor persistence across a full Minecraft restart.
+- [x] Check Wide loading after returning to the title screen and reopening the world without closing Minecraft.
+- [x] Check Nether anchor persistence across a full Minecraft restart.
 
 ### Decisions for later
 

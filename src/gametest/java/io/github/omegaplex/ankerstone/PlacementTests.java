@@ -27,7 +27,7 @@ public class PlacementTests {
         public void alreadyWidePlacementRegistersAndReleasesOwner(GameTestHelper helper) {
                 BlockPos localPos = new BlockPos(2, 2, 2);
                 BlockPos ownerPos = helper.absolutePos(localPos);
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                OwnerData savedData = OwnerData.get(helper.getLevel());
                 BlockState wideState = ModBlocks.ANKERSTONE.defaultBlockState()
                                 .setValue(AnkerstoneBlock.MODE, AnkerstoneMode.WIDE);
 
@@ -85,19 +85,19 @@ public class PlacementTests {
                 assertTicketLevels(helper, truncated, List.of());
 
                 try {
-                        AnkerstoneChunkTickets.add(
+                        ChunkTickets.add(
                                         level, owner, AnkerstoneMode.WIDE);
 
                         assertTicketLevels(helper, expected, List.of(30));
                         assertTicketLevels(helper, truncated, List.of());
                 } finally {
-                        AnkerstoneChunkTickets.remove(
+                        ChunkTickets.remove(
                                         level, owner, AnkerstoneMode.WIDE);
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        ChunkTickets.ANKERSTONE_TICKET,
                                         expected, 3);
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        ChunkTickets.ANKERSTONE_TICKET,
                                         truncated, 3);
                 }
 
@@ -113,8 +113,8 @@ public class PlacementTests {
                 helper.assertTrue(nether != null, "Nether must be available");
                 BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
                 ChunkPos chunk = ChunkPos.containing(owner);
-                AnkerstoneSavedData overworldData = AnkerstoneSavedData.get(overworld);
-                AnkerstoneSavedData netherData = AnkerstoneSavedData.get(nether);
+                OwnerData overworldData = OwnerData.get(overworld);
+                OwnerData netherData = OwnerData.get(nether);
 
                 helper.assertFalse(
                                 overworldData.getOwnerModes().containsKey(owner)
@@ -123,7 +123,7 @@ public class PlacementTests {
                 assertTicketLevels(helper, overworld, chunk, List.of());
                 assertTicketLevels(helper, nether, chunk, List.of());
                 try {
-                        AnkerstoneChunkTickets.add(nether, owner, AnkerstoneMode.WIDE);
+                        ChunkTickets.add(nether, owner, AnkerstoneMode.WIDE);
                         helper.assertTrue(
                                         netherData.getOwnerModes().get(owner) == AnkerstoneMode.WIDE,
                                         "Nether must store its owner");
@@ -132,15 +132,15 @@ public class PlacementTests {
                         assertTicketLevels(helper, nether, chunk, List.of(30));
                         assertTicketLevels(helper, overworld, chunk, List.of());
 
-                        AnkerstoneChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        ChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
                         helper.assertFalse(netherData.getOwnerModes().containsKey(owner),
                                         "Removing the Nether owner must clear its saved entry");
                         assertTicketLevels(helper, nether, chunk, List.of());
                         assertTicketLevels(helper, overworld, chunk, List.of());
                 } finally {
-                        AnkerstoneChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        ChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
                         nether.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
+                                        ChunkTickets.ANKERSTONE_TICKET, chunk, 3);
                 }
                 helper.succeed();
         }
@@ -215,7 +215,7 @@ public class PlacementTests {
                 BlockPos steady = new BlockPos(2, 2, 2);
                 BlockPos changing = new BlockPos(2, 6, 2);
                 ChunkPos chunk = ChunkPos.containing(helper.absolutePos(steady));
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                OwnerData savedData = OwnerData.get(helper.getLevel());
 
                 assertTicketLevels(helper, chunk, List.of());
                 try {
@@ -269,7 +269,7 @@ public class PlacementTests {
                 BlockPos steady = new BlockPos(2, 2, 2);
                 BlockPos changing = new BlockPos(2, 6, 2);
                 ChunkPos chunk = ChunkPos.containing(helper.absolutePos(steady));
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                OwnerData savedData = OwnerData.get(helper.getLevel());
 
                 assertTicketLevels(helper, chunk, List.of());
                 try {
@@ -323,7 +323,7 @@ public class PlacementTests {
                 ServerLevel level = helper.getLevel();
                 BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
                 ChunkPos chunk = ChunkPos.containing(owner);
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+                OwnerData savedData = OwnerData.get(level);
 
                 helper.assertTrue(savedData.getOwnerModes().isEmpty(),
                                 "Lifecycle test requires an empty saved owner table");
@@ -338,7 +338,7 @@ public class PlacementTests {
 
                         // Remove the ticket without clearing the runtime owner.
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        ChunkTickets.ANKERSTONE_TICKET,
                                         chunk, 3);
                         assertTicketLevels(helper, chunk, List.of());
 
@@ -352,17 +352,17 @@ public class PlacementTests {
                                         .onLevelLoad(level.getServer(), level);
                         assertTicketLevels(helper, chunk, List.of(30));
 
-                        AnkerstoneChunkTickets.remove(
+                        ChunkTickets.remove(
                                         level, owner, AnkerstoneMode.WIDE);
                         assertTicketLevels(helper, chunk, List.of());
                 } finally {
-                        AnkerstoneChunkTickets.remove(
+                        ChunkTickets.remove(
                                         level, owner, AnkerstoneMode.WIDE);
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        ChunkTickets.ANKERSTONE_TICKET,
                                         chunk, 2);
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET,
+                                        ChunkTickets.ANKERSTONE_TICKET,
                                         chunk, 3);
                 }
                 helper.succeed();
@@ -375,7 +375,7 @@ public class PlacementTests {
                 BlockPos second = helper.absolutePos(new BlockPos(2, 4, 2));
                 BlockPos wide = helper.absolutePos(new BlockPos(2, 6, 2));
                 ChunkPos chunk = ChunkPos.containing(first);
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+                OwnerData savedData = OwnerData.get(level);
                 Map<BlockPos, AnkerstoneMode> expected = Map.of(
                                 first, AnkerstoneMode.SINGLE,
                                 second, AnkerstoneMode.SINGLE,
@@ -389,9 +389,9 @@ public class PlacementTests {
                         expected.forEach(savedData::addOwner);
                         savedData.setDirty(false);
 
-                        AnkerstoneChunkTickets.restore(level);
+                        ChunkTickets.restore(level);
                         assertTicketLevels(helper, chunk, List.of(30, 31));
-                        AnkerstoneChunkTickets.restore(level);
+                        ChunkTickets.restore(level);
                         assertTicketLevels(helper, chunk, List.of(30, 31));
 
                         helper.assertTrue(savedData.getOwnerModes().equals(expected),
@@ -399,20 +399,20 @@ public class PlacementTests {
                         helper.assertTrue(!savedData.isDirty(),
                                         "Restoration must not mark unchanged saved data dirty");
 
-                        AnkerstoneChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
                         assertTicketLevels(helper, chunk, List.of(30, 31));
-                        AnkerstoneChunkTickets.remove(level, second, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, second, AnkerstoneMode.SINGLE);
                         assertTicketLevels(helper, chunk, List.of(30));
-                        AnkerstoneChunkTickets.remove(level, wide, AnkerstoneMode.WIDE);
+                        ChunkTickets.remove(level, wide, AnkerstoneMode.WIDE);
                         assertTicketLevels(helper, chunk, List.of());
                         helper.assertTrue(savedData.getOwnerModes().isEmpty(),
                                         "Removing all restored owners must clear their saved entries");
                 } finally {
-                        expected.forEach((pos, mode) -> AnkerstoneChunkTickets.remove(level, pos, mode));
+                        expected.forEach((pos, mode) -> ChunkTickets.remove(level, pos, mode));
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+                                        ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
                         level.getChunkSource().removeTicketWithRadius(
-                                        AnkerstoneChunkTickets.ANKERSTONE_TICKET, chunk, 3);
+                                        ChunkTickets.ANKERSTONE_TICKET, chunk, 3);
                 }
                 helper.succeed();
         }
@@ -592,7 +592,7 @@ public class PlacementTests {
                 setTestPower(helper, localPos, power);
                 helper.assertBlockProperty(localPos, AnkerstoneBlock.MODE, expectedMode);
 
-                AnkerstoneMode actualOwner = AnkerstoneSavedData.get(helper.getLevel())
+                AnkerstoneMode actualOwner = OwnerData.get(helper.getLevel())
                                 .getOwnerModes().get(helper.absolutePos(localPos));
                 AnkerstoneMode expectedOwner = expectedMode == AnkerstoneMode.OFF
                                 ? null
@@ -626,11 +626,11 @@ public class PlacementTests {
                                 new BlockPos(2, 2, 2)).immutable();
                 BlockPos.MutableBlockPos cursor = originalPosition.mutable();
                 ChunkPos chunk = ChunkPos.containing(originalPosition);
-                AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+                OwnerData savedData = OwnerData.get(level);
 
                 assertTicketCount(helper, chunk, 0);
                 try {
-                        AnkerstoneChunkTickets.add(
+                        ChunkTickets.add(
                                         level, cursor, AnkerstoneMode.WIDE);
                         assertTicketCount(helper, chunk, 1);
 
@@ -638,7 +638,7 @@ public class PlacementTests {
                                         originalPosition.getY(),
                                         originalPosition.getZ());
 
-                        AnkerstoneChunkTickets.remove(
+                        ChunkTickets.remove(
                                         level, originalPosition, AnkerstoneMode.WIDE);
 
                         helper.assertFalse(
@@ -648,7 +648,7 @@ public class PlacementTests {
                 } finally {
                         // Restore the key so cleanup also works before the fix.
                         cursor.set(originalPosition);
-                        AnkerstoneChunkTickets.remove(
+                        ChunkTickets.remove(
                                         level, originalPosition, AnkerstoneMode.WIDE);
                 }
                 helper.succeed();
@@ -668,7 +668,7 @@ public class PlacementTests {
                 TicketStorage storage = helper.getLevel().getChunkSource()
                                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
                 long actual = storage.getTickets(chunk.pack()).stream()
-                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                                .filter(ticket -> ticket.getType() == ChunkTickets.ANKERSTONE_TICKET)
                                 .count();
 
                 helper.assertTrue(actual == expected,
@@ -685,7 +685,7 @@ public class PlacementTests {
                 TicketStorage storage = level.getChunkSource()
                                 .getDataStorage().computeIfAbsent(TicketStorage.TYPE);
                 List<Integer> actual = storage.getTickets(chunk.pack()).stream()
-                                .filter(ticket -> ticket.getType() == AnkerstoneChunkTickets.ANKERSTONE_TICKET)
+                                .filter(ticket -> ticket.getType() == ChunkTickets.ANKERSTONE_TICKET)
                                 .map(ticket -> ticket.getTicketLevel())
                                 .sorted()
                                 .toList();

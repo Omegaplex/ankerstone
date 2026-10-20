@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
-public class AnkerstoneChunkTickets {
+public class ChunkTickets {
     // Runtime owners grouped by dimension and center chunk.
     // Owners with the same mode in a chunk share a ticket.
     // Rebuilt from saved owners when the dimension loads.
@@ -38,7 +38,7 @@ public class AnkerstoneChunkTickets {
 
     public static void add(ServerLevel level, BlockPos ownerPos, AnkerstoneMode mode) {
         addToMemory(level, ownerPos, mode);
-        AnkerstoneSavedData.get(level).addOwner(ownerPos, mode);
+        OwnerData.get(level).addOwner(ownerPos, mode);
     }
 
     // Rebuilds runtime ownership and chunk tickets without changing saved data.
@@ -61,7 +61,7 @@ public class AnkerstoneChunkTickets {
         Map<BlockPos, AnkerstoneMode> owners = dimensionOwners.get(chunkPos);
 
         if (owners == null) {
-            AnkerstoneSavedData.get(level).removeOwner(ownerPos);
+            OwnerData.get(level).removeOwner(ownerPos);
             return;
         }
 
@@ -76,11 +76,11 @@ public class AnkerstoneChunkTickets {
             dimensionOwners.remove(chunkPos);
         }
 
-        AnkerstoneSavedData.get(level).removeOwner(ownerPos);
+        OwnerData.get(level).removeOwner(ownerPos);
     }
 
     public static void restore(ServerLevel level) {
-        AnkerstoneSavedData savedData = AnkerstoneSavedData.get(level);
+        OwnerData savedData = OwnerData.get(level);
 
         for (Map.Entry<BlockPos, AnkerstoneMode> entry : savedData.getOwnerModes().entrySet()) {
             addToMemory(level, entry.getKey(), entry.getValue());

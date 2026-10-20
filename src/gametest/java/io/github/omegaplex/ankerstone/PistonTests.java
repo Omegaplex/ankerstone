@@ -46,7 +46,7 @@ public class PistonTests {
         BlockPos piston = new BlockPos(2, 2, 2);
         BlockPos start = piston.east(2);
         BlockPos returned = piston.east();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         GlobalPos startPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(start));
         GlobalPos returnedPosition = GlobalPos.of(
@@ -62,7 +62,7 @@ public class PistonTests {
         try {
             data.setPlacer(startPosition, placer);
             BlockPos anchorPower = preparePoweredStickyFixture(helper, piston, mode);
-            helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+            helper.assertTrue(OwnerData.get(helper.getLevel())
                     .getOwnerModes().get(helper.absolutePos(start)) == mode,
                     "Powered fixture must register its owner mode");
             helper.assertTrue(data.hasPendingCredit(placer),
@@ -84,7 +84,7 @@ public class PistonTests {
                 helper.setBlock(piston.west(), Blocks.AIR);
 
                 helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
-                helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+                helper.assertTrue(OwnerData.get(helper.getLevel())
                         .getOwnerModes().get(helper.absolutePos(start)) == mode,
                         "Removing piston power must preserve the active owner");
                 assertAnkerstoneTicketLevel(helper, start,
@@ -138,7 +138,7 @@ public class PistonTests {
         BlockPos piston = new BlockPos(2, 2, 2);
         BlockPos start = piston.east(2);
         BlockPos returned = piston.east();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         GlobalPos startPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(start));
         GlobalPos returnedPosition = GlobalPos.of(
@@ -155,7 +155,7 @@ public class PistonTests {
 
             data.setPlacer(startPosition, placer);
             preparePoweredStickyFixture(helper, piston, mode);
-            helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+            helper.assertTrue(OwnerData.get(helper.getLevel())
                     .getOwnerModes().get(helper.absolutePos(start)) == mode,
                     "Powered fixture must register its owner mode");
             helper.assertTrue(data.hasPendingCredit(placer),
@@ -183,7 +183,7 @@ public class PistonTests {
                     helper.assertBlockPresent(Blocks.AIR, returned);
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, start);
                     helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
-                    AnkerstoneSavedData savedData = AnkerstoneSavedData.get(helper.getLevel());
+                    OwnerData savedData = OwnerData.get(helper.getLevel());
                     helper.assertTrue(savedData.getOwnerModes().get(helper.absolutePos(start)) == mode,
                             "Blocked pull must retain the active owner mode");
                     helper.assertFalse(savedData.getOwnerModes().containsKey(helper.absolutePos(returned)),
@@ -316,7 +316,7 @@ public class PistonTests {
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID firstPlacer = UUID.randomUUID();
         UUID secondPlacer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
                     .setValue(PistonBaseBlock.FACING, Direction.EAST));
@@ -382,7 +382,7 @@ public class PistonTests {
         GlobalPos newPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
                     .setValue(PistonBaseBlock.FACING, Direction.EAST));
@@ -432,7 +432,7 @@ public class PistonTests {
         GlobalPos newPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston, Blocks.PISTON.defaultBlockState()
                     .setValue(PistonBaseBlock.FACING, Direction.EAST));
@@ -488,7 +488,7 @@ public class PistonTests {
         GlobalPos newPosition = GlobalPos.of(
                 helper.getLevel().dimension(), helper.absolutePos(destination));
         UUID placer = UUID.randomUUID();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+        AttributionData data = AttributionData.get(helper.getLevel());
         try {
             helper.setBlock(piston.west(), Blocks.REDSTONE_BLOCK);
             helper.setBlock(piston, Blocks.STICKY_PISTON.defaultBlockState()
@@ -602,7 +602,7 @@ public class PistonTests {
                     helper.assertBlockProperty(piston, PistonBaseBlock.EXTENDED, false);
                     helper.assertBlockPresent(ModBlocks.ANKERSTONE, start);
                     helper.assertBlockProperty(start, AnkerstoneBlock.MODE, mode);
-                    helper.assertTrue(AnkerstoneSavedData.get(helper.getLevel())
+                    helper.assertTrue(OwnerData.get(helper.getLevel())
                             .getOwnerModes().get(helper.absolutePos(start)) == mode,
                             "Blocked Ankerstone must retain its owner mode");
                     helper.assertBlockPresent(Blocks.AIR, start.east());

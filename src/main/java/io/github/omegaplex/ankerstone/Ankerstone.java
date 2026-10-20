@@ -16,11 +16,11 @@ public class Ankerstone implements ModInitializer {
 	public void onInitialize() {
 		ModBlocks.initialize();
 		ServerPlayConnectionEvents.JOIN
-				.register((handler, sender, server) -> AnkerstoneAdvancements.onPlayerJoin(handler.player));
+				.register((handler, sender, server) -> ModAdvancements.onPlayerJoin(handler.player));
 		// Rebuild live chunk tickets from saved data whenever a server dimension loads.
-		ServerLevelEvents.LOAD.register((server, level) -> AnkerstoneChunkTickets.restore(level));
+		ServerLevelEvents.LOAD.register((server, level) -> ChunkTickets.restore(level));
 		// Discard runtime ownership on unload; saved owners remain for restoration.
-		ServerLevelEvents.UNLOAD.register((server, level) -> AnkerstoneChunkTickets.clear(level));
+		ServerLevelEvents.UNLOAD.register((server, level) -> ChunkTickets.clear(level));
 
 		LOGGER.info("Ankerstone initialized!");
 	}

@@ -1,6 +1,6 @@
 package io.github.omegaplex.ankerstone.mixin;
 
-import io.github.omegaplex.ankerstone.AnkerstoneAttributionData;
+import io.github.omegaplex.ankerstone.AttributionData;
 import io.github.omegaplex.ankerstone.AnkerstoneBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PistonMovingBlockEntity.class)
-public abstract class AnkerstoneMovingPistonMixin {
+public abstract class MovingPistonMixin {
     @Inject(method = "preRemoveSideEffects", at = @At("HEAD"))
     private void ankerstone$clearRemovedPlacer(
             BlockPos pos, BlockState state, CallbackInfo ci) {
@@ -21,7 +21,7 @@ public abstract class AnkerstoneMovingPistonMixin {
 
         if (piston.getLevel() instanceof ServerLevel level
                 && piston.getMovedState().getBlock() instanceof AnkerstoneBlock) {
-            AnkerstoneAttributionData.get(level).removePlacer(
+            AttributionData.get(level).removePlacer(
                     GlobalPos.of(level.dimension(), pos));
         }
     }

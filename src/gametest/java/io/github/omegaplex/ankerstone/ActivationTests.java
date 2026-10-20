@@ -32,7 +32,7 @@ public class ActivationTests {
                 BlockPos absolutePos = helper.absolutePos(localPos);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
                 try {
@@ -60,7 +60,7 @@ public class ActivationTests {
                 BlockPos absolutePos = helper.absolutePos(localPos);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
                 try {
@@ -88,7 +88,7 @@ public class ActivationTests {
                 BlockPos pos = new BlockPos(2, 2, 2);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), helper.absolutePos(pos));
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -140,7 +140,7 @@ public class ActivationTests {
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), helper.absolutePos(localPos));
                 UUID placer = UUID.randomUUID();
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
 
                 try {
                         helper.assertTrue(helper.getLevel().getServer()
@@ -178,7 +178,7 @@ public class ActivationTests {
         @GameTest
         @SuppressWarnings("removal")
         public void joiningDeliversPendingCredit(GameTestHelper helper) {
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -211,7 +211,7 @@ public class ActivationTests {
         @GameTest
         @SuppressWarnings("removal")
         public void joiningDoesNotRepeatDeliveredCredit(GameTestHelper helper) {
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -274,7 +274,7 @@ public class ActivationTests {
                 BlockPos pos = new BlockPos(2, 3, 2);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), helper.absolutePos(pos));
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -318,7 +318,7 @@ public class ActivationTests {
                 BlockPos pos = new BlockPos(2, 2, 2);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), helper.absolutePos(pos));
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -361,7 +361,7 @@ public class ActivationTests {
         public void joiningInNetherDeliversPendingCredit(GameTestHelper helper) {
                 ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
                 helper.assertTrue(nether != null, "Missing Nether dimension");
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -400,7 +400,7 @@ public class ActivationTests {
                 BlockPos absolutePos = helper.absolutePos(localPos);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));
@@ -443,7 +443,7 @@ public class ActivationTests {
                 BlockPos absolutePos = helper.absolutePos(localPos);
                 GlobalPos position = GlobalPos.of(
                                 helper.getLevel().dimension(), absolutePos);
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(helper.getLevel());
+                AttributionData data = AttributionData.get(helper.getLevel());
                 AdvancementHolder advancement = helper.getLevel().getServer()
                                 .getAdvancements().get(Identifier.fromNamespaceAndPath(
                                                 "ankerstone", "stay_a_while"));

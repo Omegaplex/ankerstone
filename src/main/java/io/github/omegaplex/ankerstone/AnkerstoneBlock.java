@@ -31,14 +31,14 @@ public class AnkerstoneBlock extends Block {
 
         if (level instanceof ServerLevel serverLevel
                 && placer instanceof ServerPlayer player) {
-            AnkerstoneAttributionData.get(serverLevel).setPlacer(
+            AttributionData.get(serverLevel).setPlacer(
                     GlobalPos.of(serverLevel.dimension(), pos),
                     player.getUUID());
 
             BlockState placedState = serverLevel.getBlockState(pos);
             if (placedState.is(this)
                     && placedState.getValue(MODE) != AnkerstoneMode.OFF) {
-                AnkerstoneAdvancements.onActivated(serverLevel, pos);
+                ModAdvancements.onActivated(serverLevel, pos);
             }
         }
     }
@@ -92,7 +92,7 @@ public class AnkerstoneBlock extends Block {
             if (oldMode == AnkerstoneMode.OFF
                     && mode != AnkerstoneMode.OFF
                     && level instanceof ServerLevel serverLevel) {
-                AnkerstoneAdvancements.onActivated(serverLevel, pos);
+                ModAdvancements.onActivated(serverLevel, pos);
             }
         }
     }
@@ -115,9 +115,9 @@ public class AnkerstoneBlock extends Block {
         }
 
         if (loaded) {
-            AnkerstoneChunkTickets.add(serverLevel, pos, mode);
+            ChunkTickets.add(serverLevel, pos, mode);
         } else {
-            AnkerstoneChunkTickets.remove(serverLevel, pos, mode);
+            ChunkTickets.remove(serverLevel, pos, mode);
         }
     }
 
@@ -131,7 +131,7 @@ public class AnkerstoneBlock extends Block {
         }
 
         if (!movedByPiston) {
-            AnkerstoneAttributionData.get(level).removePlacer(
+            AttributionData.get(level).removePlacer(
                     GlobalPos.of(level.dimension(), pos));
         }
 

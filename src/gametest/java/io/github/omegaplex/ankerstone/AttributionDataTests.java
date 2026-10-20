@@ -21,7 +21,7 @@ public class AttributionDataTests {
                 GlobalPos nether = GlobalPos.of(Level.NETHER, coordinates);
                 UUID firstPlayer = UUID.randomUUID();
                 UUID secondPlayer = UUID.randomUUID();
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
 
                 data.setPlacer(overworld, firstPlayer);
                 data.setPlacer(nether, secondPlayer);
@@ -37,7 +37,7 @@ public class AttributionDataTests {
         public void removedPlacementHasNoPlacer(GameTestHelper helper) {
                 GlobalPos position = GlobalPos.of(
                                 Level.OVERWORLD, new BlockPos(10, 64, 10));
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
                 data.setPlacer(position, UUID.randomUUID());
 
                 data.removePlacer(position);
@@ -53,7 +53,7 @@ public class AttributionDataTests {
                 GlobalPos original = GlobalPos.of(
                                 Level.OVERWORLD, new BlockPos(10, 64, 10));
                 UUID placer = UUID.randomUUID();
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
 
                 data.setPlacer(GlobalPos.of(Level.OVERWORLD, coordinates), placer);
                 coordinates.set(20, 64, 20);
@@ -72,12 +72,12 @@ public class AttributionDataTests {
                 ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
                 helper.assertTrue(nether != null, "Nether must be available");
 
-                AnkerstoneAttributionData data = AnkerstoneAttributionData.get(overworld);
+                AttributionData data = AttributionData.get(overworld);
 
-                helper.assertTrue(data == AnkerstoneAttributionData.get(nether),
+                helper.assertTrue(data == AttributionData.get(nether),
                                 "Dimensions must share the same attribution data");
                 helper.assertTrue(data == overworld.getDataStorage()
-                                .get(AnkerstoneAttributionData.TYPE),
+                                .get(AttributionData.TYPE),
                                 "Attribution data must be managed by world storage");
                 helper.succeed();
         }
@@ -87,7 +87,7 @@ public class AttributionDataTests {
                 GlobalPos position = GlobalPos.of(
                                 Level.OVERWORLD, new BlockPos(10, 64, 10));
                 UUID player = UUID.randomUUID();
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
 
                 data.setPlacer(position, player);
                 helper.assertTrue(data.isDirty(), "Adding a placer must require saving");
@@ -112,7 +112,7 @@ public class AttributionDataTests {
         @GameTest
         public void pendingCreditSaveFlagTracksChanges(GameTestHelper helper) {
                 UUID player = UUID.randomUUID();
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
 
                 data.queueCredit(player);
                 helper.assertTrue(data.isDirty(), "Adding pending credit must require saving");
@@ -134,10 +134,10 @@ public class AttributionDataTests {
         public void pendingCreditSurvivesRoundTrip(GameTestHelper helper) {
                 UUID player = UUID.randomUUID();
                 UUID otherPlayer = UUID.randomUUID();
-                AnkerstoneAttributionData original = new AnkerstoneAttributionData();
+                AttributionData original = new AttributionData();
                 original.queueCredit(player);
 
-                AnkerstoneAttributionData restored = roundTrip(original);
+                AttributionData restored = roundTrip(original);
 
                 helper.assertTrue(restored.hasPendingCredit(player),
                                 "Pending credit must survive serialization");
@@ -149,12 +149,12 @@ public class AttributionDataTests {
         @GameTest
         public void clearedCreditDoesNotReturnAfterRoundTrip(GameTestHelper helper) {
                 UUID player = UUID.randomUUID();
-                AnkerstoneAttributionData original = new AnkerstoneAttributionData();
+                AttributionData original = new AttributionData();
                 original.queueCredit(player);
-                AnkerstoneAttributionData restored = roundTrip(original);
+                AttributionData restored = roundTrip(original);
 
                 restored.removePendingCredit(player);
-                AnkerstoneAttributionData savedAgain = roundTrip(restored);
+                AttributionData savedAgain = roundTrip(restored);
 
                 helper.assertFalse(savedAgain.hasPendingCredit(player),
                                 "Cleared credit must not return after serialization");
@@ -166,7 +166,7 @@ public class AttributionDataTests {
                 UUID player = UUID.randomUUID();
                 GlobalPos position = GlobalPos.of(
                                 Level.OVERWORLD, new BlockPos(10, 64, 10));
-                AnkerstoneAttributionData data = new AnkerstoneAttributionData();
+                AttributionData data = new AttributionData();
                 data.setPlacer(position, player);
                 data.queueCredit(player);
 
@@ -185,11 +185,11 @@ public class AttributionDataTests {
                                 Level.NETHER, new BlockPos(10, 64, 10));
                 UUID firstPlayer = UUID.randomUUID();
                 UUID secondPlayer = UUID.randomUUID();
-                AnkerstoneAttributionData original = new AnkerstoneAttributionData();
+                AttributionData original = new AttributionData();
                 original.setPlacer(overworld, firstPlayer);
                 original.setPlacer(nether, secondPlayer);
 
-                AnkerstoneAttributionData restored = roundTrip(original);
+                AttributionData restored = roundTrip(original);
 
                 helper.assertTrue(firstPlayer.equals(restored.getPlacer(overworld)),
                                 "Overworld placer must survive serialization");
@@ -204,7 +204,7 @@ public class AttributionDataTests {
                 GlobalPos oldPosition = GlobalPos.of(Level.OVERWORLD, start);
                 GlobalPos newPosition = GlobalPos.of(Level.OVERWORLD, start.east());
                 UUID placer = UUID.randomUUID();
-                AnkerstoneAttributionData original = new AnkerstoneAttributionData();
+                AttributionData original = new AttributionData();
 
                 original.setPlacer(oldPosition, placer);
                 original.setDirty(false);
@@ -214,7 +214,7 @@ public class AttributionDataTests {
                 helper.assertTrue(original.isDirty(),
                                 "Moving a placer must require saving");
 
-                AnkerstoneAttributionData restored = roundTrip(original);
+                AttributionData restored = roundTrip(original);
 
                 helper.assertTrue(placer.equals(restored.getPlacer(newPosition)),
                                 "Moved placer must survive serialization at the destination");
@@ -223,10 +223,10 @@ public class AttributionDataTests {
                 helper.succeed();
         }
 
-        private AnkerstoneAttributionData roundTrip(AnkerstoneAttributionData original) {
-                Tag encoded = AnkerstoneAttributionData.CODEC
+        private AttributionData roundTrip(AttributionData original) {
+                Tag encoded = AttributionData.CODEC
                                 .encodeStart(NbtOps.INSTANCE, original).getOrThrow();
-                return AnkerstoneAttributionData.CODEC
+                return AttributionData.CODEC
                                 .parse(NbtOps.INSTANCE, encoded).getOrThrow();
         }
 }

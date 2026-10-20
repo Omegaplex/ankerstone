@@ -12,8 +12,7 @@
   "icon": "assets/ankerstone/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["io.github.omegaplex.ankerstone.Ankerstone"],
-    "client": ["io.github.omegaplex.ankerstone.client.AnkerstoneClient"]
+    "main": ["io.github.omegaplex.ankerstone.Ankerstone"]
   },
   "mixins": ["ankerstone.mixins.json"],
   "depends": {

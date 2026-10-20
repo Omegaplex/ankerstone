@@ -9,9 +9,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
-public class AnkerstoneAdvancements {
+public class ModAdvancements {
     public static void onActivated(ServerLevel level, BlockPos pos) {
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(level);
+        AttributionData data = AttributionData.get(level);
         GlobalPos position = GlobalPos.of(level.dimension(), pos);
         UUID placer = data.getPlacer(position);
 
@@ -39,7 +39,7 @@ public class AnkerstoneAdvancements {
 
     public static void onPlayerJoin(ServerPlayer player) {
         ServerLevel level = player.level();
-        AnkerstoneAttributionData data = AnkerstoneAttributionData.get(level);
+        AttributionData data = AttributionData.get(level);
         UUID playerId = player.getUUID();
 
         if (!data.hasPendingCredit(playerId)) {

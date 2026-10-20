@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(BlockBehaviour.BlockStateBase.class)
-public abstract class AnkerstonePistonReactionMixin {
+public abstract class PistonReactionMixin {
     @ModifyReturnValue(method = "getPistonPushReaction", at = @At("RETURN"))
     private PushReaction ankerstone$restrictMovement(PushReaction original) {
         // At runtime, this code runs on Minecraft's BlockState instance.

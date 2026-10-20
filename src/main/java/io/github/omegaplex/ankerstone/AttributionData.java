@@ -21,7 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-public class AnkerstoneAttributionData extends SavedData {
+public class AttributionData extends SavedData {
     private record PlacementEntry(GlobalPos pos, UUID placer) {
     }
 
@@ -31,17 +31,17 @@ public class AnkerstoneAttributionData extends SavedData {
                     UUIDUtil.CODEC.fieldOf("placer").forGetter(PlacementEntry::placer))
             .apply(instance, PlacementEntry::new));
 
-    public static final Codec<AnkerstoneAttributionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    public static final Codec<AttributionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             PLACEMENT_ENTRY_CODEC.listOf()
                     .optionalFieldOf("placements", List.of())
-                    .forGetter(AnkerstoneAttributionData::placementEntries),
+                    .forGetter(AttributionData::placementEntries),
             UUIDUtil.CODEC_SET.optionalFieldOf("pending_credits", Set.of())
                     .forGetter(data -> data.pendingCredits))
-            .apply(instance, AnkerstoneAttributionData::new));
+            .apply(instance, AttributionData::new));
 
-    public static final SavedDataType<AnkerstoneAttributionData> TYPE = new SavedDataType<>(
+    public static final SavedDataType<AttributionData> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath(Ankerstone.MOD_ID, "attribution"),
-            AnkerstoneAttributionData::new,
+            AttributionData::new,
             CODEC,
             null);
 
@@ -49,10 +49,10 @@ public class AnkerstoneAttributionData extends SavedData {
 
     private final Map<GlobalPos, UUID> placers = new HashMap<>();
 
-    public AnkerstoneAttributionData() {
+    public AttributionData() {
     }
 
-    private AnkerstoneAttributionData(
+    private AttributionData(
             List<PlacementEntry> entries, Set<UUID> pendingCredits) {
         for (PlacementEntry entry : entries) {
             placers.put(entry.pos(), entry.placer());
@@ -78,6 +78,8 @@ public class AnkerstoneAttributionData extends SavedData {
 
     public void movePlacers(ResourceKey<Level> dimension,
             List<BlockPos> positions, Direction movement) {
+        // Collect moves before writing destinations so adjacent blocks don't overwrite
+        // each other's placers.
         Map<GlobalPos, UUID> moved = new HashMap<>();
         for (BlockPos pos : positions) {
             UUID placer = placers.remove(GlobalPos.of(dimension, pos));
@@ -118,7 +120,7 @@ public class AnkerstoneAttributionData extends SavedData {
     }
 
     // All dimensions share the Overworld's attribution store.
-    public static AnkerstoneAttributionData get(ServerLevel level) {
+    public static AttributionData get(ServerLevel level) {
         return level.getServer().overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 }
