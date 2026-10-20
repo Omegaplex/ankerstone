@@ -37,7 +37,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Confirm the full Gradle build passes.
 - [ ] Confirm all required GameTests pass.
 - [ ] Run the documented manual restart/persistence checks.
-- [ ] Test the actual built release jar in a normal Minecraft instance, not only the development environment.
+- [x] Test the actual built release jar in a normal Minecraft instance, not only the development environment.
 - [ ] Check models, textures, particles, lighting, comparator behavior, pistons, recipes, advancements, and shader compatibility where applicable.
 - [ ] Make sure important gameplay bugs have regression tests where practical.
 - [x] Review `docs/testing.md` and update it if test coverage or manual checks changed.

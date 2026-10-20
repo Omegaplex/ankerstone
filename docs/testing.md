@@ -58,6 +58,7 @@ Coverage includes:
 - Wide's ticking footprint also works in the Nether
 - Wide's Nether footprint continues ticking for at least 320 entity ticks, beyond the idle-dimension grace period, without another dimension-keeping ticket present at setup
 - owner additions, mode changes, and removals require saving; unchanged or absent entries do not
+- Placement, mode changes, and the Stay a While advancement worked.
 
 Off movement and exact ticket-count tests use separate batches to reduce interference. These batches share a server; they are not separate worlds. The `ticket_ownership` and `restoration` tests also rely on running synchronously. Revisit their isolation before adding delayed callbacks.
 
@@ -207,3 +208,27 @@ AnkerstoneHelper, with Minecraft closed completely between runs.
 Offline activation credited the original placer on return, even after
 the block was removed. After revoking the advancement and restarting
 again, it was not awarded a second time.
+
+## Installed JAR Check
+
+Checked on 2026-10-20 in Prism using Fabulously Optimized for Minecraft 26.1.2 and `ankerstone-1.0.0-rc1+mc26.1.2.jar`.
+
+- Blocks and variants displayed correctly.
+- Acquisition and activation advancements worked.
+- Survival crafting, stonecutting, and recipe-book checks passed.
+- Wide kept the remote command-block counter advancing after a full Minecraft restart.
+- Visual checks passed with shaders off and on. Overlay/PBR effects remained difficult to perceive and need a separate review.
+
+The restart check measured block ticking in the anchor's own chunk, not the full entity-ticking footprint.
+
+A separate minimal instance containing only Fabric Loader, Fabric API, and Ankerstone also passed on 2026-10-20. Placement and activation credit worked, and the remote counter continued advancing after a full Minecraft restart.
+
+## Dedicated Server Check
+
+Checked on 2026-10-20 using the release JAR on a minimal Fabric dedicated server.
+
+- The remote counter continued advancing with no players connected.
+- After a clean server shutdown and restart, the counter resumed advancing before any player joined.
+- `pause-when-empty-seconds=0` was set for these checks.
+
+This verifies center-chunk block ticking and restoration. Ankerstone does not override Minecraft's whole-server empty-server pausing.

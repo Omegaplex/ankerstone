@@ -147,3 +147,5 @@ Ankerstone has no block entity. Placer credit is stored in the world's Overworld
 - WorldEdit cloning and edits that bypass normal block-removal hooks are untested. Do not assume they copy or clear attribution correctly.
 
 Active chunk-ticket ownership is stored separately in each dimension. It tracks block positions and operating modes, not players.
+
+On dedicated servers, set pause-when-empty-seconds=0 if anchors should keep ticking with nobody connected. Ankerstone does not override whole-server pausing.
