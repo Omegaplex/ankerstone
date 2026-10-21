@@ -9,7 +9,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Check source and history for accidental Codex/OpenAI markers, generated-by comments, or unwanted co-author metadata.
 - [ ] Review old issues and comments for anything written with the assumption that the repository would stay private.
 - [ ] Review GitHub Actions logs and artifacts for anything sensitive that may have been printed or uploaded.
-- [ ] Delete any workflow runs or artifacts that should not become public.
+- [x] No workflow runs or artifacts identified for removal.
 
 ## Source code audit
 
@@ -28,8 +28,8 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Review issues for specification-style language that does not sound natural for the project.
 - [ ] Make sure documentation reflects the final 1.0 behavior and crafting progression.
 - [ ] Clearly separate current features from future plans.
-- [ ] Make sure installation requirements and supported Minecraft/Fabric versions are easy to find.
-- [ ] Check that the license, source links, project description, and `fabric.mod.json` metadata are correct.
+- [x] Make sure installation requirements and supported Minecraft/Fabric versions are easy to find.
+- [x] Check that the license, source links, project description, and `fabric.mod.json` metadata are correct.
 - [x] Add an administrator note about placer credit: it uses world SavedData in the Overworld, keyed by dimension and position, not block-entity or item data. Explain piston movement, breaking and replacing blocks, and pending offline credit. Mark WorldEdit cloning as untested.
 
 ## Testing and release readiness

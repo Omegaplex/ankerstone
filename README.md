@@ -45,7 +45,7 @@ All recipes have recipe-book unlocks.
 
 Both building-block families have crafting recipes for slabs, stairs, and walls. Their full blocks can also be cut into those shapes with a stonecutter.
 
-## A Little Lore
+## A Little Lores
 
 Stillstone is deepslate altered with lapis to resist dimensional flux. Ironwork turns that resistance into a structure capable of containing the dimensional energies of an ender pearl. Redstone controls the finished Ankerstone.
 
@@ -55,8 +55,12 @@ Read the [full lore and advancement notes](docs/lore-and-advancements.md) for mo
 
 - Minecraft Java Edition 26.1.2
 - Fabric Loader 0.19.2 or later
-- Fabric API
+- Fabric API 0.149.0 or later for Minecraft 26.1.2
 - Java 25 or later
+
+For multiplayer, install Ankerstone and Fabric API on both the client and server.
+
+On dedicated servers, set `pause-when-empty-seconds=0` in `server.properties` if anchors should keep ticking with nobody connected. Ankerstone does not override whole-server pausing.
 
 LabPBR material maps are included for compatible shaders. Shaders and PBR resource packs are optional.
 
