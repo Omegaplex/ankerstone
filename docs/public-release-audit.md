@@ -7,7 +7,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 - [ ] Search the full Git history, not just the current files, for anything that should not become public.
 - [ ] Check for passwords, API tokens, private paths, personal files, email addresses, temporary files, and other sensitive information.
 - [ ] Check source and history for accidental Codex/OpenAI markers, generated-by comments, or unwanted co-author metadata.
-- [ ] Review old issues and comments for anything written with the assumption that the repository would stay private.
+- [x] Review old issues and comments for anything written with the assumption that the repository would stay private.
 - [ ] Review GitHub Actions logs and artifacts for anything sensitive that may have been printed or uploaded.
 - [x] No workflow runs or artifacts identified for removal.
 

@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Use with LabPBR shaders. Disable without shaders to restore vanilla glow.",
+    "min_format": [84, 0],
+    "max_format": [84, 0]
+  }
+}

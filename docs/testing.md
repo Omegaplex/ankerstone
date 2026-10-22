@@ -232,3 +232,16 @@ Checked on 2026-10-20 using the release JAR on a minimal Fabric dedicated server
 - `pause-when-empty-seconds=0` was set for these checks.
 
 This verifies center-chunk block ticking and restoration. Ankerstone does not override Minecraft's whole-server empty-server pausing.
+
+## Material and Shader Review
+
+Checked on 2026-10-21 in the Gradle development client using Complementary Reimagined r5.8.1.
+
+- Refreshed Ankerstone and Reinforced Stillstone normal maps using deliberately authored height maps. Stillstone maps were reviewed and retained.
+- Reviewed Ankerstone in daylight and darkness, with shaders disabled and with LabPBR enabled. Checked the revised normals with POM on and off.
+- Kept Off’s core recessed and made Single’s active core flush with the outer surface.
+- Added an optional, disabled-by-default POM compatibility pack for Wide. Its overlay-free model allows shader emission to follow the recessed ring.
+- Confirmed the bundled pack works with the standalone test pack disabled. Disabling the bundled pack restores the vanilla overlay.
+- Reviewed Reinforced Stillstone and its variants after correcting the normal-map export.
+
+The updated RC1 JAR passed an installed check in Prism. Vanilla glow worked with shaders off and the compatibility pack disabled. With LabPBR and POM enabled, the bundled pack displayed Wide’s recessed ring correctly. Reinforced Stillstone’s refreshed appearance also passed.

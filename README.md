@@ -45,7 +45,7 @@ All recipes have recipe-book unlocks.
 
 Both building-block families have crafting recipes for slabs, stairs, and walls. Their full blocks can also be cut into those shapes with a stonecutter.
 
-## A Little Lores
+## A Little Lore
 
 Stillstone is deepslate altered with lapis to resist dimensional flux. Ironwork turns that resistance into a structure capable of containing the dimensional energies of an ender pearl. Redstone controls the finished Ankerstone.
 
@@ -62,7 +62,15 @@ For multiplayer, install Ankerstone and Fabric API on both the client and server
 
 On dedicated servers, set `pause-when-empty-seconds=0` in `server.properties` if anchors should keep ticking with nobody connected. Ankerstone does not override whole-server pausing.
 
-LabPBR material maps are included for compatible shaders. Shaders and PBR resource packs are optional.
+## Shaders
+
+LabPBR material maps are included for compatible shaders. No additional PBR resource pack is needed for Ankerstone’s blocks. Shaders are optional.
+
+For recessed surfaces, enable LabPBR support and Parallax Occlusion Mapping (POM) in your shader settings.
+
+An optional **Ankerstone POM Compatibility** pack is available in Minecraft’s Resource Packs menu. It adjusts Wide’s glowing overlay so it does not float above the recessed surface. The pack starts disabled.
+
+Disable the compatibility pack when playing without LabPBR shaders to restore Wide’s vanilla glow. 
 
 ## Development
 
