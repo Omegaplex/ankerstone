@@ -4,11 +4,11 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 ## Repository history and privacy
 
-- [ ] Search the full Git history, not just the current files, for anything that should not become public.
-- [ ] Check for passwords, API tokens, private paths, personal files, email addresses, temporary files, and other sensitive information.
-- [ ] Check source and history for accidental Codex/OpenAI markers, generated-by comments, or unwanted co-author metadata.
+- [x] Search the full Git history, not just the current files, for anything that should not become public.
+- [x] Check for passwords, API tokens, private paths, personal files, email addresses, temporary files, and other sensitive information.
+- [x] Check source and history for accidental Codex/OpenAI markers, generated-by comments, or unwanted co-author metadata.
 - [x] Review old issues and comments for anything written with the assumption that the repository would stay private.
-- [ ] Review GitHub Actions logs and artifacts for anything sensitive that may have been printed or uploaded.
+- [x] Review GitHub Actions logs and artifacts for anything sensitive that may have been printed or uploaded.
 - [x] No workflow runs or artifacts identified for removal.
 
 ## Source code audit
@@ -26,8 +26,8 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 - [x] Review the README for canned or overly formal wording.
 - [ ] Review issues for specification-style language that does not sound natural for the project.
-- [ ] Make sure documentation reflects the final 1.0 behavior and crafting progression.
-- [ ] Clearly separate current features from future plans.
+- [x] Make sure documentation reflects the final 1.0 behavior and crafting progression.
+- [x] Clearly separate current features from future plans.
 - [x] Make sure installation requirements and supported Minecraft/Fabric versions are easy to find.
 - [x] Check that the license, source links, project description, and `fabric.mod.json` metadata are correct.
 - [x] Add an administrator note about placer credit: it uses world SavedData in the Overworld, keyed by dimension and position, not block-entity or item data. Explain piston movement, breaking and replacing blocks, and pending offline credit. Mark WorldEdit cloning as untested.
@@ -36,10 +36,10 @@ Use this before changing the Ankerstone repository from private to public and ag
 
 - [ ] Confirm the full Gradle build passes.
 - [ ] Confirm all required GameTests pass.
-- [ ] Run the documented manual restart/persistence checks.
+- [x] Run the documented manual restart/persistence checks.
 - [x] Test the actual built release jar in a normal Minecraft instance, not only the development environment.
-- [ ] Check models, textures, particles, lighting, comparator behavior, pistons, recipes, advancements, and shader compatibility where applicable.
-- [ ] Make sure important gameplay bugs have regression tests where practical.
+- [x] Check models, textures, particles, lighting, comparator behavior, pistons, recipes, advancements, and shader compatibility where applicable.
+- [x] Make sure important gameplay bugs have regression tests where practical.
 - [x] Review `docs/testing.md` and update it if test coverage or manual checks changed.
 
 ### Test quality review
@@ -92,7 +92,7 @@ Use this before changing the Ankerstone repository from private to public and ag
 ## Version and release packaging
 
 - [ ] Confirm the mod version is correct for the release candidate or stable release.
-- [ ] Confirm the Minecraft target is included in the release/jar naming.
+- [x] Confirm the Minecraft target is included in the release/jar naming.
 - [ ] Pin release tooling to stable versions where practical.
 - [ ] Build from a clean checkout before the release.
 - [ ] Install and test the exact jar that will be published.

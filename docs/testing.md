@@ -120,6 +120,8 @@ A temporary blocked-push check confirmed that the push deadline preserves the or
 
 Entity-ticking tests prepare terrain before measurement and wait for entity data to load. They measure armor stands' actual tick counters. Active fixtures receive no helper simulation tickets. The Off check uses a loading-only ticket to keep its probe present and a separate ticking control. Probes are removed during cleanup and are not saved.
 
+Negative-boundary setup watchdogs stop checking once movement begins. Readiness failures report entity-ticking state, entity-data readiness, temporary ticket levels, and chunk-loading details. An intermittent CI readiness failure remains under investigation. The updated suite passed ten consecutive local runs.
+
 ## Manual Restart Check
 
 Use a new Creative superflat world with commands enabled and no other

@@ -154,10 +154,14 @@ public class PistonActivationTests {
                 "Both chunks must have negative coordinates");
         helper.assertFalse(start.equals(destination),
                 "Powered arrival must cross a negative chunk boundary");
-
+        boolean[] movementStarted = { false };
         try {
             loadNegativeBoundaryChunks(helper, piston, Direction.EAST);
             helper.runAtTickTime(160, () -> {
+                if (movementStarted[0]) {
+                    return;
+                }
+
                 try {
                     assertPistonChunksReady(helper, worldPiston, Direction.EAST);
                 } catch (RuntimeException failure) {
@@ -168,6 +172,8 @@ public class PistonActivationTests {
             helper.startSequence()
                     .thenWaitUntil(() -> assertPistonChunksReady(helper, worldPiston, Direction.EAST))
                     .thenExecute(() -> {
+                        movementStarted[0] = true;
+
                         try {
                             assertMovedAnkerstoneActivates(helper, mode, piston);
                         } catch (RuntimeException failure) {

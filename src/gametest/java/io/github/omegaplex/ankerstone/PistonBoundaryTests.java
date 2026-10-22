@@ -73,9 +73,14 @@ public class PistonBoundaryTests {
                 "Both chunks must have negative coordinates");
         helper.assertFalse(startChunk.equals(destinationChunk),
                 "The negative-coordinate fixture must cross a chunk boundary");
+        boolean[] movementStarted = { false };
         try {
             loadNegativeBoundaryChunks(helper, piston, direction);
             helper.runAtTickTime(160, () -> {
+                if (movementStarted[0]) {
+                    return;
+                }
+
                 try {
                     assertPistonChunksReady(helper, worldPiston, direction);
                 } catch (RuntimeException failure) {
@@ -86,6 +91,8 @@ public class PistonBoundaryTests {
             helper.startSequence()
                     .thenWaitUntil(() -> assertPistonChunksReady(helper, worldPiston, direction))
                     .thenExecute(() -> {
+                        movementStarted[0] = true;
+
                         try {
                             if (sticky) {
                                 assertOffAnkerstoneCanBePulled(helper, direction, piston);
