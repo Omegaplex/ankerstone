@@ -17,6 +17,7 @@
       "io.github.omegaplex.ankerstone.ChunkTickingTests"
     ]
   },
+  "mixins": ["ankerstone-test.mixins.json"],
   "depends": {
     "ankerstone": "*"
   }

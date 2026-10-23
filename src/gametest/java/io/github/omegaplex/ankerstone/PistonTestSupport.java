@@ -2,7 +2,9 @@ package io.github.omegaplex.ankerstone;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import io.github.omegaplex.ankerstone.mixin.ServerLevelAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
@@ -81,12 +83,29 @@ final class PistonTestSupport {
 
         static void loadNegativeBoundaryChunks(GameTestHelper helper,
                         BlockPos piston, Direction direction) {
-                for (BlockPos pos : List.of(piston.relative(direction),
-                                piston.relative(direction, 2))) {
-                        ChunkPos chunk = ChunkPos.containing(helper.absolutePos(pos));
-                        helper.getLevel().getChunkSource().addTicketWithRadius(
+                ServerLevel level = helper.getLevel();
+                List<ChunkPos> chunks = List.of(piston.relative(direction),
+                                piston.relative(direction, 2)).stream()
+                                .map(helper::absolutePos)
+                                .map(ChunkPos::containing)
+                                .toList();
+                for (ChunkPos chunk : chunks) {
+                        level.getChunkSource().addTicketWithRadius(
                                         NEGATIVE_TEST_TICKET, chunk, 2);
-                        helper.getLevel().getChunk(chunk.x(), chunk.z());
+                        level.getChunk(chunk.x(), chunk.z());
+                }
+
+                // GameTest ticks can outrun entity I/O. Pump completed loads as vanilla's
+                // waitForEntities does, but bound the wait in real time.
+                var entities = ((ServerLevelAccessor) level).ankerstone$getEntityManager();
+                long started = System.nanoTime();
+                level.getServer().managedBlock(() -> {
+                        entities.processPendingLoads();
+                        return chunks.stream().allMatch(chunk -> level.areEntitiesLoaded(chunk.pack()))
+                                        || System.nanoTime() - started >= TimeUnit.SECONDS.toNanos(10);
+                });
+                if (!chunks.stream().allMatch(chunk -> level.areEntitiesLoaded(chunk.pack()))) {
+                        assertPistonChunksReady(helper, helper.absolutePos(piston), direction);
                 }
         }
 

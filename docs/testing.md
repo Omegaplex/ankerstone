@@ -46,7 +46,13 @@ A CI run on 2026-10-21 failed in `stickyRoundTripCrossesNegativeZChunkBoundary`:
 
 The readiness assertion now reports entity-ticking state, entity-data readiness, temporary ticket levels, and chunk-loading details. Setup watchdogs also stop checking once movement starts. These changes passed ten consecutive local runs and a fresh CI run with all 113 required tests passing on 2026-10-22. That does not establish that the original problem is fixed.
 
-If it returns, keep the failure message and job log before rerunning. Relevant runs: [original failure](https://github.com/Omegaplex/ankerstone/actions/runs/39688317977), [diagnostic changes passing](https://github.com/Omegaplex/ankerstone/actions/runs/39857154833).
+A second CI failure on 2026-10-23 occurred in `negativeBoundaryArrivalActivatesWide`, before movement began. The fixture ticket was present at level 31 and the chunk reported `ENTITY_TICKING`, but entity data was not loaded at tick 160. The diagnostic changes did not resolve the readiness problem.
+
+Negative-boundary setup now waits for entity data before starting the movement sequence. It processes completed entity loads using vanilla's entity-wait mechanism, with a ten-second real-time limit because GameTest ticks run without normal tick pacing. The entity-ticking checks and movement deadlines remain unchanged. This change still needs CI verification.
+
+In controlled local checks, a temporary five-second entity-load delay made the old setup fail at tick 160; the new setup passed all 113 tests with the same delay. A fifteen-second delay hit the new setup timeout and failed without hanging. After removing the temporary delay hook, five consecutive runs passed all 113 tests, including the full build. These checks reproduce a timing failure, but do not establish the exact cause of the CI failures.
+
+Keep the failure message and job log before rerunning. Relevant runs: [original failure](https://github.com/Omegaplex/ankerstone/actions/runs/39688317977), [diagnostic changes passing](https://github.com/Omegaplex/ankerstone/actions/runs/39857154833), [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
 
 ## Manual Checks
 
