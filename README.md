@@ -49,7 +49,7 @@ Both building-block families have crafting recipes for slabs, stairs, and walls.
 
 Stillstone is deepslate altered with lapis to resist dimensional flux. Ironwork turns that resistance into a structure capable of containing the dimensional energies of an ender pearl. Redstone controls the finished Ankerstone.
 
-Read the [full lore and advancement notes](docs/lore-and-advancements.md) for more.
+Read the [lore](docs/lore.md) and [advancement notes](docs/advancements.md) for more.
 
 ## Requirements
 
