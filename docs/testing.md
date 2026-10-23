@@ -48,7 +48,7 @@ The readiness assertion now reports entity-ticking state, entity-data readiness,
 
 A second CI failure on 2026-10-23 occurred in `negativeBoundaryArrivalActivatesWide`, before movement began. The fixture ticket was present at level 31 and the chunk reported `ENTITY_TICKING`, but entity data was not loaded at tick 160. The diagnostic changes did not resolve the readiness problem.
 
-Negative-boundary setup now waits for entity data before starting the movement sequence. It processes completed entity loads using vanilla's entity-wait mechanism, with a ten-second real-time limit because GameTest ticks run without normal tick pacing. The entity-ticking checks and movement deadlines remain unchanged. This change still needs CI verification.
+Negative-boundary setup now waits for entity data before starting the movement sequence. It processes completed entity loads using vanilla's entity-wait mechanism, with a ten-second real-time limit because GameTest ticks run without normal tick pacing. The entity-ticking checks and movement deadlines remain unchanged. The [first CI run with the bounded wait](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) passed on 2026-10-23.
 
 In controlled local checks, a temporary five-second entity-load delay made the old setup fail at tick 160; the new setup passed all 113 tests with the same delay. A fifteen-second delay hit the new setup timeout and failed without hanging. After removing the temporary delay hook, five consecutive runs passed all 113 tests, including the full build. These checks reproduce a timing failure, but do not establish the exact cause of the CI failures.
 
