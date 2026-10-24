@@ -20,6 +20,14 @@ On Linux or macOS, use `./gradlew` instead of `.\gradlew.bat`.
 
 These are server-side GameTests. They can check blocks, circuits, saved data, and entity ticking, but they do not replace the client and restart checks below.
 
+## Minecraft 26.2 Port
+
+The current build targets Minecraft 26.2 with Java 25, Fabric Loader 0.20.1, Fabric API 0.161.0+26.2, Loom 1.17.21, and Gradle 9.5.1. The bundled POM pack uses resource-pack format 88.0.
+
+On 2026-10-23, the full local build and three repeat runs passed all 113 required GameTests without Java source changes. The packaged version, dependency requirements, and POM pack metadata were checked, and the JAR contains no test-only code. CI and the client, installed-JAR, restart, and multiplayer checks have not yet been repeated for 26.2. The earlier 26.1.2 results below do not verify this port.
+
+Test `ankerstone-1.0.0-rc1+mc26.2.jar` in a separate 26.2 instance. Use disposable worlds for the manual checks. If checking an upgrade from 26.1.2, use a backup copy of the world, not the original.
+
 ## What the Tests Cover
 
 The test classes are in `src/gametest/java/io/github/omegaplex/ankerstone`.
@@ -128,6 +136,8 @@ Test the built mod JAR, not the sources JAR, in a separate Minecraft instance.
 ## Recorded Checks
 
 These results apply to the versions and arrangements tested. Repeat the affected checks after relevant changes, and smoke-test the exact JAR intended for release.
+
+The manual results recorded below are from Minecraft 26.1.2.
 
 | Date | Passed Checks |
 |---|---|

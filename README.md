@@ -4,6 +4,8 @@
 
 A Fabric mod with redstone-controlled chunk anchors, plus Stillstone and Reinforced Stillstone blocks for building.
 
+The Minecraft 26.2 port is a release candidate and still needs in-game testing.
+
 ## Chunk Anchoring
 
 Place an Ankerstone and supply redstone power to keep chunks active without a player nearby.
@@ -53,9 +55,9 @@ Read the [lore](docs/lore.md) and [advancement notes](docs/advancements.md) for 
 
 ## Requirements
 
-- Minecraft Java Edition 26.1.2
-- Fabric Loader 0.19.2 or later
-- Fabric API 0.149.0 or later for Minecraft 26.1.2
+- Minecraft Java Edition 26.2
+- Fabric Loader 0.20.1 or later
+- Fabric API 0.161.0 or later for Minecraft 26.2
 - Java 25 or later
 
 For multiplayer, install Ankerstone and Fabric API on both the client and server.
