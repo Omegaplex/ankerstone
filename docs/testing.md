@@ -1,36 +1,24 @@
 # Testing
 
-## Run the Tests
+## Run Tests
 
-From the repository root on Windows, run:
+Run from the repository root:
 
-```powershell
-.\gradlew.bat build
-```
+| Windows Command | Runs |
+|---|---|
+| `.\gradlew.bat build` | Build, GameTests, and fresh-server restart checks |
+| `.\gradlew.bat runGameTest` | GameTests only |
+| `.\gradlew.bat restartTest` | Fresh-server restart checks only |
 
-This builds the mod and runs the required Fabric GameTests. A required test failure fails the build. GitHub Actions runs the same build on pushes and pull requests.
+On Linux or macOS, use `./gradlew`. The normal build runs both automated server suites, including in GitHub Actions. Client checks are manual; no graphics-based test harness is maintained.
 
-To run just the GameTests:
+Restart results are in `build/reports/restart-tests/summary.txt`; detailed logs stay with the disposable world under `build/restart-tests/`. CI uploads test reports and server logs. `clean` removes generated test worlds.
 
-```powershell
-.\gradlew.bat runGameTest
-```
+Automated tests use disposable worlds, never the hand-built lab or personal saves.
 
-On Linux or macOS, use `./gradlew` instead of `.\gradlew.bat`.
+## Automated Coverage
 
-These are server-side GameTests. They can check blocks, circuits, saved data, and entity ticking, but they do not replace the client and restart checks below.
-
-## Minecraft 26.2 Port
-
-The current build targets Minecraft 26.2 with Java 25, Fabric Loader 0.20.1, Fabric API 0.161.0+26.2, Loom 1.17.21, and Gradle 9.5.1. The bundled POM pack uses resource-pack format 88.0.
-
-On 2026-10-23, the full local build and three repeat runs passed all 113 required GameTests without Java source changes. The packaged version, dependency requirements, and POM pack metadata were checked, and the JAR contains no test-only code. CI and the client, installed-JAR, restart, and multiplayer checks have not yet been repeated for 26.2. The earlier 26.1.2 results below do not verify this port.
-
-Test `ankerstone-1.0.0-rc1+mc26.2.jar` in a separate 26.2 instance. Use disposable worlds for the manual checks. If checking an upgrade from 26.1.2, use a backup copy of the world, not the original.
-
-## What the Tests Cover
-
-The test classes are in `src/gametest/java/io/github/omegaplex/ankerstone`.
+Test sources are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 
 | Area | Main Checks |
 |---|---|
@@ -38,117 +26,67 @@ The test classes are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Saved data | Serialization, save flags, and copying mutable input positions before storing them |
 | Redstone | Mode transitions, full-block conduction, Observer pulses, and comparator outputs of 0, 7, and 15 |
 | Pistons | Off pushes and sticky pulls in all six directions; active blocks resisting movement; X/Z chunk boundaries, including negative coordinates; activation at the destination; same-tick power loss; interruption cleanup |
-| Placer credit | Original-placer attribution, movement and replacement, powered placement, offline credit, cross-dimension join delivery, and no repeat delivery after credit is consumed |
+| Placer credit | Original-placer attribution, movement and replacement, powered placement, offline credit, cross-dimension delivery, and no repeat delivery; real disk restarts preserve ordinary/piston-moved placements, pending credit after block removal, and consumed credit |
 | Mining and drops | Tool requirements and drop items/counts, including double slabs |
-| Recipes | Core crafting, both families' variants, stonecutting, output counts, and invalid ingredients or layouts |
+| Recipes | Core crafting, both families' variants, stonecutting, output counts, invalid ingredients/layouts, and Survival recipe-book discovery for all 15 recipes, including negative unlock checks |
 | Advancements | Full-block acquisition milestones, activation credit, and the Wide advancement icon without changing the inventory item |
-| Entity ticking | Single's center chunk, Wide's full 3x3 area, unticked chunks outside those footprints, Off mode, and dimension isolation |
+| Entity ticking | Single's center chunk, Wide's full 3x3 area, unticked chunks outside those footprints, Off mode, dimension isolation, and Single/Wide restart fixtures in the End |
+| Chunk release | Single/Wide deactivation and removal; Wide-to-Single entity-ticking downgrade; shared and overlapping owners; Nether release; chunk and entity-data unloading without loading them through the checks |
 
-Footprint tests measure armor stands' actual tick counters. Single checks the surrounding 24 chunks remain unticked; Wide checks the 16-chunk ring outside its 3x3 area. Nether coverage includes at least 320 entity ticks to check continued ticking beyond the idle-dimension grace period.
+Footprint tests measure actual entity ticks and check that chunks outside the footprint stay unticked. Release checks query chunk and entity-data unloading without loading those chunks. Recipe discovery checks a Survival player's recipe book after inventory changes.
 
-Lifecycle callback tests do not simulate a disk restart or a fresh chunk manager. Recipe-book discovery and client appearance are checked manually.
+### Fresh-Server Restarts
 
-## Intermittent CI Readiness Failure
+The restart suite saves one disposable world across three separate Java 25 server processes:
 
-A CI run on 2026-10-21 failed in `stickyRoundTripCrossesNegativeZChunkBoundary`: a fixture chunk was not entity-ticking when the tick-160 watchdog ran. The cause has not been confirmed.
+1. **Prepare:** Prove anchors tick, leave inactive fixtures unloaded, and save ordinary/piston-moved placements and pending offline credit.
+2. **Restore:** Confirm ticking and credit survive restart, deliver credit through the join handler, then release the active anchors and save.
+3. **Released:** Confirm released chunks remain unloaded, consumed credit stays consumed, and deferred credit delivers once.
 
-The readiness assertion now reports entity-ticking state, entity-data readiness, temporary ticket levels, and chunk-loading details. Setup watchdogs also stop checking once movement starts. These changes passed ten consecutive local runs and a fresh CI run with all 113 required tests passing on 2026-10-22. That does not establish that the original problem is fixed.
+Fixtures cover Single and Wide in the Overworld and End, plus Wide in the Nether. They use ordinary redstone power and observe 1,200 game ticks after settling, at 200 ticks per second, exceeding the idle-dimension grace period.
 
-A second CI failure on 2026-10-23 occurred in `negativeBoundaryArrivalActivatesWide`, before movement began. The fixture ticket was present at level 31 and the chunk reported `ENTITY_TICKING`, but entity data was not loaded at tick 160. The diagnostic changes did not resolve the readiness problem.
-
-Negative-boundary setup now waits for entity data before starting the movement sequence. It processes completed entity loads using vanilla's entity-wait mechanism, with a ten-second real-time limit because GameTest ticks run without normal tick pacing. The entity-ticking checks and movement deadlines remain unchanged. The [first CI run with the bounded wait](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) passed on 2026-10-23.
-
-In controlled local checks, a temporary five-second entity-load delay made the old setup fail at tick 160; the new setup passed all 113 tests with the same delay. A fifteen-second delay hit the new setup timeout and failed without hanging. After removing the temporary delay hook, five consecutive runs passed all 113 tests, including the full build. These checks reproduce a timing failure, but do not establish the exact cause of the CI failures.
-
-Keep the failure message and job log before rerunning. Relevant runs: [original failure](https://github.com/Omegaplex/ankerstone/actions/runs/39688317977), [diagnostic changes passing](https://github.com/Omegaplex/ankerstone/actions/runs/39857154833), [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
+Servers bind only to localhost on an assigned port, disable empty-server pausing, and allow no connected players. The task accepts the Minecraft server EULA for these disposable servers. Credit checks use server-side player stand-ins, not real network connections.
 
 ## Manual Checks
 
-Use a disposable world. For chunk-loading checks, use a new Creative superflat world with commands enabled and no other chunk loaders.
+Use the exact release JAR in a separate Minecraft instance and disposable worlds. Run this checklist before releasing a new Minecraft port; after smaller changes, repeat affected checks. The server mechanics listed under **Automated Coverage** do not need a full manual rerun.
 
-### Center-Chunk Restart Check
+1. **Blocks and advancement display:** Check every block and variant in-world and in inventory, the four advancements, their tab background, and Wide's activation icon. The ordinary inventory item should look Off.
+2. **Survival menus:** Obtain the unlock ingredients, check the nine crafting and six stonecutter recipes appear, and craft an output in each menu. Confirm previews and received items agree. Recipe definitions, counts, and unlock rules are already automated; this checks the installed client's menus.
+3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off, with LabPBR alone, and with LabPBR plus POM. Confirm the bundled pack's icon and that enabling it aligns Wide's recessed glow; disable it again and check the non-shader glow. Shader appearance and GPU-specific behavior remain manual.
+4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off anchor returns, and no ghost blocks remain before reloading. Server movement and ticket behavior are already automated.
+5. **Single-player reopening:** Leave Single/Wide/Off counter fixtures outside the player's ticking area. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. Disk persistence and server restart behavior are already automated; this checks the integrated-server lifecycle.
 
-First set up the scoreboard and teleport to the remote test site:
+### Optional Integration Checks
 
-```mcfunction
-/scoreboard objectives add anchor_ticks dummy
-/scoreboard objectives setdisplay sidebar anchor_ticks
-/tp @s 10008 100 10008
-```
+Real multiplayer placer credit needs two connected identities: one places and disconnects, the other activates, then the placer returns after a server restart. Confirm only the placer receives credit, once. Run when multiplayer/login handling changes or a second client is available; otherwise record it as untested, not passed. Attribution, offline credit, dimensions, and saved credit across restarts are covered by automated server tests.
 
-Wait for the terrain to load, then run:
+Use a backup world for upgrades when save formats or supported Minecraft versions change. Extra counter runs, repeated build loops, and fixture diagnostics are troubleshooting, not routine release checks.
 
-```mcfunction
-/fill 10004 98 10004 10011 98 10011 minecraft:stone
-/give @s minecraft:repeating_command_block
-/setblock 10010 98 10008 minecraft:redstone_block
-/setblock 10010 99 10008 ankerstone:ankerstone
-```
+## Known Issues
 
-Place the command block on the platform. Set it to Repeat, Unconditional, and Always Active, with this command:
+Negative-boundary piston tests have intermittently failed during fixture setup, before movement, reporting that chunk or entity data was not ready. Setup now waits up to ten real-time seconds for entity data; movement assertions remain unchanged.
 
-```mcfunction
-scoreboard players add Anchor anchor_ticks 1
-```
+The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) and controlled-delay checks, but the original cause remains unconfirmed. If it recurs, keep the failure message and server log before rerunning. Diagnostics include entity-ticking state, entity-data readiness, ticket levels, and chunk-loading details. See the [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
 
-The setup starts in Wide mode. To change to Single, run:
+## Latest Results
 
-```mcfunction
-/setblock 10010 98 10008 minecraft:stone
-/setblock 10007 99 10008 minecraft:redstone_block
-/setblock 10008 99 10008 minecraft:redstone_wire
-/setblock 10009 99 10008 minecraft:redstone_wire
-```
+Results apply only to the version and artifact tested. Repeat affected checks after changes and smoke-test the exact release JAR.
 
-For Off, remove the source:
+### Minecraft 26.2
 
-```mcfunction
-/setblock 10007 99 10008 minecraft:air
-```
+- **Test lab, 2026-10-27:** All five manual checks above passed, including shader/POM appearance, both piston removal orders, and Off/Single/Wide counters after title-screen reopening and full client restarts. The lab save was upgraded from 26.1.2 to 26.2 and backed up after testing.
+- **Automated, 2026-10-27:** Full local build passed all 125 GameTests and all three restart phases after removing client automation. CI passed the earlier 113-test suite on 2026-10-23; the expanded suite still needs CI confirmation.
+- **Manual, 2026-10-23:** Installed-client block, variant, recipe, and advancement display; Off/Single/Wide full-client restart counters; POM pack icon/default state; non-shader Single/Wide appearance and compatible POM glow alignment passed.
+- **Optional integration:** Real two-client multiplayer credit remains untested; the automated server tests cover attribution and saved credit delivery.
+- **Artifact:** `ankerstone-1.0.0-rc1+mc26.2.jar` remains byte-for-byte identical to the installed JAR tested above and contains no test-only code.
 
-For each mode:
+### Minecraft 26.1.2
 
-1. Confirm the mode with F3, then teleport away using `/tp @s 0 100 0`.
-2. Leave the game unpaused for 20 seconds to let unrelated loading settle. Note the counter, wait another 60 seconds, and compare. Single and Wide should advance it; Off should not.
-3. Save and quit, close Minecraft completely, then relaunch and reopen the world. Stay remote and unpaused and repeat the counter check.
-4. Return with `/tp @s 10008 100 10008` before changing modes.
+- **Automated, 2026-10-27:** Full local build passed all 125 GameTests and all three restart phases after removing client automation.
+- **Manual:** Recipe-book, credit, restart, and piston checks were recorded before release; the latest Wide material check was on 2026-10-22. Installed-client checks on October 20 and 21 used RC1 builds whose contents changed under the same filename.
+- **Artifact:** `ankerstone-1.0.0+mc26.1.2.jar` remains byte-for-byte identical to the published 1.0.0 JAR and contains no test-only code. The RC1 manual records are not a separate installed-client pass for this stable artifact.
 
-This checks block ticking in the anchor's own chunk. It does not prove Wide's full entity-ticking footprint.
+Controlled faults confirmed that ticket leaks, loading-only leaks, disabled ticket restoration, an incorrect unlock ingredient, and omitted saved credit fail the relevant server tests. Release artifacts contain no test-only code.
 
-### Other Restart and Multiplayer Checks
-
-- Reopen a world from the title screen without closing Minecraft and check that an active anchor resumes ticking.
-- Check an item entity's Age in a Wide corner chunk before and after a full restart, with the player remote. Repeat in the Nether, restarting with the player in the Overworld.
-- Check placer credit across a restart for an Off placement and a piston-moved placement, then activate the block.
-- With two players or test clients, activate a block while its placer is offline. Remove the block, restart, and check that the placer receives credit on return. Revoke the advancement and restart again to check that consumed credit is not delivered twice.
-- On a dedicated server, set `pause-when-empty-seconds=0`. Check that the remote counter advances after everyone disconnects and after a server restart before anyone joins. Ankerstone does not override whole-server pausing.
-
-### Client and Installed-JAR Checks
-
-Test the built mod JAR, not the sources JAR, in a separate Minecraft instance.
-
-- Check all blocks and variants, the four advancements, the tab background, and the Wide activation icon. The ordinary inventory item should remain Off.
-- In Survival, check crafting and stonecutting outputs. In a fresh world, check that lapis unlocks Stillstone, Stillstone unlocks Reinforced Stillstone, and Reinforced Stillstone unlocks Ankerstone. Base blocks should unlock their variant recipes.
-- Check Single and Wide sticky retraction with anchor power removed first and piston power removed first in the same tick. Compare the visible blocks with server block checks before touching the fixture or reloading.
-- Check materials in daylight and darkness with shaders off, then with LabPBR and POM on and off. Include slabs, stairs, walls, and views from different angles.
-- Check the bundled POM compatibility pack with the standalone test pack disabled. It should start disabled. With LabPBR shaders, enabling it should keep Wide's recessed glow aligned. Disable it when checking vanilla glow.
-
-## Recorded Checks
-
-These results apply to the versions and arrangements tested. Repeat the affected checks after relevant changes, and smoke-test the exact JAR intended for release.
-
-The manual results recorded below are from Minecraft 26.1.2.
-
-| Date | Passed Checks |
-|---|---|
-| 2026-10-06 | Off, Single, and Wide center-chunk restart checks on Minecraft 26.1.2 |
-| 2026-10-07 to 2026-10-09 | Survival crafting, stonecutting, output counts, and fresh-world recipe-book unlocks |
-| 2026-10-10 | Advancement display and credit; ordinary and piston-moved placements across restarts; offline credit after block removal; no repeat delivery |
-| 2026-10-19 | Same-JVM world reopen; Overworld and Nether Wide corner entity checks across full restarts; both same-tick power-removal orders for Single and Wide |
-| 2026-10-20 | RC1 installed in Prism with Fabulously Optimized and separately with minimal Fabric; placement, activation credit, and restart counter checks; crafting and advancement checks in the Fabulously Optimized instance |
-| 2026-10-20 | Minimal Fabric dedicated server: counter continued with no players and resumed after restart before anyone joined |
-| 2026-10-21 | Refreshed Ankerstone and Reinforced Stillstone maps and retained Stillstone maps; visual checks in the dev client with Complementary Reimagined r5.8.1; updated RC1 visual and bundled-pack checks in Prism |
-| 2026-10-22 | Negative-boundary diagnostic changes: ten consecutive local passes and a fresh CI pass, all 113 required tests passing |
-| 2026-10-22 | Revised Wide's color, normal, and emission maps; checked the appearance in the development client with shaders on and off, including nighttime rain |
-
-The installed artifact tested on October 20 and 21 was `ankerstone-1.0.0-rc1+mc26.1.2.jar`. The material refresh changed that JAR's contents without changing its RC1 filename; the October 21 checks used the updated build.
+The experimental real-client automation passed locally on 2026-10-26, but was retired on 2026-10-27 because its version-specific maintenance outweighed the benefit. Those development-runtime runs do not replace the installed-client checklist above.

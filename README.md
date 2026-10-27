@@ -18,7 +18,7 @@ Place an Ankerstone and supply redstone power to keep chunks active without a pl
 
 Single keeps the chunk containing the Ankerstone entity-ticking. Wide keeps a 3×3 area entity-ticking, centered on that chunk, matching a portal chunk loader's entity-ticking coverage. Vanilla chunk loading also maintains supporting outer rings beyond these areas.
 
-Both modes affect only the dimension where the Ankerstone is placed. Loading chunks in another dimension requires a separate anchor there.
+Both modes work in the Overworld, Nether, and End, but affect only the dimension where the Ankerstone is placed. Loading chunks in another dimension requires a separate anchor there.
 
 Turning off the power releases the anchor. Active Ankerstones resume chunk loading automatically after a server restart.
 
@@ -76,7 +76,7 @@ Disable the compatibility pack when playing without LabPBR shaders to restore Wi
 
 ## Development
 
-See [Testing](docs/testing.md) for automated coverage and manual restart checks.
+See [Testing](docs/testing.md) for automated server coverage and the manual client checklist.
 
 ## License
 
