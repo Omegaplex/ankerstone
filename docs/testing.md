@@ -59,7 +59,7 @@ Use the exact release JAR in a separate Minecraft instance and disposable worlds
 
 ### Optional Integration Checks
 
-Real multiplayer placer credit needs two connected identities: one places and disconnects, the other activates, then the placer returns after a server restart. Confirm only the placer receives credit, once. Run when multiplayer/login handling changes or a second client is available; otherwise record it as untested, not passed. Attribution, offline credit, dimensions, and saved credit across restarts are covered by automated server tests.
+Use the [manual multiplayer credit check](multiplayer-testing.md) once per new port and after multiplayer/login handling changes. One client can be relaunched under two local identities: the placer disconnects, someone else activates, and the placer returns after a server restart. Confirm only the placer receives credit, once. Record it as untested until completed. Attribution, offline credit, dimensions, and saved credit across restarts are also covered by automated server tests.
 
 Use a backup world for upgrades when save formats or supported Minecraft versions change. Extra counter runs, repeated build loops, and fixture diagnostics are troubleshooting, not routine release checks.
 
@@ -78,7 +78,7 @@ Results apply only to the version and artifact tested. Repeat affected checks af
 - **Test lab, 2026-10-27:** All five manual checks above passed, including shader/POM appearance, both piston removal orders, and Off/Single/Wide counters after title-screen reopening and full client restarts. The lab save was upgraded from 26.1.2 to 26.2 and backed up after testing.
 - **Automated, 2026-10-27:** Full local build passed all 125 GameTests and all three restart phases after removing client automation. CI passed the earlier 113-test suite on 2026-10-23; the expanded suite still needs CI confirmation.
 - **Manual, 2026-10-23:** Installed-client block, variant, recipe, and advancement display; Off/Single/Wide full-client restart counters; POM pack icon/default state; non-shader Single/Wide appearance and compatible POM glow alignment passed.
-- **Optional integration:** Real two-client multiplayer credit remains untested; the automated server tests cover attribution and saved credit delivery.
+- **Manual network credit, 2026-10-27:** Passed the [multiplayer credit check](multiplayer-testing.md) using sequential real-client connections as AnkerPlacer and AnkerActivator on a localhost-only, offline-mode dedicated server. The activator received no credit; the returning placer received credit after anchor removal and a server restart. After revocation and a second restart, consumed credit was not delivered again. Tested with Fabric Loader 0.20.1, Fabric API 0.161.0+26.2, and `ankerstone-1.0.0-rc1+mc26.2.jar`. This does not test Microsoft authentication or internet routing.
 - **Artifact:** `ankerstone-1.0.0-rc1+mc26.2.jar` remains byte-for-byte identical to the installed JAR tested above and contains no test-only code.
 
 ### Minecraft 26.1.2
