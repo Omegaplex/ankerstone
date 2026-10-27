@@ -1,0 +1,100 @@
+import java.nio.file.Files
+import java.util.concurrent.TimeUnit
+
+loom.runs {
+    restartTestServer {
+        server()
+        source sourceSets.gametest
+        runDir "build/restart-tests/launcher"
+    }
+}
+
+def restartLaunch = tasks.named("runRestartTestServer")
+def restartRoot = layout.buildDirectory.dir("restart-tests")
+def restartReports = layout.buildDirectory.dir("reports/restart-tests")
+def restartMinecraftVersion = project.minecraft_version
+def restartJava = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(25)
+}
+
+tasks.register("restartTest") {
+    group = "verification"
+    description = "Checks chunk ticking, owner restoration, and placer credit across three fresh server processes."
+    dependsOn "gametestClasses", "configureLaunch", "generateDLIConfig", "generateLog4jConfig"
+    mustRunAfter "runGameTest"
+
+    doLast {
+        def launch = restartLaunch.get()
+        def javaExecutable = restartJava.get().executablePath.asFile.absolutePath
+        def reports = restartReports.get().asFile
+        reports.mkdirs()
+        restartRoot.get().asFile.mkdirs()
+        def run = Files.createTempDirectory(restartRoot.get().asFile.toPath(), "run-").toFile()
+        new File(reports, "summary.txt").text = "INCOMPLETE: see ${run}\n"
+        def runId = UUID.randomUUID().toString()
+        new File(run, "eula.txt").text = "eula=true\n"
+        def settings = new Properties()
+        settings.putAll([
+                "online-mode": "false", "server-ip": "127.0.0.1", "server-port": "0",
+                "enable-query": "false", "enable-rcon": "false",
+                "pause-when-empty-seconds": "0", "view-distance": "2",
+                "simulation-distance": "2", "spawn-protection": "0",
+                "level-type": "minecraft:flat", "generate-structures": "false",
+                "generator-settings": '{"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains"}'
+        ])
+        new File(run, "server.properties").withOutputStream { settings.store(it, "Disposable restart-test server") }
+        logger.lifecycle("Restart-test world and logs: ${run}")
+
+        def processIds = []
+        ["prepare", "restore", "released"].each { phase ->
+            // Java does not expand nested @files; our own file supplies the full classpath.
+            def arguments = new ArrayList<String>(launch.allJvmArgs.findAll { !it.startsWith("@") })
+            arguments.addAll([
+                    "-Dankerstone.restart.phase=${phase}", "-Dankerstone.restart.run=${runId}",
+                    "-cp", launch.classpath.asPath, launch.mainClass.get()
+            ])
+            arguments.addAll(launch.args)
+            launch.argumentProviders.each { arguments.addAll(it.asArguments()) }
+            // An argument file avoids Windows' command-line length limit.
+            def argumentFile = new File(run, "${phase}.args")
+            argumentFile.setText(arguments.collect { arg ->
+                '"' + arg.replace('\\', '\\\\').replace('"', '\\"') + '"'
+            }.join("\n") + "\n", "UTF-8")
+            def log = new File(run, "${phase}.log")
+            def process = new ProcessBuilder(javaExecutable, "@${argumentFile.absolutePath}")
+                    .directory(run).redirectErrorStream(true).redirectOutput(log).start()
+            try {
+                if (!process.waitFor(180, TimeUnit.SECONDS)) {
+                    process.outputStream.withWriter("UTF-8") { it.write("stop\n"); it.flush() }
+                    if (!process.waitFor(15, TimeUnit.SECONDS)) process.destroyForcibly().waitFor()
+                    throw new GradleException("Restart phase ${phase} timed out. See ${log}")
+                }
+                def resultFile = new File(run, "${phase}.properties")
+                def result = new Properties()
+                if (resultFile.isFile()) resultFile.withInputStream { result.load(it) }
+                if (process.exitValue() != 0 || result.getProperty("result") != "pass"
+                        || result.getProperty("run") != runId || result.getProperty("phase") != phase) {
+                    throw new GradleException("Restart phase ${phase} failed: ${result.getProperty('error', 'no success marker')}. See ${log}")
+                }
+                if (processIds.contains(result.getProperty("process"))) {
+                    throw new GradleException("Restart phases reused a process identity")
+                }
+                processIds.add(result.getProperty("process"))
+                logger.lifecycle("Restart phase ${phase}: PASS")
+            } finally {
+                if (process.isAlive()) {
+                    process.destroy()
+                    if (!process.waitFor(5, TimeUnit.SECONDS)) process.destroyForcibly().waitFor()
+                }
+                Files.copy(log.toPath(), new File(reports, log.name).toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            }
+        }
+        new File(reports, "summary.txt").text =
+                "PASS: prepare, restore, released\nMinecraft: ${restartMinecraftVersion}\nWorld and detailed results: ${run}\n"
+    }
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("restartTest")
+}

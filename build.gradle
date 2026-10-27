@@ -67,3 +67,5 @@ jar {
 tasks.named('sourcesJar', Jar) {
 	from("LICENSE", "NOTICE")
 }
+
+apply from: "gradle/restart-tests.gradle"

@@ -23,6 +23,16 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
+      - name: capture test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: TestReports-${{ github.run_attempt }}
+          path: |
+            build/reports/
+            build/run/gameTest/logs/latest.log
+            build/restart-tests/run-*/*.log
+            build/restart-tests/run-*/*.properties
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:

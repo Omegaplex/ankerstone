@@ -3,6 +3,7 @@
   "id": "ankerstone-test",
   "version": "1.0.0",
   "entrypoints": {
+    "main": ["io.github.omegaplex.ankerstone.ServerRestartChecks"],
     "fabric-gametest": [
       "io.github.omegaplex.ankerstone.PistonTests",
       "io.github.omegaplex.ankerstone.PistonActivationTests",
@@ -11,10 +12,12 @@
       "io.github.omegaplex.ankerstone.SavedDataTests",
       "io.github.omegaplex.ankerstone.MiningTests",
       "io.github.omegaplex.ankerstone.CraftingTests",
+      "io.github.omegaplex.ankerstone.RecipeDiscoveryTests",
       "io.github.omegaplex.ankerstone.AdvancementTests",
       "io.github.omegaplex.ankerstone.AttributionDataTests",
       "io.github.omegaplex.ankerstone.ActivationTests",
-      "io.github.omegaplex.ankerstone.ChunkTickingTests"
+      "io.github.omegaplex.ankerstone.ChunkTickingTests",
+      "io.github.omegaplex.ankerstone.ChunkReleaseTests"
     ]
   },
   "mixins": ["ankerstone-test.mixins.json"],
