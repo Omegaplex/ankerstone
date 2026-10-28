@@ -18,7 +18,7 @@ public abstract class PistonReactionMixin {
 
         if (state.getBlock() instanceof AnkerstoneBlock
                 && state.getValue(AnkerstoneBlock.MODE) != AnkerstoneMode.OFF) {
-            return PushReaction.BLOCK;
+            return PushReaction.IMMOVEABLE;
         }
 
         return original;

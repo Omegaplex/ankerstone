@@ -66,7 +66,7 @@ public class AdvancementTests {
         ItemStack icon = advancement.value().display()
                 .orElseThrow(() -> helper.assertionException(
                         "Activation advancement must have display information"))
-                .getIcon().create();
+                .icon().create();
 
         helper.assertTrue(icon.is(ModBlocks.ANKERSTONE.asItem()),
                 "Activation icon must use the Ankerstone item");

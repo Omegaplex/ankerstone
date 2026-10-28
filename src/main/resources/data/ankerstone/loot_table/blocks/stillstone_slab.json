@@ -2,31 +2,30 @@
   "type": "minecraft:block",
   "pools": [
     {
-      "rolls": 1,
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "ankerstone:stillstone_slab",
-          "functions": [
+          "modifier": [
             {
-              "function": "minecraft:set_count",
-              "count": 2,
-              "conditions": [
-                {
-                  "condition": "minecraft:block_state_property",
-                  "block": "ankerstone:stillstone_slab",
-                  "properties": {
-                    "type": "double"
-                  }
+              "type": "minecraft:set_count",
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "ankerstone:stillstone_slab",
+                "state": {
+                  "type": "double"
                 }
-              ]
+              },
+              "count": 2
             },
             {
-              "function": "minecraft:explosion_decay"
+              "type": "minecraft:explosion_decay"
             }
-          ]
+          ],
+          "name": "ankerstone:stillstone_slab"
         }
-      ]
+      ],
+      "rolls": 1
     }
-  ]
+  ],
+  "random_sequence": "ankerstone:blocks/stillstone_slab"
 }

@@ -6,12 +6,20 @@ Run once for a new Minecraft port, and after changes to placement credit or logi
 
 Use a disposable dedicated server, not the lab backup or a personal world. One Prism instance can be launched alternately under two offline usernames; the players do not need to be connected simultaneously.
 
-For 26.2, the prepared server is at `E:\MinecraftTests\AnkerstoneNetwork-26.2`. It contains Fabric Loader 0.20.1, Fabric API 0.161.0+26.2, and the same Ankerstone JAR installed in the tested Prism instance. It uses Java 25 through `start.cmd`.
+1. Use `\MinecraftTests\AnkerstoneNetwork-xx.x` on your test drive, replacing `xx.x` with the target Minecraft version. Create a fresh test world in that server folder. Do not copy an older server's libraries, versions, player data, or world.
+2. Download the matching Minecraft/Fabric server launcher from [Fabric](https://fabricmc.net/use/server/). Rename the downloaded JAR to `fabric-server-launch.jar`; do not extract it.
+3. Create a `mods` folder. Install the matching Fabric API and the exact Ankerstone JAR being tested. Use the same Ankerstone JAR in the client.
+4. Use the Java version required by the target Minecraft release. From the server folder, run the command below. The launcher downloads its dependencies and initially stops at the EULA prompt.
+5. Review the Minecraft EULA linked in `eula.txt`. If you accept it, set `eula=true`. Apply the server settings below before starting again.
+6. Start the server with the same command and wait for Done. Stop any other test server using port 25566 first.
+7. In Prism, select the matching Minecraft instance. Use **Launch Offline** and enter exactly `AnkerPlacer`. Use the same capitalization every time.
+8. Connect through Multiplayer / Direct Connection to `127.0.0.1:25566`.
 
-1. Review the Minecraft EULA linked in `eula.txt`. If you accept it, set `eula=true`.
-2. Run `start.cmd` and wait for the server's Done message.
-3. In Prism, select the matching Minecraft instance. Use **Launch Offline** and enter exactly `AnkerPlacer`. Use the same capitalization every time.
-4. Connect through Multiplayer / Direct Connection to `127.0.0.1:25566`.
+```powershell
+java -Xms512M -Xmx2G -jar fabric-server-launch.jar nogui
+```
+
+Check `java -version` first. If it selects the wrong runtime, use the full path to the correct Java executable. An existing start script is fine if it uses that runtime and launcher from this server folder.
 
 If the launcher asks for account setup, use its normal licensed-account flow. Do not modify authentication files to bypass it. If Launch Offline does not offer a username, use Prism's account settings to add/select the two offline profiles, where supported.
 
@@ -26,6 +34,10 @@ enable-query=false
 enable-rcon=false
 management-server-enabled=false
 pause-when-empty-seconds=0
+white-list=false
+gamemode=creative
+allow-flight=true
+spawn-protection=0
 ```
 
 Offline mode permits impersonation. Keep the server bound to 127.0.0.1; do not forward the port, expose a tunnel, or change it to a LAN/public address.
@@ -95,7 +107,7 @@ Disconnect and close the client. Enter `stop` in the server console and wait for
 
 ## Return After Restart
 
-1. Run start.cmd again and wait for Done.
+1. Start the same server again using the launch command or your start script, and wait for Done.
 2. Launch offline as AnkerPlacer and reconnect. Do not place or activate another anchor.
 3. With AnkerPlacer connected, check:
 
@@ -127,10 +139,8 @@ execute if entity @a[name=AnkerPlacer,advancements={ankerstone:stay_a_while=true
 
 Passing all stages completes this check. Keep the server log and record the date, Minecraft version, Loader/API versions, and exact Ankerstone JAR in testing.md. No output from both alternatives is not a pass: verify the named player is connected. Stop at any FAIL and preserve the world and log for investigation.
 
-## Repeat For 26.3
+## Repeating The Check
 
-Use a new folder and fresh disposable world, not the 26.2 server folder. Download the matching Minecraft/Fabric server launcher from [Fabric](https://fabricmc.net/use/server/), install the matching Fabric API and ported Ankerstone JAR, and use the Java version required by that Minecraft release. Update start.cmd if the Java path changes.
+For another Minecraft version, repeat Setup in its own `\MinecraftTests\AnkerstoneNetwork-xx.x` folder with matching dependencies and clients. For another run on the same version, use a fresh disposable world so old attribution or pending credit cannot affect the result.
 
-Copy only the localhost server settings above, then use a matching client and repeat the same two usernames and procedure. Do not copy the old server's libraries, versions, player data, or test world. If another test server is running, stop it before reusing port 25566.
-
-The fixture commands need changing only if Minecraft command syntax or Ankerstone's IDs/states change. This is a manual checklist, not a version-specific client harness.
+Keep both usernames and the fixture coordinates unchanged. The commands need changing only if Minecraft command syntax or Ankerstone's IDs/states change. Record version-specific results in [Testing](testing.md), not in this procedure.

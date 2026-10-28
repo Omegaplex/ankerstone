@@ -315,7 +315,7 @@ public class ServerRestartChecks implements ModInitializer {
                 ItemEntity item = new ItemEntity(level, position.getX() + 0.5, position.getY(),
                         position.getZ() + 0.5, new ItemStack(Items.DIAMOND), 0, 0, 0);
                 item.setNoGravity(true);
-                item.setInvulnerable(true);
+                item.setPermanentlyInvulnerable(true);
                 item.setNeverPickUp();
                 require(level.addFreshEntity(item), id + " probe could not be added");
                 ids.add(item.getUUID());

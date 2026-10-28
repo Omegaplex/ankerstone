@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.ObserverBlock;
-import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.RedstoneWireBlock;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.RepeaterBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -461,7 +461,7 @@ public class PlacementTests {
                                 helper.setBlock(repeater.east(), materials.get(i));
                                 helper.setBlock(repeater.east(2), Blocks.REDSTONE_WIRE);
                                 helper.assertBlockProperty(repeater.east(2),
-                                                RedStoneWireBlock.POWER, 0);
+                                                RedstoneWireBlock.POWER, 0);
                         }
                         repeaters.forEach(pos -> helper.setBlock(pos.west(), Blocks.REDSTONE_BLOCK));
                         long deadline = helper.getTick() + 20;
@@ -483,7 +483,7 @@ public class PlacementTests {
                                                         helper.assertBlockProperty(repeater,
                                                                         RepeaterBlock.POWERED, true);
                                                         helper.assertBlockProperty(repeater.east(2),
-                                                                        RedStoneWireBlock.POWER,
+                                                                        RedstoneWireBlock.POWER,
                                                                         i == 1 ? 0 : 15);
                                                 }
                                         } finally {
@@ -716,12 +716,12 @@ public class PlacementTests {
                         helper.runAfterDelay(3, () -> {
                                 try {
                                         helper.assertBlockProperty(output,
-                                                        RedStoneWireBlock.POWER, initialOutput);
+                                                        RedstoneWireBlock.POWER, initialOutput);
                                         setTestPower(helper, anchor, targetPower);
                                         helper.runAfterDelay(3, () -> {
                                                 try {
                                                         helper.assertBlockProperty(output,
-                                                                        RedStoneWireBlock.POWER,
+                                                                        RedstoneWireBlock.POWER,
                                                                         expectedOutput);
                                                 } finally {
                                                         cleanup.run();

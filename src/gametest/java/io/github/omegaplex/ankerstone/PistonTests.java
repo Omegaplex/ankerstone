@@ -252,8 +252,8 @@ public class PistonTests {
             BlockState state = ModBlocks.ANKERSTONE.defaultBlockState()
                     .setValue(AnkerstoneBlock.MODE, mode);
             PushReaction expected = mode == AnkerstoneMode.OFF
-                    ? PushReaction.NORMAL
-                    : PushReaction.BLOCK;
+                    ? PushReaction.PUSH_PULL
+                    : PushReaction.IMMOVEABLE;
             PushReaction actual = state.getPistonPushReaction();
 
             helper.assertTrue(actual == expected,

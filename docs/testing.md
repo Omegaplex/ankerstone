@@ -73,6 +73,13 @@ The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/run
 
 Results apply only to the version and artifact tested. Repeat affected checks after changes and smoke-test the exact release JAR.
 
+### Minecraft 26.3
+
+- **Automated, 2026-10-28:** Full local build passed, as reported by the tester, after updating recipe-unlock advancements and both slab loot tables for the new data formats.
+- **Test lab, 2026-10-28:** All five manual checks above passed using the packaged RC1 JAR, including crafting, advancements, piston rendering, textures, shaders/POM, and Off/Single/Wide counters after title-screen reopening and full client restarts.
+- **Manual network credit, 2026-10-28:** Passed the [multiplayer credit check](multiplayer-testing.md). The activator received no placer credit; the returning placer received saved credit after anchor removal and a server restart. After revocation and another restart, consumed credit was not delivered again.
+- **Artifact:** `ankerstone-1.0.0-rc1+mc26.3.jar`. These results do not yet constitute a final-release JAR smoke test or a CI pass.
+
 ### Minecraft 26.2
 
 - **Test lab, 2026-10-27:** All five manual checks above passed, including shader/POM appearance, both piston removal orders, and Off/Single/Wide counters after title-screen reopening and full client restarts. The lab save was upgraded from 26.1.2 to 26.2 and backed up after testing.

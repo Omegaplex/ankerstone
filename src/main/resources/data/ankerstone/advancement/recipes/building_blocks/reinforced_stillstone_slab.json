@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "ankerstone:reinforced_stillstone_slab"
+        "recipes": "ankerstone:reinforced_stillstone_slab"
       }
     }
   },
