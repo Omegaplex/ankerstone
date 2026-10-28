@@ -3,7 +3,7 @@
   "id": "ankerstone",
   "version": "${version}",
   "name": "Ankerstone",
-  "description": "Adds a redstone-powered chunk-loading block called Ankerstone.",
+  "description": "Adds a redstone-powered chunk-loading block called Ankerstone. Also adds stillstone and reinforced stillstone block families.",
   "authors": ["Omegaplex"],
   "contact": {
     "sources": "https://github.com/Omegaplex/ankerstone",
