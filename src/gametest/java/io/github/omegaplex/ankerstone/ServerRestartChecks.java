@@ -67,7 +67,8 @@ public class ServerRestartChecks implements ModInitializer {
             server.tickRateManager().setTickRate(200);
             fixtures.add(new Fixture(server.overworld(), "Single", 10008, AnkerstoneMode.SINGLE, false));
             fixtures.add(new Fixture(server.overworld(), "Wide", 10520, AnkerstoneMode.WIDE, false));
-            fixtures.add(new Fixture(server.getLevel(Level.NETHER), "Nether", 10008, AnkerstoneMode.WIDE, false));
+            fixtures.add(new Fixture(server.getLevel(Level.NETHER), "NetherSingle", 10520, AnkerstoneMode.SINGLE, false));
+            fixtures.add(new Fixture(server.getLevel(Level.NETHER), "NetherWide", 10008, AnkerstoneMode.WIDE, false));
             fixtures.add(new Fixture(server.getLevel(Level.END), "EndSingle", 10008, AnkerstoneMode.SINGLE, false));
             fixtures.add(new Fixture(server.getLevel(Level.END), "EndWide", 10520, AnkerstoneMode.WIDE, false));
             fixtures.add(new Fixture(server.overworld(), "Off", 11032, AnkerstoneMode.WIDE, true));
