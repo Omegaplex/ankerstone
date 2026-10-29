@@ -31,10 +31,14 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 
-/** Test-only initializer; inert during ordinary GameTests and absent from the release JAR. */
+/**
+ * Test-only initializer; inert during ordinary GameTests and absent from the
+ * release JAR.
+ */
 public class ServerRestartChecks implements ModInitializer {
     private static final int SETTLE_TICKS = 400;
     private static final int OBSERVE_TICKS = 1200;
+    private static final BlockPos STALE_OWNER = new BlockPos(12056, 200, 10008);
     private final String phase = System.getProperty("ankerstone.restart.phase");
     private final String run = System.getProperty("ankerstone.restart.run");
     private final String process = UUID.randomUUID().toString();
@@ -50,7 +54,8 @@ public class ServerRestartChecks implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        if (phase == null) return;
+        if (phase == null)
+            return;
         require(List.of("prepare", "restore", "released").contains(phase), "Unknown restart phase");
         require(run != null && !run.isBlank(), "Restart task must supply a run identity");
         ServerLifecycleEvents.SERVER_STARTED.register(this::start);
@@ -67,7 +72,8 @@ public class ServerRestartChecks implements ModInitializer {
             server.tickRateManager().setTickRate(200);
             fixtures.add(new Fixture(server.overworld(), "Single", 10008, AnkerstoneMode.SINGLE, false));
             fixtures.add(new Fixture(server.overworld(), "Wide", 10520, AnkerstoneMode.WIDE, false));
-            fixtures.add(new Fixture(server.getLevel(Level.NETHER), "NetherSingle", 10520, AnkerstoneMode.SINGLE, false));
+            fixtures.add(
+                    new Fixture(server.getLevel(Level.NETHER), "NetherSingle", 10520, AnkerstoneMode.SINGLE, false));
             fixtures.add(new Fixture(server.getLevel(Level.NETHER), "NetherWide", 10008, AnkerstoneMode.WIDE, false));
             fixtures.add(new Fixture(server.getLevel(Level.END), "EndSingle", 10008, AnkerstoneMode.SINGLE, false));
             fixtures.add(new Fixture(server.getLevel(Level.END), "EndWide", 10520, AnkerstoneMode.WIDE, false));
@@ -78,7 +84,8 @@ public class ServerRestartChecks implements ModInitializer {
                 server.getGameRules().set(GameRules.COMMAND_BLOCK_OUTPUT, false, server);
                 server.getScoreboard().addObjective("restart_ticks", ObjectiveCriteria.DUMMY,
                         Component.literal("Restart checks"), ObjectiveCriteria.RenderType.INTEGER, false, null);
-                for (Fixture fixture : fixtures) fixture.create(server);
+                for (Fixture fixture : fixtures)
+                    fixture.create(server);
                 baseline.setProperty("run", run);
                 baseline.setProperty("prepareProcess", process);
                 credits.prepare(server, baseline, run);
@@ -90,7 +97,13 @@ public class ServerRestartChecks implements ModInitializer {
                 require(!process.equals(baseline.getProperty("prepareProcess")), "Must use a fresh server process");
                 require(!process.equals(baseline.getProperty("restoreProcess")), "Must restart after releasing owners");
                 credits.checkSaved(server, baseline, phase.equals("released"));
-                for (Fixture fixture : fixtures) fixture.readIds(baseline);
+                AnkerstoneMode expectedStaleMode = phase.equals("restore")
+                        ? AnkerstoneMode.SINGLE
+                        : null;
+                require(OwnerData.get(server.overworld()).getOwnerMode(STALE_OWNER) == expectedStaleMode,
+                        "Stale owner did not match the expected saved restart state");
+                for (Fixture fixture : fixtures)
+                    fixture.readIds(baseline);
                 for (Fixture fixture : fixtures) {
                     boolean active = phase.equals("restore") && !fixture.negative;
                     int expected = fixture.mode == AnkerstoneMode.WIDE ? 30 : 31;
@@ -109,15 +122,19 @@ public class ServerRestartChecks implements ModInitializer {
     }
 
     private void tick(MinecraftServer server) {
-        if (finished || directory == null) return;
+        if (finished || directory == null)
+            return;
         try {
             ticks++;
             require(System.nanoTime() < expires && ticks < 12000,
                     "Restart phase timed out at step " + step + ": " + diagnostics(server));
             require(server.getPlayerCount() == 0, "A player joined the restart-test server");
-            if (phase.equals("prepare")) prepare(server);
-            else if (phase.equals("restore")) restore(server);
-            else released(server);
+            if (phase.equals("prepare"))
+                prepare(server);
+            else if (phase.equals("restore"))
+                restore(server);
+            else
+                released(server);
         } catch (Exception failure) {
             finish(server, failure);
         }
@@ -125,22 +142,33 @@ public class ServerRestartChecks implements ModInitializer {
 
     private void prepare(MinecraftServer server) throws IOException {
         if (step == 0) {
-            if (!fixtures.stream().allMatch(f -> f.initiallyTicked(server))) return;
-            if (!credits.movementFinished(server, baseline)) return;
+            if (!fixtures.stream().allMatch(f -> f.initiallyTicked(server)))
+                return;
+            if (!credits.movementFinished(server, baseline))
+                return;
             for (Fixture fixture : fixtures) {
-                if (fixture.negative) fixture.release(fixture.id.equals("Removed"));
+                if (fixture.negative)
+                    fixture.release(fixture.id.equals("Removed"));
             }
             step = 1;
         } else if (step == 1) {
-            if (!fixtures.stream().filter(f -> f.negative).allMatch(Fixture::unloaded)) return;
+            if (!fixtures.stream().filter(f -> f.negative).allMatch(Fixture::unloaded))
+                return;
             snapshot(server, true);
             stepStarted = ticks;
             step = 2;
         } else {
             assertNegativeFixtures(server);
-            if (ticks - stepStarted < SETTLE_TICKS + OBSERVE_TICKS) return;
+            if (ticks - stepStarted < SETTLE_TICKS + OBSERVE_TICKS)
+                return;
             require(activeProgressed(server, OBSERVE_TICKS), "Active fixtures must tick throughout preparation");
             snapshot(server, true);
+
+            ServerLevel level = server.overworld();
+            require(level.getBlockState(STALE_OWNER).isAir(),
+                    "Stale restart fixture must contain air");
+            OwnerData.get(level).addOwner(STALE_OWNER, AnkerstoneMode.SINGLE);
+
             writeBaseline();
             finish(server, null);
         }
@@ -149,7 +177,8 @@ public class ServerRestartChecks implements ModInitializer {
     private void restore(MinecraftServer server) throws IOException {
         if (step == 0) {
             assertNegativeFixtures(server);
-            if (ticks < SETTLE_TICKS + OBSERVE_TICKS || !activeProgressed(server, OBSERVE_TICKS)) return;
+            if (ticks < SETTLE_TICKS + OBSERVE_TICKS || !activeProgressed(server, OBSERVE_TICKS))
+                return;
             credits.activateAndDeliver(server, baseline);
             for (Fixture fixture : fixtures) {
                 if (!fixture.negative) {
@@ -160,7 +189,10 @@ public class ServerRestartChecks implements ModInitializer {
             }
             step = 1;
         } else {
-            if (!fixtures.stream().allMatch(Fixture::unloaded)) return;
+            if (!fixtures.stream().allMatch(Fixture::unloaded))
+                return;
+            if (!staleOwnerReleased(server))
+                return;
             for (Fixture fixture : fixtures) {
                 require(!OwnerData.get(fixture.level).getOwnerModes().containsKey(fixture.anchor),
                         fixture.id + " must not retain a released owner");
@@ -173,6 +205,8 @@ public class ServerRestartChecks implements ModInitializer {
     }
 
     private void released(MinecraftServer server) {
+        require(staleOwnerReleased(server),
+                "Stale owner, ticket, or loaded chunks returned after restart");
         for (Fixture fixture : fixtures) {
             require(fixture.score(server) == value(fixture.id + ".score"),
                     fixture.id + " restarted ticking after its owner was released");
@@ -188,7 +222,8 @@ public class ServerRestartChecks implements ModInitializer {
 
     private void assertNegativeFixtures(MinecraftServer server) {
         for (Fixture fixture : fixtures) {
-            if (!fixture.negative) continue;
+            if (!fixture.negative)
+                continue;
             require(fixture.unloaded(), fixture.id + " unexpectedly loaded");
             require(!OwnerData.get(fixture.level).getOwnerModes().containsKey(fixture.anchor),
                     fixture.id + " must not have a saved active owner");
@@ -197,15 +232,47 @@ public class ServerRestartChecks implements ModInitializer {
         }
     }
 
+    private boolean staleOwnerReleased(MinecraftServer server) {
+        ServerLevel level = server.overworld();
+
+        if (OwnerData.get(level).getOwnerMode(STALE_OWNER) != null) {
+            return false;
+        }
+
+        ChunkPos center = ChunkPos.containing(STALE_OWNER);
+        TicketStorage storage = level.getChunkSource().getDataStorage()
+                .computeIfAbsent(TicketStorage.TYPE);
+
+        if (storage.getTickets(center.pack()).stream()
+                .anyMatch(ticket -> ticket.getType() == ChunkTickets.ANKERSTONE_TICKET)) {
+            return false;
+        }
+
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                ChunkPos chunk = new ChunkPos(center.x() + dx, center.z() + dz);
+                if (level.getChunkSource().getChunkNow(chunk.x(), chunk.z()) != null
+                        || level.areEntitiesLoaded(chunk.pack())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private boolean activeProgressed(MinecraftServer server, int minimum) {
         for (Fixture fixture : fixtures) {
-            if (fixture.negative) continue;
-            if (fixture.score(server) - value(fixture.id + ".score") < minimum) return false;
+            if (fixture.negative)
+                continue;
+            if (fixture.score(server) - value(fixture.id + ".score") < minimum)
+                return false;
             for (int i = 0; i < fixture.ids.size(); i++) {
                 var entity = fixture.level.getEntity(fixture.ids.get(i));
                 if (!(entity instanceof ItemEntity item)
                         || !fixture.level.isPositionEntityTicking(item.blockPosition())
-                        || item.getAge() - value(fixture.id + ".age." + i) < minimum) return false;
+                        || item.getAge() - value(fixture.id + ".age." + i) < minimum)
+                    return false;
             }
         }
         return true;
@@ -241,7 +308,8 @@ public class ServerRestartChecks implements ModInitializer {
     }
 
     private void finish(MinecraftServer server, Exception failure) {
-        if (finished) return;
+        if (finished)
+            return;
         finished = true;
         Properties result = new Properties();
         result.setProperty("run", run);
@@ -263,7 +331,8 @@ public class ServerRestartChecks implements ModInitializer {
     }
 
     private static void require(boolean condition, String message) {
-        if (!condition) throw new IllegalStateException(message);
+        if (!condition)
+            throw new IllegalStateException(message);
     }
 
     private static final class Fixture {
@@ -300,8 +369,9 @@ public class ServerRestartChecks implements ModInitializer {
                     server.getScoreboard().getObjective("restart_ticks")).set(0);
             List<BlockPos> positions = new ArrayList<>(List.of(anchor.above(2)));
             if (mode == AnkerstoneMode.WIDE) {
-                for (int dx : new int[] {-16, 16}) {
-                    for (int dz : new int[] {-16, 16}) positions.add(anchor.offset(dx, 2, dz));
+                for (int dx : new int[] { -16, 16 }) {
+                    for (int dz : new int[] { -16, 16 })
+                        positions.add(anchor.offset(dx, 2, dz));
                 }
             }
             var entities = ((ServerLevelAccessor) level).ankerstone$getEntityManager();
@@ -325,17 +395,22 @@ public class ServerRestartChecks implements ModInitializer {
 
         void readIds(Properties baseline) {
             int count = mode == AnkerstoneMode.SINGLE ? 1 : 5;
-            for (int i = 0; i < count; i++) ids.add(UUID.fromString(baseline.getProperty(id + ".uuid." + i)));
+            for (int i = 0; i < count; i++)
+                ids.add(UUID.fromString(baseline.getProperty(id + ".uuid." + i)));
         }
 
         boolean initiallyTicked(MinecraftServer server) {
-            if (score(server) < 10) return false;
-            return ids.stream().allMatch(uuid -> level.getEntity(uuid) instanceof ItemEntity item && item.getAge() >= 340);
+            if (score(server) < 10)
+                return false;
+            return ids.stream()
+                    .allMatch(uuid -> level.getEntity(uuid) instanceof ItemEntity item && item.getAge() >= 340);
         }
 
         void release(boolean remove) {
-            if (remove) level.setBlock(anchor, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-            else power(0);
+            if (remove)
+                level.setBlock(anchor, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            else
+                power(0);
         }
 
         void power(int strength) {
@@ -370,7 +445,8 @@ public class ServerRestartChecks implements ModInitializer {
                     int x = center.x() + dx;
                     int z = center.z() + dz;
                     if (level.getChunkSource().getChunkNow(x, z) != null
-                            || level.areEntitiesLoaded(new ChunkPos(x, z).pack())) return false;
+                            || level.areEntitiesLoaded(new ChunkPos(x, z).pack()))
+                        return false;
                 }
             }
             return true;

@@ -97,6 +97,25 @@ public class AnkerstoneBlock extends Block {
         }
     }
 
+    static void reconcileRestoredOwner(ServerLevel level, BlockPos pos,
+            BlockState state, AnkerstoneMode savedMode) {
+        AnkerstoneMode actualMode = modeFromSignal(level.getBestNeighborSignal(pos));
+
+        if (savedMode != actualMode) {
+            ChunkTickets.remove(level, pos, savedMode);
+
+            if (actualMode != AnkerstoneMode.OFF) {
+                ChunkTickets.add(level, pos, actualMode);
+            }
+        }
+
+        if (state.getValue(MODE) != actualMode) {
+            level.setBlock(pos, state.setValue(MODE, actualMode),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SKIP_ON_PLACE);
+            level.updateNeighbourForOutputSignal(pos, state.getBlock());
+        }
+    }
+
     private static AnkerstoneMode modeFromSignal(int signalStrength) {
         if (signalStrength == 0) {
             return AnkerstoneMode.OFF;
