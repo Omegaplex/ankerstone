@@ -53,11 +53,11 @@ Read the [lore](docs/lore.md) and [advancement notes](docs/advancements.md) for 
 
 ## Requirements
 
-| Minecraft Java Edition | Ankerstone JAR | Minimum Fabric Loader | Minimum Fabric API |
-|---|---|---|---|
-| 26.1.2 | `ankerstone-1.0.0+mc26.1.2.jar` | 0.19.2 | 0.149.0 for 26.1.2 |
-| 26.2 | `ankerstone-1.0.0+mc26.2.jar` | 0.20.1 | 0.161.0 for 26.2 |
-| 26.3 | `ankerstone-1.0.0+mc26.3.jar` | 0.20.1 | 0.165.0 for 26.3 |
+| Minecraft Java Edition | Minimum Fabric Loader | Minimum Fabric API |
+|---|---|---|
+| 26.1.2 | 0.19.2 | 0.149.0 for 26.1.2 |
+| 26.2 | 0.20.1 | 0.161.0 for 26.2 |
+| 26.3 | 0.20.1 | 0.165.0 for 26.3 |
 
 - All three releases require Java 25 or later. 
 
