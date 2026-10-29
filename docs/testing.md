@@ -66,9 +66,11 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 ## Known Issues
 
-Negative-boundary piston tests have intermittently failed during fixture setup, before movement, reporting that chunk or entity data was not ready. Setup now waits up to ten real-time seconds for entity data; movement assertions remain unchanged.
+- One restart run timed out waiting for stale-owner cleanup; all ordinary fixtures had unloaded. Three subsequent runs passed. Diagnostics were expanded; the cause remains unconfirmed.
 
-The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) and controlled-delay checks, but the original cause remains unconfirmed. If it recurs, keep the failure message and server log before rerunning. Diagnostics include entity-ticking state, entity-data readiness, ticket levels, and chunk-loading details. See the [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
+- Negative-boundary piston tests have intermittently failed during fixture setup, before movement, reporting that chunk or entity data was not ready. Setup now waits up to ten real-time seconds for entity data; movement assertions remain unchanged.
+
+- The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) and controlled-delay checks, but the original cause remains unconfirmed. If it recurs, keep the failure message and server log before rerunning. Diagnostics include entity-ticking state, entity-data readiness, ticket levels, and chunk-loading details. See the [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
 
 ## Latest Results
 

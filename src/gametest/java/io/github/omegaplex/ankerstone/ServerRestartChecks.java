@@ -303,8 +303,35 @@ public class ServerRestartChecks implements ModInitializer {
     }
 
     private String diagnostics(MinecraftServer server) {
-        return fixtures.stream().map(f -> f.id + ": score=" + f.score(server) + ", unloaded=" + f.unloaded())
-                .toList().toString();
+        return fixtures.stream()
+                .map(f -> f.id + ": score=" + f.score(server)
+                        + ", unloaded=" + f.unloaded())
+                .toList().toString()
+                + "; " + staleOwnerDiagnostics(server);
+    }
+
+    private String staleOwnerDiagnostics(MinecraftServer server) {
+        ServerLevel level = server.overworld();
+        ChunkPos center = ChunkPos.containing(STALE_OWNER);
+        TicketStorage storage = level.getChunkSource().getDataStorage()
+                .computeIfAbsent(TicketStorage.TYPE);
+        List<String> loaded = new ArrayList<>();
+
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                ChunkPos chunk = new ChunkPos(center.x() + dx, center.z() + dz);
+                boolean blocks = level.getChunkSource()
+                        .getChunkNow(chunk.x(), chunk.z()) != null;
+                boolean entities = level.areEntitiesLoaded(chunk.pack());
+                if (blocks || entities) {
+                    loaded.add(chunk + ": blocks=" + blocks + ", entities=" + entities);
+                }
+            }
+        }
+
+        return "staleOwner=" + OwnerData.get(level).getOwnerMode(STALE_OWNER)
+                + ", centerTickets=" + storage.getTickets(center.pack())
+                + ", loaded=" + loaded;
     }
 
     private void finish(MinecraftServer server, Exception failure) {
