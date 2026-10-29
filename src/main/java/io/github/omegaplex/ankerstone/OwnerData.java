@@ -71,6 +71,10 @@ public class OwnerData extends SavedData {
         return Map.copyOf(ownerModes);
     }
 
+    public AnkerstoneMode getOwnerMode(BlockPos pos) {
+        return ownerModes.get(pos);
+    }
+
     public static OwnerData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(TYPE);
     }
