@@ -13,7 +13,7 @@ Ankerstone has four advancements in its own tab, titled **A Strange Stillness**.
 
 The first three advancements are earned by obtaining Stillstone, Reinforced Stillstone, and Ankerstone respectively. Crafting is the intended progression, but receiving the items from another player also counts. Stillstone and Reinforced Stillstone require the full-block item; slabs, stairs, and walls do not count toward those milestones.
 
-The advancements form a single chain in the tab, but earning a parent is not required to earn its child. Recipe-book unlocks are separate.
+The advancements form a single chain in the tab, but earning a parent is not required to earn its child.
 
 ## Activation Credit
 
