@@ -9,7 +9,7 @@ Ankerstone 1.0.0 is available for Minecraft Java Edition 26.1.2, 26.2, and 26.3.
 
 ## Chunk Anchoring
 
-Place an Ankerstone and supply redstone power to keep chunks active without a player nearby.
+Place an Ankerstone and supply redstone power to keep chunks ticking without a player nearby. Ankerstone uses Minecraft's normal chunk-ticket system, not a simulated player.
 
 | Mode | Redstone Input | Entity-Ticking Coverage | Comparator Output | Piston Movable |
 |---|---|---|---|---|
@@ -23,6 +23,24 @@ Both modes work in the Overworld, Nether, and End, but affect only the dimension
 
 Turning off the power releases the anchor. Active Ankerstones resume chunk loading automatically after a server restart.
 
+### Vanilla Loading
+
+- Ankerstone is a redstone-controlled alternative to maintaining a vanilla chunk loader. 
+- Single matches a pearl loader's entity-ticking coverage in the Ankerstone's dimension.
+- Wide matches a portal loader's entity-ticking coverage in the Ankerstone's dimension; it does not reproduce portal transport or load a destination in another dimension.
+
+**Note:** Keeping chunks ticking does not satisfy mechanics that explicitly require a nearby player:
+
+| Mechanic | What to Expect |
+|---|---|
+| Redstone circuits, furnaces, and hoppers | Can continue under normal vanilla ticking rules. Keep all required parts of the machine inside the appropriate ticking area. |
+| Existing entities, including dropped items | Continue ticking inside the entity-ticking footprint. Ankerstone does not disable normal item aging or mob despawn rules. |
+| Natural mob spawning | An anchor does not substitute for the nearby player required by ordinary natural-spawning rules. |
+| Standard monster spawners | Still require a nearby player to activate. Loading the chunk alone is not enough. |
+| Crops and other random-tick mechanics | Follow the target Minecraft version's vanilla random-tick rules. Ankerstone adds no separate growth system. |
+| A paused or closed world/server | Does not run. An anchor cannot override whole-server pausing or keep a closed single-player world running. |
+
+## Advancements
 Ankerstone has its own advancement tab. Activation credit goes to the player who placed the block, even if someone else powers it. If the placer is offline, they receive credit when they return.
 
 ## Building Blocks
