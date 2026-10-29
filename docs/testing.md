@@ -31,6 +31,7 @@ Test sources are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Advancements | Full-block acquisition milestones, activation credit, and the Wide advancement icon without changing the inventory item |
 | Entity ticking | Measures actual entity ticks inside and outside the expected footprint. Single's center chunk, Wide's full 3x3 area, Off mode, and dimension isolation. |
 | Chunk release | Checks Single/Wide deactivation and removal; Wide-to-Single entity-ticking downgrade; shared and overlapping owners; Nether release; chunk and entity-data unloading without loading them through the checks |
+| Startup reconciliation | Removes missing or unpowered owners, corrects Single/Wide mismatches, preserves shared tickets, waits for required chunks without loading them synchronously, limits validation to 16 attempts per tick across dimensions, and clears pending work on dimension unload |
 
 We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
 
@@ -43,6 +44,8 @@ The restart suite saves one disposable world across three separate Java 25 serve
 3. **Released:** Confirm released chunks remain unloaded, consumed credit stays consumed, and deferred credit delivers once.
 
 Restart checks cover Single and Wide in the Overworld, Nether, and End. They use normal redstone power and run long enough to detect ticking stopping when no players are present.
+
+A deliberately stale owner is saved during Prepare. Restore confirms it survived disk loading, then checks that reconciliation removes its saved record and ticket and allows its chunks and entity data to unload. Released confirms the cleanup survives another restart.
 
 Servers bind only to localhost on an assigned port, disable empty-server pausing, and allow no connected players. The task accepts the Minecraft server EULA for these disposable servers. Credit checks use server-side player stand-ins.
 
@@ -69,6 +72,10 @@ The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/run
 
 ## Latest Results
 
+### Development (`main`, Minecraft 26.3)
+
+- **2026-10-29:** All 136 GameTests and all three restart phases passed, including startup reconciliation and stale-owner cleanup across disk restarts.  **Note**: Validation runs after restoration, not continuously during gameplay.
+- **Nether Single Restart, 2026-10-29** Added Nether Single coverage; all three restart phases passed.
 ### Published Release Artifacts
 
 After automated and manual testing, the final release JARs were loaded into a testing instance for a smoke check. All three versions passed. The SHA-256 hashes below were confirmed against the published downloads.
@@ -81,7 +88,6 @@ After automated and manual testing, the final release JARs were loaded into a te
 
 ### Minecraft 26.3
 
-- **Nether Single Restart, 2026-10-29** Added Nether Single coverage; all three restart phases passed.
 - **Automated, 2026-10-28:** Full local build passed, as reported by the tester, after updating recipe-unlock advancements and both slab loot tables for the new data formats.
 - **Test lab, 2026-10-28:** All five manual checks above passed using the packaged RC1 JAR, including crafting, advancements, piston rendering, textures, shaders/POM, and Off/Single/Wide counters after title-screen reopening and full client restarts.
 - **Manual network credit, 2026-10-28:** Passed the [multiplayer credit check](multiplayer-testing.md). The activator received no placer credit; the returning placer received saved credit after anchor removal and a server restart. After revocation and another restart, consumed credit was not delivered again.

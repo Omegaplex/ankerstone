@@ -2,6 +2,7 @@ package io.github.omegaplex.ankerstone;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import org.slf4j.Logger;
@@ -21,7 +22,8 @@ public class Ankerstone implements ModInitializer {
 		ServerLevelEvents.LOAD.register((server, level) -> ChunkTickets.restore(level));
 		// Discard runtime ownership on unload; saved owners remain for restoration.
 		ServerLevelEvents.UNLOAD.register((server, level) -> ChunkTickets.clear(level));
-
+		// Validate pending owners on each server tick.
+		ServerTickEvents.END_SERVER_TICK.register(ChunkTickets::validatePending);
 		LOGGER.info("Ankerstone initialized!");
 	}
 }
