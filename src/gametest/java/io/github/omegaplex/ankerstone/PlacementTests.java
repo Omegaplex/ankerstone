@@ -829,7 +829,7 @@ public class PlacementTests {
                                 cleanup, 10);
         }
 
-        @GameTest(environment = "ankerstone-test:deferred_validation_budget")
+        @GameTest(environment = "ankerstone-test:deferred_validation_budget", maxTicks = Integer.MAX_VALUE)
         public void deferredOwnersCountTowardValidationBudget(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 ServerLevel nether = level.getServer().getLevel(Level.NETHER);
@@ -848,43 +848,57 @@ public class PlacementTests {
                 helper.assertTrue(
                                 nether.getChunkSource().getChunkNow(remote.x(), remote.z()) == null,
                                 "Nether fixture must be unloaded");
-
-                try {
-                        for (int i = 0; i < 16; i++) {
-                                BlockPos pos = new BlockPos(remote.x() * 16 + 8,
-                                                200 + i, remote.z() * 16 + 8);
-                                waiting.add(pos);
-                                waitingData.addOwner(pos, AnkerstoneMode.SINGLE);
-                        }
-                        ChunkTickets.restore(nether);
-
-                        readyData.addOwner(ready, AnkerstoneMode.SINGLE);
-                        ChunkTickets.restore(level);
-
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(
-                                        readyData.getOwnerMode(ready) == AnkerstoneMode.SINGLE,
-                                        "16 deferred attempts must exhaust the first call's budget");
-                        assertTicketLevels(helper, readyChunk, List.of(31));
-
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(readyData.getOwnerMode(ready) == null,
-                                        "Ready owner must be reached on the second call");
-                        assertTicketLevels(helper, readyChunk, List.of());
-                        helper.assertTrue(waitingData.getOwnerModes().size() == 16,
-                                        "Unloaded owners must remain saved");
-                        helper.assertTrue(
-                                        nether.getChunkSource().getChunkNow(remote.x(), remote.z()) == null,
-                                        "Validation must not synchronously load deferred chunks");
-                        helper.succeed();
-                } finally {
+                Runnable cleanup = () -> {
                         ChunkTickets.remove(level, ready, AnkerstoneMode.SINGLE);
                         for (BlockPos pos : waiting) {
                                 ChunkTickets.remove(nether, pos, AnkerstoneMode.SINGLE);
                         }
-                }
+                        level.getChunkSource().removeTicketWithRadius(
+                                        ChunkTickets.ANKERSTONE_TICKET, readyChunk, 2);
+                };
+
+                level.getChunkSource().addTicketWithRadius(
+                                ChunkTickets.ANKERSTONE_TICKET, readyChunk, 2);
+                awaitValidation(helper,
+                                () -> ChunkTickets.restoredFootprintReady(
+                                                level, ready, AnkerstoneMode.SINGLE),
+                                () -> {
+                                        helper.assertTrue(
+                                                        nether.getChunkSource()
+                                                                        .getChunkNow(remote.x(), remote.z()) == null,
+                                                        "Nether fixture must remain unloaded before measurement");
+                                        for (int i = 0; i < 16; i++) {
+                                                BlockPos pos = new BlockPos(remote.x() * 16 + 8,
+                                                                200 + i, remote.z() * 16 + 8);
+                                                waiting.add(pos);
+                                                waitingData.addOwner(pos, AnkerstoneMode.SINGLE);
+                                        }
+                                        ChunkTickets.restore(nether);
+
+                                        readyData.addOwner(ready, AnkerstoneMode.SINGLE);
+                                        ChunkTickets.restore(level);
+
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(
+                                                        readyData.getOwnerMode(ready) == AnkerstoneMode.SINGLE,
+                                                        "16 deferred attempts must exhaust the first call's budget");
+                                        assertTicketLevels(helper, readyChunk, List.of(31));
+
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(readyData.getOwnerMode(ready) == null,
+                                                        "Ready owner must be reached on the second call");
+                                        assertTicketLevels(helper, readyChunk, List.of());
+                                        helper.assertTrue(waitingData.getOwnerModes().size() == 16,
+                                                        "Unloaded owners must remain saved");
+                                        helper.assertTrue(
+                                                        nether.getChunkSource().getChunkNow(remote.x(),
+                                                                        remote.z()) == null,
+                                                        "Validation must not synchronously load deferred chunks");
+
+                                }, cleanup, 10);
+
         }
 
         @GameTest(environment = "ankerstone-test:validation_cleanup")
