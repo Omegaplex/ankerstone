@@ -30,7 +30,7 @@ Test sources are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Recipes | Checks Survival recipe-book discovery after inventory changes, core crafting, both families' variants, stonecutting, output counts, and invalid ingredients/layouts. |
 | Advancements | Full-block acquisition milestones, activation credit, and the Wide advancement icon without changing the inventory item |
 | Entity ticking | Measures actual entity ticks inside and outside the expected footprint. Single's center chunk, Wide's full 3x3 area, Off mode, and dimension isolation. |
-| Chunk release | Checks Single/Wide deactivation and removal; Wide-to-Single entity-ticking downgrade; shared and overlapping owners; Nether release; chunk and entity-data unloading without loading them through the checks |
+| Chunk release | Single/Wide deactivation and removal, plus Wide-to-Single downgrade, in the Overworld, Nether, and End; shared and overlapping owners in the Overworld; chunk and entity-data unloading checked without loading them |
 | Startup reconciliation | Removes missing or unpowered owners, corrects Single/Wide mismatches, preserves shared tickets, waits for required chunks without loading them synchronously, limits validation to 16 attempts per tick across dimensions, and clears pending work on dimension unload |
 
 We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
@@ -76,6 +76,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 ### Development (`main`, Minecraft 26.3)
 
+- **2026-10-31:** All 145 GameTests and three restart phases passed. Release fixtures run in separate environment batches, and both validation-budget tests establish readiness before measuring calls.
 - **2026-10-30:** All 136 GameTests passed after updating asynchronous checks to use real-time deadlines. Console progress bars are suppressed; full logs and the final pass/fail summary remain available.
 - **2026-10-29:** All 136 GameTests and all three restart phases passed, including startup reconciliation and stale-owner cleanup across disk restarts.  **Note**: Validation runs after restoration, not continuously during gameplay.
 - **Nether Single Restart, 2026-10-29** Added Nether Single coverage; all three restart phases passed.

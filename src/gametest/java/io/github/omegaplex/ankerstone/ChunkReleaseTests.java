@@ -8,6 +8,7 @@ import io.github.omegaplex.ankerstone.mixin.ServerLevelAccessor;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.ChunkPos;
@@ -18,52 +19,108 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 
 public class ChunkReleaseTests {
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_single_off", maxTicks = 1400)
     public void singleDeactivationUnloads(GameTestHelper helper) {
-        new Fixture(helper, 8192, AnkerstoneMode.SINGLE, false, Change.OFF).start();
+        new Fixture(helper, 8192, AnkerstoneMode.SINGLE, Level.OVERWORLD, Change.OFF).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_wide_off", maxTicks = 1400)
     public void wideDeactivationUnloads(GameTestHelper helper) {
-        new Fixture(helper, 8256, AnkerstoneMode.WIDE, false, Change.OFF).start();
+        new Fixture(helper, 8256, AnkerstoneMode.WIDE, Level.OVERWORLD, Change.OFF).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_single_removed", maxTicks = 1400)
     public void singleRemovalUnloads(GameTestHelper helper) {
-        new Fixture(helper, 8320, AnkerstoneMode.SINGLE, false, Change.REMOVE).start();
+        new Fixture(helper, 8320, AnkerstoneMode.SINGLE, Level.OVERWORLD, Change.REMOVE).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_wide_removed", maxTicks = 1400)
     public void wideRemovalUnloads(GameTestHelper helper) {
-        new Fixture(helper, 8384, AnkerstoneMode.WIDE, false, Change.REMOVE).start();
+        new Fixture(helper, 8384, AnkerstoneMode.WIDE, Level.OVERWORLD, Change.REMOVE).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_wide_downgrade", maxTicks = 1400)
     public void wideDowngradeStopsOuterEntities(GameTestHelper helper) {
-        new Fixture(helper, 8448, AnkerstoneMode.WIDE, false, Change.DOWNGRADE).start();
+        new Fixture(helper, 8448, AnkerstoneMode.WIDE, Level.OVERWORLD, Change.DOWNGRADE).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_shared_single", maxTicks = 1400)
     public void sharedSingleKeepsTickingUntilLastRemoval(GameTestHelper helper) {
-        new Fixture(helper, 8512, AnkerstoneMode.SINGLE, false, Change.SHARED).start();
+        new Fixture(helper, 8512, AnkerstoneMode.SINGLE, Level.OVERWORLD, Change.SHARED).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_shared_wide", maxTicks = 1400)
     public void sharedWideKeepsTickingUntilLastRemoval(GameTestHelper helper) {
-        new Fixture(helper, 8576, AnkerstoneMode.WIDE, false, Change.SHARED).start();
+        new Fixture(helper, 8576, AnkerstoneMode.WIDE, Level.OVERWORLD, Change.SHARED).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_overlapping_wide", maxTicks = 1400)
     public void overlappingWideReleasesOnlyItsOwnFootprint(GameTestHelper helper) {
-        new Fixture(helper, 8640, AnkerstoneMode.WIDE, false, Change.OVERLAP).start();
+        new Fixture(helper, 8640, AnkerstoneMode.WIDE, Level.OVERWORLD, Change.OVERLAP).start();
     }
 
-    @GameTest(environment = "ankerstone-test:chunk_release", maxTicks = 1400)
+    @GameTest(environment = "ankerstone-test:release_nether_wide", maxTicks = 1400)
     public void netherWideRemovalUnloads(GameTestHelper helper) {
-        new Fixture(helper, 8704, AnkerstoneMode.WIDE, true, Change.REMOVE).start();
+        new Fixture(helper, 8704, AnkerstoneMode.WIDE, Level.NETHER, Change.REMOVE).start();
     }
 
-    private enum Change { OFF, REMOVE, DOWNGRADE, SHARED, OVERLAP }
+    @GameTest(environment = "ankerstone-test:release_nether_single_off", maxTicks = 1400)
+    public void netherSingleDeactivationUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8192, AnkerstoneMode.SINGLE,
+                Level.NETHER, Change.OFF).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_nether_wide_off", maxTicks = 1400)
+    public void netherWideDeactivationUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8256, AnkerstoneMode.WIDE,
+                Level.NETHER, Change.OFF).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_nether_single_removed", maxTicks = 1400)
+    public void netherSingleRemovalUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8320, AnkerstoneMode.SINGLE,
+                Level.NETHER, Change.REMOVE).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_nether_wide_downgrade", maxTicks = 1400)
+    public void netherWideDowngradeStopsOuterEntities(GameTestHelper helper) {
+        new Fixture(helper, 8448, AnkerstoneMode.WIDE,
+                Level.NETHER, Change.DOWNGRADE).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_end_single_off", maxTicks = 1400)
+    public void endSingleDeactivationUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8192, AnkerstoneMode.SINGLE,
+                Level.END, Change.OFF).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_end_wide_off", maxTicks = 1400)
+    public void endWideDeactivationUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8256, AnkerstoneMode.WIDE,
+                Level.END, Change.OFF).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_end_single_removed", maxTicks = 1400)
+    public void endSingleRemovalUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8320, AnkerstoneMode.SINGLE,
+                Level.END, Change.REMOVE).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_end_wide_removed", maxTicks = 1400)
+    public void endWideRemovalUnloads(GameTestHelper helper) {
+        new Fixture(helper, 8384, AnkerstoneMode.WIDE,
+                Level.END, Change.REMOVE).start();
+    }
+
+    @GameTest(environment = "ankerstone-test:release_end_wide_downgrade", maxTicks = 1400)
+    public void endWideDowngradeStopsOuterEntities(GameTestHelper helper) {
+        new Fixture(helper, 8448, AnkerstoneMode.WIDE,
+                Level.END, Change.DOWNGRADE).start();
+    }
+
+    private enum Change {
+        OFF, REMOVE, DOWNGRADE, SHARED, OVERLAP
+    }
 
     private static final class Fixture {
         private final GameTestHelper helper;
@@ -86,9 +143,11 @@ public class ChunkReleaseTests {
         private boolean startedTicking;
 
         Fixture(GameTestHelper helper, int offset, AnkerstoneMode mode,
-                boolean nether, Change change) {
+                ResourceKey<Level> dimension, Change change) {
             this.helper = helper;
-            this.level = nether ? helper.getLevel().getServer().getLevel(Level.NETHER) : helper.getLevel();
+            this.level = helper.getLevel().getServer().getLevel(dimension);
+            helper.assertTrue(this.level != null,
+                    "Release-test dimension must exist: " + dimension);
             this.mode = mode;
             this.change = change;
             BlockPos origin = helper.absolutePos(BlockPos.ZERO);
@@ -96,7 +155,8 @@ public class ChunkReleaseTests {
                     200, (Math.floorDiv(origin.getZ(), 16) + offset) * 16 + 8);
             second = first.east(change == Change.OVERLAP ? 32 : 3);
             anchors = change == Change.SHARED || change == Change.OVERLAP
-                    ? List.of(first, second) : List.of(first);
+                    ? List.of(first, second)
+                    : List.of(first);
         }
 
         void start() {
@@ -121,7 +181,8 @@ public class ChunkReleaseTests {
                     probes.add(probe(second.east(16).above(2)));
                 } else {
                     probes.add(probe(first.above(2)));
-                    if (mode == AnkerstoneMode.WIDE) probes.add(probe(first.offset(16, 2, 16)));
+                    if (mode == AnkerstoneMode.WIDE)
+                        probes.add(probe(first.offset(16, 2, 16)));
                 }
                 var entities = ((ServerLevelAccessor) level).ankerstone$getEntityManager();
                 long started = System.nanoTime();
@@ -145,7 +206,8 @@ public class ChunkReleaseTests {
         }
 
         private void tick() {
-            if (finished) return;
+            if (finished)
+                return;
             try {
                 // Other fixtures may still be preparing before this test gets its first tick.
                 if (!startedTicking) {
@@ -155,11 +217,15 @@ public class ChunkReleaseTests {
                 helper.assertTrue(helper.getTick() < deadline && System.nanoTime() < wallDeadline,
                         "Release phase " + phase + " timed out: " + diagnostics());
                 if (phase == 0) {
-                    if (!probes.stream().allMatch(p -> p.tickCount >= 10)) return;
+                    if (!probes.stream().allMatch(p -> p.tickCount >= 10))
+                        return;
                     baseline = counts();
-                    if (change == Change.OFF) power(first, 0);
-                    else if (change == Change.DOWNGRADE) power(first, 1);
-                    else level.setBlock(first, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                    if (change == Change.OFF)
+                        power(first, 0);
+                    else if (change == Change.DOWNGRADE)
+                        power(first, 1);
+                    else
+                        level.setBlock(first, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                     if (change != Change.DOWNGRADE) {
                         helper.assertFalse(OwnerData.get(level).getOwnerModes().containsKey(first),
                                 "Released anchor must not remain a saved owner");
@@ -188,7 +254,8 @@ public class ChunkReleaseTests {
                                     "Downgrade must preserve the Single owner");
                         }
                     }
-                    if (!remainsActive) return;
+                    if (!remainsActive)
+                        return;
                     BlockPos last = change == Change.DOWNGRADE ? first : second;
                     level.setBlock(last, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                     nextPhase(2);
@@ -201,13 +268,15 @@ public class ChunkReleaseTests {
                     }
                     // Neither of these queries requests or reloads a chunk.
                     if (chunks.stream().anyMatch(c -> level.getChunkSource().getChunkNow(c.x(), c.z()) != null
-                            || level.areEntitiesLoaded(c.pack()))) return;
+                            || level.areEntitiesLoaded(c.pack())))
+                        return;
                     helper.assertTrue(probes.stream().noneMatch(p -> level.isPositionEntityTicking(p.blockPosition())),
                             "Unloaded probes must not be entity-ticking");
                     baseline = counts();
                     nextPhase(3);
                 } else {
-                    if (helper.getTick() - phaseStarted < 20) return;
+                    if (helper.getTick() - phaseStarted < 20)
+                        return;
                     helper.assertTrue(java.util.Arrays.equals(baseline, counts()),
                             "Released probe tick counts must stay unchanged");
                     finished = true;
@@ -250,7 +319,9 @@ public class ChunkReleaseTests {
         private ArmorStand probe(BlockPos pos) {
             ArmorStand probe = new ArmorStand(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) {
                 @Override
-                public boolean shouldBeSaved() { return false; }
+                public boolean shouldBeSaved() {
+                    return false;
+                }
             };
             probe.setNoGravity(true);
             return probe;
