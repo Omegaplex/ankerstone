@@ -1,5 +1,7 @@
 package io.github.omegaplex.ankerstone;
 
+import io.github.omegaplex.ankerstone.mixin.EntityManagerAccessor;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +24,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.entity.Visibility;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.block.Block;
@@ -54,6 +57,7 @@ public class ServerRestartChecks implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        TestConsoleLogging.initialize();
         if (phase == null)
             return;
         require(List.of("prepare", "restore", "released").contains(phase), "Unknown restart phase");
@@ -312,6 +316,8 @@ public class ServerRestartChecks implements ModInitializer {
 
     private String staleOwnerDiagnostics(MinecraftServer server) {
         ServerLevel level = server.overworld();
+        var manager = ((ServerLevelAccessor) level).ankerstone$getEntityManager();
+        var details = (EntityManagerAccessor) manager;
         ChunkPos center = ChunkPos.containing(STALE_OWNER);
         TicketStorage storage = level.getChunkSource().getDataStorage()
                 .computeIfAbsent(TicketStorage.TYPE);
@@ -324,14 +330,23 @@ public class ServerRestartChecks implements ModInitializer {
                         .getChunkNow(chunk.x(), chunk.z()) != null;
                 boolean entities = level.areEntitiesLoaded(chunk.pack());
                 if (blocks || entities) {
-                    loaded.add(chunk + ": blocks=" + blocks + ", entities=" + entities);
+                    long key = chunk.pack();
+                    loaded.add(chunk + ": blocks=" + blocks
+                            + ", entities=" + entities
+                            + ", visibility=" + details.ankerstone$getChunkVisibility()
+                                    .getOrDefault(key, Visibility.HIDDEN)
+                            + ", loadStatus=" + details.ankerstone$getChunkLoadStatuses().get(key)
+                            + ", queuedForUnload=" + details.ankerstone$getChunksToUnload()
+                                    .contains(key));
                 }
             }
         }
 
         return "staleOwner=" + OwnerData.get(level).getOwnerMode(STALE_OWNER)
                 + ", centerTickets=" + storage.getTickets(center.pack())
-                + ", loaded=" + loaded;
+                + ", loadingInboxSize=" + details.ankerstone$getLoadingInbox().size()
+                + ", loaded=" + loaded
+                + ", manager=" + System.identityHashCode(manager);
     }
 
     private void finish(MinecraftServer server, Exception failure) {
