@@ -418,7 +418,7 @@ public class PlacementTests {
                 helper.succeed();
         }
 
-        @GameTest(environment = "ankerstone-test:missing_owner", maxTicks = 100)
+        @GameTest(environment = "ankerstone-test:missing_owner", maxTicks = Integer.MAX_VALUE)
         public void restoringMissingOwnerReleasesTicket(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -434,19 +434,12 @@ public class PlacementTests {
                 savedData.addOwner(owner, AnkerstoneMode.SINGLE);
                 ChunkTickets.restore(level);
 
-                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
-                // elapsed ticks.
-                helper.runAfterDelay(40, () -> {
-                        try {
-                                helper.assertTrue(
-                                                !savedData.getOwnerModes().containsKey(owner),
-                                                "Missing Ankerstone must not retain a saved owner");
-                                assertTicketLevels(helper, chunk, List.of());
-                                helper.succeed();
-                        } finally {
-                                ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
-                        }
-                });
+                awaitValidation(helper,
+                                () -> savedData.getOwnerMode(owner) == null,
+                                () -> assertTicketLevels(helper, chunk, List.of()),
+                                () -> ChunkTickets.remove(
+                                                level, owner, AnkerstoneMode.SINGLE),
+                                10);
         }
 
         @GameTest(environment = "ankerstone-test:shared_wide_owner", maxTicks = 1000000)
@@ -499,7 +492,7 @@ public class PlacementTests {
                                 cleanup, 10);
         }
 
-        @GameTest(environment = "ankerstone-test:unpowered_owner", maxTicks = 100)
+        @GameTest(environment = "ankerstone-test:unpowered_owner", maxTicks = Integer.MAX_VALUE)
         public void restoringUnpoweredOwnerReleasesTicket(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -518,24 +511,20 @@ public class PlacementTests {
                 savedData.addOwner(owner, AnkerstoneMode.SINGLE);
                 ChunkTickets.restore(level);
 
-                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
-                // elapsed ticks.
-                helper.runAfterDelay(40, () -> {
-                        try {
-                                helper.assertTrue(
-                                                !savedData.getOwnerModes().containsKey(owner),
-                                                "Unpowered Ankerstone must not retain a saved owner");
-                                assertTicketLevels(helper, chunk, List.of());
-                                helper.assertTrue(
-                                                level.getBlockState(owner).is(ModBlocks.ANKERSTONE),
-                                                "Reconciliation must not remove the Ankerstone block");
-                                helper.succeed();
-                        } finally {
-                                ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
-                                level.setBlock(owner, Blocks.AIR.defaultBlockState(),
-                                                Block.UPDATE_ALL);
-                        }
-                });
+                awaitValidation(helper,
+                                () -> savedData.getOwnerMode(owner) == null,
+                                () -> {
+                                        assertTicketLevels(helper, chunk, List.of());
+                                        helper.assertTrue(
+                                                        level.getBlockState(owner).is(ModBlocks.ANKERSTONE),
+                                                        "Reconciliation must not remove the Ankerstone block");
+                                },
+                                () -> {
+                                        ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
+                                        level.setBlock(owner, Blocks.AIR.defaultBlockState(),
+                                                        Block.UPDATE_ALL);
+                                },
+                                10);
         }
 
         @GameTest(environment = "ankerstone-test:wide_to_single_owner", maxTicks = 1000000)
@@ -599,7 +588,7 @@ public class PlacementTests {
                                 10);
         }
 
-        @GameTest(environment = "ankerstone-test:single_to_wide_owner", maxTicks = 100)
+        @GameTest(environment = "ankerstone-test:single_to_wide_owner", maxTicks = Integer.MAX_VALUE)
         public void restoringSingleOwnerWithWidePowerUpgradesTicket(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos local = new BlockPos(2, 2, 2);
@@ -641,26 +630,24 @@ public class PlacementTests {
                         throw failure;
                 }
 
-                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
-                // elapsed ticks.
-                helper.runAfterDelay(40, () -> {
-                        try {
-                                helper.assertTrue(
-                                                savedData.getOwnerMode(owner) == AnkerstoneMode.WIDE,
-                                                "Wide power must replace the saved Wide owner");
-                                assertTicketLevels(helper, chunk, List.of(30));
-                                helper.assertTrue(
-                                                level.getBlockState(owner).getValue(
-                                                                AnkerstoneBlock.MODE) == AnkerstoneMode.WIDE,
-                                                "Wide power must correct the Wide block state");
-                                helper.succeed();
-                        } finally {
-                                level.setBlock(owner, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                                ChunkTickets.remove(level, owner, AnkerstoneMode.WIDE);
-                                ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
-                                level.setBlock(owner.below(), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                        }
-                });
+                awaitValidation(helper,
+                                () -> savedData.getOwnerMode(owner) == AnkerstoneMode.WIDE,
+                                () -> {
+                                        assertTicketLevels(helper, chunk, List.of(30));
+                                        helper.assertTrue(
+                                                        level.getBlockState(owner).getValue(
+                                                                        AnkerstoneBlock.MODE) == AnkerstoneMode.WIDE,
+                                                        "Wide power must correct the Single block state");
+                                },
+                                () -> {
+                                        level.setBlock(owner, Blocks.AIR.defaultBlockState(),
+                                                        Block.UPDATE_ALL);
+                                        ChunkTickets.remove(level, owner, AnkerstoneMode.WIDE);
+                                        ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
+                                        level.setBlock(owner.below(), Blocks.AIR.defaultBlockState(),
+                                                        Block.UPDATE_ALL);
+                                },
+                                10);
         }
 
         @GameTest(environment = "ankerstone-test:validation_budget", structure = "ankerstone-test:validation_budget", maxTicks = Integer.MAX_VALUE)
@@ -939,7 +926,7 @@ public class PlacementTests {
                 }
         }
 
-        @GameTest(environment = "ankerstone-test:unpowered_active_owner", maxTicks = 100)
+        @GameTest(environment = "ankerstone-test:unpowered_active_owner", maxTicks = Integer.MAX_VALUE)
         public void restoringUnpoweredActiveStateReleasesTicket(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -974,23 +961,24 @@ public class PlacementTests {
                         throw failure;
                 }
 
-                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
-                // elapsed ticks.
-                helper.runAfterDelay(40, () -> {
-                        try {
-                                helper.assertTrue(savedData.getOwnerMode(owner) == null,
-                                                "Unpowered active state must not retain a saved owner");
-                                assertTicketLevels(helper, chunk, List.of());
-                                helper.assertTrue(
-                                                level.getBlockState(owner)
-                                                                .getValue(AnkerstoneBlock.MODE) == AnkerstoneMode.OFF,
-                                                "Unpowered Ankerstone must return to Off");
-                                helper.succeed();
-                        } finally {
-                                ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
-                                level.setBlock(owner, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                        }
-                });
+                awaitValidation(helper,
+                                () -> savedData.getOwnerMode(owner) == null,
+                                () -> {
+                                        assertTicketLevels(helper, chunk, List.of());
+                                        helper.assertTrue(
+                                                        level.getBlockState(owner).is(ModBlocks.ANKERSTONE),
+                                                        "Reconciliation must preserve the Ankerstone");
+                                        helper.assertTrue(
+                                                        level.getBlockState(owner).getValue(
+                                                                        AnkerstoneBlock.MODE) == AnkerstoneMode.OFF,
+                                                        "Unpowered Ankerstone must return to Off");
+                                },
+                                () -> {
+                                        ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
+                                        level.setBlock(owner, Blocks.AIR.defaultBlockState(),
+                                                        Block.UPDATE_ALL);
+                                },
+                                10);
         }
 
         @GameTest
