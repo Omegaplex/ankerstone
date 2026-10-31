@@ -25,6 +25,39 @@ public class ChunkTickets {
 
     private static final java.util.ArrayDeque<PendingOwner> PENDING = new java.util.ArrayDeque<>();
 
+    private static boolean restoredFootprintReady(
+            ServerLevel level, PendingOwner pending) {
+        ChunkPos center = chunkFor(pending.pos());
+        int radius = radiusFor(pending.savedMode());
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                ChunkPos pos = new ChunkPos(center.x() + dx, center.z() + dz);
+
+                if (level.getChunkSource().getChunkNow(pos.x(), pos.z()) == null
+                        || !level.areEntitiesLoaded(pos.pack())) {
+                    return false;
+                }
+
+                int distance = Math.max(Math.abs(dx), Math.abs(dz));
+
+                if (distance <= radius - 1
+                        && !level.isPositionTickingWithEntitiesLoaded(pos.pack())) {
+                    return false;
+                }
+
+                if (distance <= radius - 2
+                        && !level.isPositionEntityTicking(new BlockPos(
+                                pos.x() * 16 + 8, pending.pos().getY(),
+                                pos.z() * 16 + 8))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static void validatePending(MinecraftServer server) {
         int attempts = Math.min(16, PENDING.size());
 
@@ -35,10 +68,15 @@ public class ChunkTickets {
                 continue;
 
             OwnerData savedData = OwnerData.get(level);
+
             if (savedData.getOwnerMode(pending.pos()) != pending.savedMode()) {
                 continue;
             }
 
+            if (!restoredFootprintReady(level, pending)) {
+                PENDING.addLast(pending);
+                continue;
+            }
             ChunkPos chunkPos = chunkFor(pending.pos());
             var chunk = level.getChunkSource()
                     .getChunkNow(chunkPos.x(), chunkPos.z());

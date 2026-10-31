@@ -66,7 +66,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 ## Known Issues
 
-- One restart run timed out waiting for stale-owner cleanup; all ordinary fixtures had unloaded. Three subsequent runs passed. Diagnostics were expanded; the cause remains unconfirmed.
+- Stale-owner cleanup intermittently left entity data tracked after block chunks unloaded. Tracing showed late status transitions after the ticket was removed. Validation now waits for the restored footprint's block and entity readiness before reconciliation. Ten consecutive restart-suite runs passed afterward; failure diagnostics remain in place.
 
 - Negative-boundary piston tests have intermittently failed during fixture setup, before movement, reporting that chunk or entity data was not ready. Setup now waits up to ten real-time seconds for entity data; movement assertions remain unchanged.
 
@@ -76,6 +76,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 ### Development (`main`, Minecraft 26.3)
 
+- **2026-10-30:** All 136 GameTests passed after updating asynchronous checks to use real-time deadlines. Console progress bars are suppressed; full logs and the final pass/fail summary remain available.
 - **2026-10-29:** All 136 GameTests and all three restart phases passed, including startup reconciliation and stale-owner cleanup across disk restarts.  **Note**: Validation runs after restoration, not continuously during gameplay.
 - **Nether Single Restart, 2026-10-29** Added Nether Single coverage; all three restart phases passed.
 ### Published Release Artifacts
