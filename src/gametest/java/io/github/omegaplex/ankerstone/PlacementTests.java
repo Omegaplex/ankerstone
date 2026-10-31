@@ -434,6 +434,8 @@ public class PlacementTests {
                 savedData.addOwner(owner, AnkerstoneMode.SINGLE);
                 ChunkTickets.restore(level);
 
+                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
+                // elapsed ticks.
                 helper.runAfterDelay(40, () -> {
                         try {
                                 helper.assertTrue(
@@ -516,6 +518,8 @@ public class PlacementTests {
                 savedData.addOwner(owner, AnkerstoneMode.SINGLE);
                 ChunkTickets.restore(level);
 
+                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
+                // elapsed ticks.
                 helper.runAfterDelay(40, () -> {
                         try {
                                 helper.assertTrue(
@@ -637,6 +641,8 @@ public class PlacementTests {
                         throw failure;
                 }
 
+                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
+                // elapsed ticks.
                 helper.runAfterDelay(40, () -> {
                         try {
                                 helper.assertTrue(
@@ -657,7 +663,7 @@ public class PlacementTests {
                 });
         }
 
-        @GameTest(environment = "ankerstone-test:validation_budget", structure = "ankerstone-test:validation_budget")
+        @GameTest(environment = "ankerstone-test:validation_budget", structure = "ankerstone-test:validation_budget", maxTicks = Integer.MAX_VALUE)
         public void restoredOwnerValidationProcessesSixteenPerCall(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 OwnerData savedData = OwnerData.get(level);
@@ -669,35 +675,53 @@ public class PlacementTests {
                                 "Test requires an empty saved owner table");
                 assertTicketLevels(helper, chunk, List.of());
 
-                try {
-                        for (int i = 0; i < 17; i++) {
-                                BlockPos pos = base.above(i);
-                                helper.assertTrue(level.getBlockState(pos).isAir(),
-                                                "Budget fixture positions must contain air");
-                                positions.add(pos);
-                                savedData.addOwner(pos, AnkerstoneMode.SINGLE);
-                        }
+                for (int i = 0; i < 17; i++) {
+                        BlockPos pos = base.above(i);
+                        helper.assertTrue(level.getBlockState(pos).isAir(),
+                                        "Budget fixture positions must contain air");
+                        positions.add(pos);
+                }
 
-                        ChunkTickets.restore(level);
-                        assertTicketLevels(helper, chunk, List.of(31));
-
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(savedData.getOwnerModes().size() == 1,
-                                        "One validation call must remove exactly 16 of 17 ready owners");
-                        assertTicketLevels(helper, chunk, List.of(31));
-
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(savedData.getOwnerModes().isEmpty(),
-                                        "Second validation call must remove the remaining owner");
-                        assertTicketLevels(helper, chunk, List.of());
-                        helper.succeed();
-                } finally {
+                Runnable cleanup = () -> {
                         for (BlockPos pos : positions) {
                                 ChunkTickets.remove(level, pos, AnkerstoneMode.SINGLE);
                         }
-                }
+                        level.getChunkSource().removeTicketWithRadius(
+                                        ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+                };
+
+                level.getChunkSource().addTicketWithRadius(
+                                ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+
+                awaitValidation(helper,
+                                () -> ChunkTickets.restoredFootprintReady(
+                                                level, base, AnkerstoneMode.SINGLE),
+                                () -> {
+                                        helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                                                        "Warmup must not create saved owners");
+
+                                        for (BlockPos pos : positions) {
+                                                savedData.addOwner(pos, AnkerstoneMode.SINGLE);
+                                        }
+                                        ChunkTickets.restore(level);
+
+                                        helper.assertTrue(savedData.getOwnerModes().size() == 17,
+                                                        "Measurement must start with 17 saved owners");
+                                        assertTicketLevels(helper, chunk, List.of(31));
+
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(savedData.getOwnerModes().size() == 1,
+                                                        "One validation call must remove exactly 16 of 17 ready owners");
+                                        assertTicketLevels(helper, chunk, List.of(31));
+
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                                                        "Second validation call must remove the remaining owner");
+                                        assertTicketLevels(helper, chunk, List.of());
+                                },
+                                cleanup, 10);
         }
 
         @GameTest(environment = "ankerstone-test:unloaded_owner", maxTicks = 1000000)
@@ -936,6 +960,8 @@ public class PlacementTests {
                         throw failure;
                 }
 
+                // TODO: Wait for reconciliation completion with a bounded deadline, not 40
+                // elapsed ticks.
                 helper.runAfterDelay(40, () -> {
                         try {
                                 helper.assertTrue(savedData.getOwnerMode(owner) == null,

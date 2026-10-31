@@ -25,10 +25,10 @@ public class ChunkTickets {
 
     private static final java.util.ArrayDeque<PendingOwner> PENDING = new java.util.ArrayDeque<>();
 
-    private static boolean restoredFootprintReady(
-            ServerLevel level, PendingOwner pending) {
-        ChunkPos center = chunkFor(pending.pos());
-        int radius = radiusFor(pending.savedMode());
+    static boolean restoredFootprintReady(
+            ServerLevel level, BlockPos owner, AnkerstoneMode mode) {
+        ChunkPos center = chunkFor(owner);
+        int radius = radiusFor(mode);
 
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
@@ -48,7 +48,7 @@ public class ChunkTickets {
 
                 if (distance <= radius - 2
                         && !level.isPositionEntityTicking(new BlockPos(
-                                pos.x() * 16 + 8, pending.pos().getY(),
+                                pos.x() * 16 + 8, owner.getY(),
                                 pos.z() * 16 + 8))) {
                     return false;
                 }
@@ -73,7 +73,8 @@ public class ChunkTickets {
                 continue;
             }
 
-            if (!restoredFootprintReady(level, pending)) {
+            if (!restoredFootprintReady(
+                    level, pending.pos(), pending.savedMode())) {
                 PENDING.addLast(pending);
                 continue;
             }
