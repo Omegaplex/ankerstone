@@ -32,6 +32,7 @@ Test sources are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Entity ticking | Measures actual entity ticks inside and outside the expected footprint. Single's center chunk, Wide's full 3x3 area, Off mode, and dimension isolation. |
 | Chunk release | Single/Wide deactivation and removal, plus Wide-to-Single downgrade, in the Overworld, Nether, and End; shared and overlapping owners in the Overworld; chunk and entity-data unloading checked without loading them |
 | Startup reconciliation | Removes missing or unpowered owners, corrects Single/Wide mismatches, preserves shared tickets, waits for required chunks without loading them synchronously, limits validation to 16 attempts per tick across dimensions, and clears pending work on dimension unload |
+| Active limit and commands | Global counting across dimensions, overlapping owners, blocked activation and credit, mode changes, restored owners above the limit, command permissions and invalid arguments; console-set limits survive disk restarts |
 
 We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
 
@@ -76,6 +77,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 ### Development (`main`, Minecraft 26.3)
 
+- **2026-10-31:** All 171 GameTests and three restart phases passed in the full build. In-game limit checks passed: blocked activation, Single/Wide changes, lowering the limit without disabling active blocks, and restoring unlimited activation.
 - **2026-10-31:** All 145 GameTests and three restart phases passed. Release fixtures run in separate environment batches, and both validation-budget tests establish readiness before measuring calls.
 - **2026-10-30:** All 136 GameTests passed after updating asynchronous checks to use real-time deadlines. Console progress bars are suppressed; full logs and the final pass/fail summary remain available.
 - **2026-10-29:** All 136 GameTests and all three restart phases passed, including startup reconciliation and stale-owner cleanup across disk restarts.  **Note**: Validation runs after restoration, not continuously during gameplay.

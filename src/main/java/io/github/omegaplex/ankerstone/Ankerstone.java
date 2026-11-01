@@ -16,6 +16,7 @@ public class Ankerstone implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModBlocks.initialize();
+		ModCommands.initialize();
 		ServerPlayConnectionEvents.JOIN
 				.register((handler, sender, server) -> ModAdvancements.onPlayerJoin(handler.player));
 		// Rebuild live chunk tickets from saved data whenever a server dimension loads.

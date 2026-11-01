@@ -33,6 +33,7 @@ import net.minecraft.world.level.block.entity.CommandBlockEntity;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 /**
  * Test-only initializer; inert during ordinary GameTests and absent from the
@@ -93,6 +94,11 @@ public class ServerRestartChecks implements ModInitializer {
                 baseline.setProperty("run", run);
                 baseline.setProperty("prepareProcess", process);
                 credits.prepare(server, baseline, run);
+                require(LimitData.get(server).isUnlimited(),
+                        "A fresh restart-test world must default to unlimited");
+                require(server.getCommands().getDispatcher().execute(
+                        "ankerstone limit 37", server.createCommandSourceStack()) == 1,
+                        "Console command must set the preparation limit");
             } else {
                 try (var input = Files.newInputStream(directory.resolve("baseline.properties"))) {
                     baseline.load(input);
@@ -101,6 +107,11 @@ public class ServerRestartChecks implements ModInitializer {
                 require(!process.equals(baseline.getProperty("prepareProcess")), "Must use a fresh server process");
                 require(!process.equals(baseline.getProperty("restoreProcess")), "Must restart after releasing owners");
                 credits.checkSaved(server, baseline, phase.equals("released"));
+                int expectedLimit = phase.equals("restore") ? 37 : 0;
+                require(LimitData.get(server).getActiveLimit() == expectedLimit,
+                        "World-wide active limit did not survive restart; expected "
+                                + expectedLimit + ", got "
+                                + LimitData.get(server).getActiveLimit());
                 AnkerstoneMode expectedStaleMode = phase.equals("restore")
                         ? AnkerstoneMode.SINGLE
                         : null;
@@ -178,7 +189,8 @@ public class ServerRestartChecks implements ModInitializer {
         }
     }
 
-    private void restore(MinecraftServer server) throws IOException {
+    private void restore(MinecraftServer server)
+            throws IOException, CommandSyntaxException {
         if (step == 0) {
             assertNegativeFixtures(server);
             if (ticks < SETTLE_TICKS + OBSERVE_TICKS || !activeProgressed(server, OBSERVE_TICKS))
@@ -203,6 +215,9 @@ public class ServerRestartChecks implements ModInitializer {
             }
             snapshot(server, false);
             baseline.setProperty("restoreProcess", process);
+            require(server.getCommands().getDispatcher().execute(
+                    "ankerstone limit 0", server.createCommandSourceStack()) == 1,
+                    "Console command must set the released-phase limit");
             writeBaseline();
             finish(server, null);
         }

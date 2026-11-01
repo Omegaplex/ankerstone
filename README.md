@@ -40,6 +40,24 @@ Turning off the power releases the anchor. Active Ankerstones resume chunk loadi
 | Crops and other random-tick mechanics | Follow the target Minecraft version's vanilla random-tick rules. Ankerstone adds no separate growth system. |
 | A paused or closed world/server | Does not run. An anchor cannot override whole-server pausing or keep a closed single-player world running. |
 
+## Active Limit (Upcoming 1.1.0)
+
+Operators with permission level 4, or the server console, can set a world-wide limit on active Ankerstones across all dimensions.
+
+| Command | Purpose |
+|---|---|
+| `/ankerstone limit` | Show the limit and active count |
+| `/ankerstone limit <number>` | Set a nonnegative limit |
+| `/ankerstone limit unlimited` | Remove the limit (default) |
+
+Each active Ankerstone counts once, including overlapping anchors. Single and Wide each use one slot.
+
+Lowering the limit does not disable active Ankerstones. A limit of zero prevents new activations. Existing active Ankerstones are restored after restarting, even above the limit.
+
+Blocked Ankerstones remain Off. After capacity becomes available, toggle their redstone power to retry activation.
+
+The setting is saved with the world.
+
 ## Advancements
 Ankerstone has its own advancement tab. Activation credit goes to the player who placed the block, even if someone else powers it. If the placer is offline, they receive credit when they return.
 
