@@ -17,7 +17,8 @@
       "io.github.omegaplex.ankerstone.AttributionDataTests",
       "io.github.omegaplex.ankerstone.ActivationTests",
       "io.github.omegaplex.ankerstone.ChunkTickingTests",
-      "io.github.omegaplex.ankerstone.ChunkReleaseTests"
+      "io.github.omegaplex.ankerstone.ChunkReleaseTests",
+      "io.github.omegaplex.ankerstone.CommandTests"
     ]
   },
   "mixins": ["ankerstone-test.mixins.json"],

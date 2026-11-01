@@ -44,16 +44,8 @@ public class AnkerstoneBlock extends Block {
     }
 
     @Override
-    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
-        // Active placements need ownership even when their mode does not change.
-        if (!oldState.is(this)) {
-            AnkerstoneMode mode = state.getValue(MODE);
-
-            if (mode != AnkerstoneMode.OFF) {
-                setChunkLoading(level, pos, mode, true);
-            }
-        }
-
+    protected void onPlace(BlockState state, Level level, BlockPos pos,
+            BlockState oldState, boolean movedByPiston) {
         updateMode(level, pos, state);
     }
 
@@ -69,31 +61,39 @@ public class AnkerstoneBlock extends Block {
     }
 
     private static void updateMode(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide()) {
+        if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        int signalStrength = level.getBestNeighborSignal(pos);
-        AnkerstoneMode mode = modeFromSignal(signalStrength);
+        AnkerstoneMode mode = modeFromSignal(level.getBestNeighborSignal(pos));
+        AnkerstoneMode oldMode = OwnerData.get(serverLevel).getOwnerMode(pos);
+        if (oldMode == null) {
+            oldMode = AnkerstoneMode.OFF;
+        }
 
-        AnkerstoneMode oldMode = state.getValue(MODE);
+        if (oldMode == AnkerstoneMode.OFF
+                && mode != AnkerstoneMode.OFF
+                && !ChunkTickets.hasActivationCapacity(serverLevel.getServer())) {
+            mode = AnkerstoneMode.OFF;
+        }
 
         if (oldMode != mode) {
             if (oldMode != AnkerstoneMode.OFF) {
                 setChunkLoading(level, pos, oldMode, false);
             }
-
             if (mode != AnkerstoneMode.OFF) {
                 setChunkLoading(level, pos, mode, true);
             }
+        }
 
-            level.setBlock(pos, state.setValue(MODE, mode), Block.UPDATE_CLIENTS);
+        if (state.getValue(MODE) != mode) {
+            level.setBlock(pos, state.setValue(MODE, mode),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SKIP_ON_PLACE);
             level.updateNeighbourForOutputSignal(pos, state.getBlock());
-            if (oldMode == AnkerstoneMode.OFF
-                    && mode != AnkerstoneMode.OFF
-                    && level instanceof ServerLevel serverLevel) {
-                ModAdvancements.onActivated(serverLevel, pos);
-            }
+        }
+
+        if (oldMode == AnkerstoneMode.OFF && mode != AnkerstoneMode.OFF) {
+            ModAdvancements.onActivated(serverLevel, pos);
         }
     }
 

@@ -92,6 +92,129 @@ public class SavedDataTests {
                 helper.succeed();
         }
 
+        @GameTest
+        public void activeLimitDefaultsToUnlimited(GameTestHelper helper) {
+                LimitData data = new LimitData();
+
+                helper.assertTrue(data.isUnlimited(),
+                                "A new world must default to unlimited");
+                helper.assertTrue(data.getActiveLimit() == LimitData.UNLIMITED,
+                                "Unlimited must use the explicit sentinel value");
+                helper.assertFalse(data.isDirty(),
+                                "Reading the default setting must not request saving");
+                helper.succeed();
+        }
+
+        @GameTest
+        public void activeLimitAcceptsZeroPositiveAndUnlimited(GameTestHelper helper) {
+                LimitData data = new LimitData();
+
+                data.setActiveLimit(0);
+                helper.assertTrue(data.getActiveLimit() == 0,
+                                "Zero must remain a valid limit");
+                helper.assertFalse(data.isUnlimited(),
+                                "Zero must not mean unlimited");
+
+                data.setActiveLimit(12);
+                helper.assertTrue(data.getActiveLimit() == 12,
+                                "A positive limit must retain its value");
+                helper.assertFalse(data.isUnlimited(),
+                                "A positive limit must not mean unlimited");
+
+                data.setActiveLimit(LimitData.UNLIMITED);
+                helper.assertTrue(data.isUnlimited(),
+                                "A finite limit must be changeable back to unlimited");
+                helper.succeed();
+        }
+
+        @GameTest
+        public void activeLimitRejectsInvalidNegativeValues(GameTestHelper helper) {
+                LimitData data = new LimitData();
+                data.setActiveLimit(12);
+                data.setDirty(false);
+
+                for (int invalid : new int[] { -2, Integer.MIN_VALUE }) {
+                        boolean rejected = false;
+                        try {
+                                data.setActiveLimit(invalid);
+                        } catch (IllegalArgumentException expected) {
+                                rejected = true;
+                        }
+
+                        helper.assertTrue(rejected,
+                                        "Invalid negative limit must be rejected: " + invalid);
+                        helper.assertTrue(data.getActiveLimit() == 12,
+                                        "Rejected input must preserve the previous limit");
+                        helper.assertFalse(data.isDirty(),
+                                        "Rejected input must not request saving");
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest
+        public void activeLimitSaveFlagTracksChanges(GameTestHelper helper) {
+                LimitData data = new LimitData();
+
+                data.setActiveLimit(LimitData.UNLIMITED);
+                helper.assertFalse(data.isDirty(),
+                                "Setting the unchanged default must not request saving");
+
+                for (int limit : new int[] { 0, 12, LimitData.UNLIMITED }) {
+                        data.setActiveLimit(limit);
+                        helper.assertTrue(data.isDirty(),
+                                        "Changing the limit must request saving");
+
+                        data.setDirty(false);
+                        data.setActiveLimit(limit);
+                        helper.assertFalse(data.isDirty(),
+                                        "Setting the same limit must not request saving");
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest
+        public void activeLimitSurvivesRoundTrip(GameTestHelper helper) {
+                for (int limit : new int[] { LimitData.UNLIMITED, 0, 12, Integer.MAX_VALUE }) {
+                        LimitData original = new LimitData();
+                        original.setActiveLimit(limit);
+
+                        LimitData restored = roundTrip(original);
+
+                        helper.assertTrue(restored.getActiveLimit() == limit,
+                                        "Limit must survive encoding and decoding: " + limit);
+                        helper.assertTrue(
+                                        restored.isUnlimited() == (limit == LimitData.UNLIMITED),
+                                        "Unlimited status must survive encoding and decoding");
+                        helper.assertFalse(restored.isDirty(),
+                                        "Decoding saved data must not request another save");
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest
+        public void activeLimitCodecRejectsInvalidValues(GameTestHelper helper) {
+                for (int invalid : new int[] { -2, Integer.MIN_VALUE }) {
+                        var encoded = new net.minecraft.nbt.CompoundTag();
+                        encoded.putInt("active_limit", invalid);
+
+                        helper.assertTrue(
+                                        LimitData.CODEC.parse(NbtOps.INSTANCE, encoded).error().isPresent(),
+                                        "Invalid saved limit must fail decoding: " + invalid);
+                }
+
+                helper.succeed();
+        }
+
+        private LimitData roundTrip(LimitData original) {
+                Tag encoded = LimitData.CODEC
+                                .encodeStart(NbtOps.INSTANCE, original).getOrThrow();
+                return LimitData.CODEC
+                                .parse(NbtOps.INSTANCE, encoded).getOrThrow();
+        }
+
         private OwnerData roundTrip(OwnerData original) {
                 Tag encoded = OwnerData.CODEC
                                 .encodeStart(NbtOps.INSTANCE, original).getOrThrow();
