@@ -3,11 +3,13 @@ package io.github.omegaplex.ankerstone;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -1101,6 +1103,146 @@ public class PlacementTests {
                 assertComparatorTransition(helper, 1, 0, 0);
         }
 
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void unlimitedAllowsMultipleActivations(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos first = new BlockPos(2, 2, 2);
+                BlockPos second = new BlockPos(5, 2, 2);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(0);
+                        limits.setActiveLimit(LimitData.UNLIMITED);
+                        helper.setBlock(first, ModBlocks.ANKERSTONE);
+                        helper.setBlock(second, ModBlocks.ANKERSTONE);
+
+                        setPowerAndAssert(helper, first, 1, AnkerstoneMode.SINGLE);
+                        setPowerAndAssert(helper, second, 15, AnkerstoneMode.WIDE);
+
+                        helper.assertTrue(limits.isUnlimited(),
+                                        "Changing from zero must restore unlimited mode");
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Unlimited must allow both activations");
+                } finally {
+                        helper.setBlock(second, Blocks.AIR);
+                        helper.setBlock(second.below(), Blocks.AIR);
+                        helper.setBlock(first, Blocks.AIR);
+                        helper.setBlock(first.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:limit_restoration", maxTicks = Integer.MAX_VALUE)
+        public void restoredActiveOwnerSurvivesZeroLimit(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos owner = helper.absolutePos(local);
+                ChunkPos chunk = ChunkPos.containing(owner);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Restoration limit test requires no active owners");
+
+                Runnable cleanup = () -> {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
+                        level.getChunkSource().removeTicketWithRadius(
+                                        ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+                        limits.setActiveLimit(previousLimit);
+                };
+
+                try {
+                        limits.setActiveLimit(1);
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+                        setPowerAndAssert(helper, local, 1, AnkerstoneMode.SINGLE);
+                } catch (RuntimeException failure) {
+                        cleanup.run();
+                        throw failure;
+                }
+
+                awaitValidation(helper,
+                                () -> ChunkTickets.restoredFootprintReady(
+                                                level, owner, AnkerstoneMode.SINGLE),
+                                () -> {
+                                        limits.setActiveLimit(0);
+                                        ChunkTickets.clear(level);
+                                        ChunkTickets.restore(level);
+
+                                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                                        "Restoration must count the existing owner above zero");
+
+                                        ChunkTickets.validatePending(server);
+
+                                        helper.assertTrue(
+                                                        OwnerData.get(level)
+                                                                        .getOwnerMode(owner) == AnkerstoneMode.SINGLE,
+                                                        "Reconciliation must preserve the powered restored owner");
+                                        helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                                        AnkerstoneMode.SINGLE);
+                                        assertTicketLevels(helper, chunk, List.of(31));
+                                        helper.assertFalse(ChunkTickets.hasActivationCapacity(server),
+                                                        "Preserved owner must not permit new activations");
+                                },
+                                cleanup, 10);
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void blockedActivationPreservesPlacerCredit(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos owner = helper.absolutePos(local);
+                GlobalPos position = GlobalPos.of(level.dimension(), owner);
+                UUID placer = UUID.randomUUID();
+                AttributionData attribution = AttributionData.get(level);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(0);
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+                        attribution.setPlacer(position, placer);
+
+                        setTestPower(helper, local, 15);
+                        helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+                        helper.assertTrue(placer.equals(attribution.getPlacer(position)),
+                                        "Blocked activation must preserve the placer");
+                        helper.assertFalse(attribution.hasPendingCredit(placer),
+                                        "Blocked activation must not queue advancement credit");
+
+                        limits.setActiveLimit(1);
+                        setTestPower(helper, local, 0);
+                        setPowerAndAssert(helper, local, 15, AnkerstoneMode.WIDE);
+
+                        helper.assertTrue(attribution.hasPendingCredit(placer),
+                                        "Successful retry must queue credit for the offline placer");
+                        helper.assertTrue(attribution.getPlacer(position) == null,
+                                        "Successful activation must consume the placement record");
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        attribution.removePlacer(position);
+                        attribution.removePendingCredit(placer);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
         private void assertObserverTransition(GameTestHelper helper,
                         int initialPower, int targetPower,
                         AnkerstoneMode targetMode) {
@@ -1215,6 +1357,511 @@ public class PlacementTests {
                         ChunkTickets.remove(
                                         level, originalPosition, AnkerstoneMode.WIDE);
                 }
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void activeCountIncludesOwnersSharingOneTicket(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
+                BlockPos second = first.above(2);
+                ChunkPos chunk = ChunkPos.containing(first);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Count test requires no active owners");
+
+                try {
+                        ChunkTickets.add(level, first, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "First owner must count once");
+
+                        ChunkTickets.add(level, second, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Two owners sharing a ticket must count as two");
+                        assertTicketLevels(helper, chunk, List.of(31));
+
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Removing one shared owner must reduce the count by one");
+                        assertTicketLevels(helper, chunk, List.of(31));
+
+                        ChunkTickets.remove(level, second, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "Removing the last owner must return the count to zero");
+                        assertTicketLevels(helper, chunk, List.of());
+                } finally {
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, second, AnkerstoneMode.SINGLE);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void activeCountIncludesAllThreeDimensions(GameTestHelper helper) {
+                var server = helper.getLevel().getServer();
+                ServerLevel overworld = server.overworld();
+                ServerLevel nether = server.getLevel(Level.NETHER);
+                ServerLevel end = server.getLevel(Level.END);
+                BlockPos owner = helper.absolutePos(new BlockPos(2, 2, 2));
+
+                helper.assertTrue(nether != null && end != null,
+                                "Count test requires the Nether and End");
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Count test requires no active owners");
+
+                try {
+                        ChunkTickets.add(overworld, owner, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Overworld owner must contribute to the global count");
+
+                        ChunkTickets.add(nether, owner, AnkerstoneMode.WIDE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Nether owner must contribute to the same count");
+
+                        ChunkTickets.add(end, owner, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 3,
+                                        "End owner must contribute to the same count");
+
+                        ChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Removing the Nether owner must preserve the other two");
+                } finally {
+                        ChunkTickets.remove(overworld, owner, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
+                        ChunkTickets.remove(end, owner, AnkerstoneMode.SINGLE);
+                }
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Removing all dimension owners must return the count to zero");
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void activeCountTracksPowerWithoutCountingModeChanges(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                BlockPos local = new BlockPos(2, 2, 2);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Count test requires no active owners");
+
+                try {
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "An Off Ankerstone must not count");
+
+                        setPowerAndAssert(helper, local, 1, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Activating Single must consume one slot");
+
+                        setPowerAndAssert(helper, local, 15, AnkerstoneMode.WIDE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Single-to-Wide must not consume another slot");
+
+                        setPowerAndAssert(helper, local, 14, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Wide-to-Single must not consume another slot");
+
+                        setPowerAndAssert(helper, local, 0, AnkerstoneMode.OFF);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "Deactivation must release the slot");
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void restoredOwnersCountBeforeValidation(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                OwnerData savedData = OwnerData.get(level);
+                BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
+                BlockPos second = first.above(2);
+                ChunkPos chunk = ChunkPos.containing(first);
+
+                helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                                "Restoration count test requires no saved owners");
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Restoration count test requires no runtime owners");
+
+                try {
+                        savedData.addOwner(first, AnkerstoneMode.SINGLE);
+                        savedData.addOwner(second, AnkerstoneMode.WIDE);
+
+                        ChunkTickets.restore(level);
+
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Restored owners must count before validation");
+                        assertTicketLevels(helper, chunk, List.of(30, 31));
+
+                        ChunkTickets.restore(level);
+
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
+                                        "Repeated restoration must not double-count owners");
+                        assertTicketLevels(helper, chunk, List.of(30, 31));
+                } finally {
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, second, AnkerstoneMode.WIDE);
+                }
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Cleanup must remove restored owners from the count");
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void zeroLimitBlocksNewActivations(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos owner = helper.absolutePos(local);
+                ChunkPos chunk = ChunkPos.containing(owner);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(0);
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+
+                        for (int signal : new int[] { 1, 15 }) {
+                                setTestPower(helper, local, signal);
+
+                                helper.assertTrue(level.getBestNeighborSignal(owner) == signal,
+                                                "Test must supply the requested redstone signal");
+                                helper.assertTrue(
+                                                level.getBlockState(owner)
+                                                                .getValue(AnkerstoneBlock.MODE) == AnkerstoneMode.OFF,
+                                                "Zero limit must keep a powered Ankerstone Off");
+                                helper.assertTrue(OwnerData.get(level).getOwnerMode(owner) == null,
+                                                "Blocked activation must not create saved ownership");
+                                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                                "Blocked activation must not consume a slot");
+                                assertTicketLevels(helper, chunk, List.of());
+                        }
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void limitOneBlocksASecondActivation(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos first = new BlockPos(2, 2, 2);
+                BlockPos second = new BlockPos(5, 2, 2);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(1);
+                        helper.setBlock(first, ModBlocks.ANKERSTONE);
+                        helper.setBlock(second, ModBlocks.ANKERSTONE);
+
+                        setPowerAndAssert(helper, first, 1, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "First activation must consume the available slot");
+
+                        setTestPower(helper, second, 15);
+
+                        helper.assertTrue(
+                                        level.getBestNeighborSignal(helper.absolutePos(second)) == 15,
+                                        "Second Ankerstone must receive Wide-strength power");
+                        helper.assertBlockProperty(second, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+                        helper.assertTrue(
+                                        OwnerData.get(level).getOwnerMode(helper.absolutePos(second)) == null,
+                                        "Blocked second activation must not create saved ownership");
+                        helper.assertTrue(
+                                        OwnerData.get(level).getOwnerMode(
+                                                        helper.absolutePos(first)) == AnkerstoneMode.SINGLE,
+                                        "Blocked activation must preserve the existing owner");
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Blocked activation must not exceed the limit");
+                } finally {
+                        helper.setBlock(second, Blocks.AIR);
+                        helper.setBlock(second.below(), Blocks.AIR);
+                        helper.setBlock(first, Blocks.AIR);
+                        helper.setBlock(first.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void blockedActivationSucceedsAfterSlotIsFreedAndPowerToggled(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos first = new BlockPos(2, 2, 2);
+                BlockPos second = new BlockPos(5, 2, 2);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(1);
+                        helper.setBlock(first, ModBlocks.ANKERSTONE);
+                        helper.setBlock(second, ModBlocks.ANKERSTONE);
+
+                        setPowerAndAssert(helper, first, 1, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "First activation must consume the available slot");
+
+                        setTestPower(helper, second, 15);
+
+                        helper.assertTrue(
+                                        level.getBestNeighborSignal(helper.absolutePos(second)) == 15,
+                                        "Second Ankerstone must receive Wide-strength power");
+                        helper.assertBlockProperty(second, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+                        helper.assertTrue(
+                                        OwnerData.get(level).getOwnerMode(helper.absolutePos(second)) == null,
+                                        "Blocked second activation must not create saved ownership");
+                        helper.assertTrue(
+                                        OwnerData.get(level).getOwnerMode(
+                                                        helper.absolutePos(first)) == AnkerstoneMode.SINGLE,
+                                        "Blocked activation must preserve the existing owner");
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Blocked activation must not exceed the limit");
+                        setPowerAndAssert(helper, first, 0, AnkerstoneMode.OFF);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "Deactivation must free the occupied slot");
+
+                        helper.assertBlockProperty(second, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+                        helper.assertTrue(
+                                        OwnerData.get(level).getOwnerMode(helper.absolutePos(second)) == null,
+                                        "Freeing a slot must not immediately activate the blocked block");
+
+                        setTestPower(helper, second, 0);
+                        helper.assertBlockProperty(second, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+
+                        setPowerAndAssert(helper, second, 15, AnkerstoneMode.WIDE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "A power toggle must allow activation after a slot becomes available");
+                } finally {
+                        helper.setBlock(second, Blocks.AIR);
+                        helper.setBlock(second.below(), Blocks.AIR);
+                        helper.setBlock(first, Blocks.AIR);
+                        helper.setBlock(first.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void loweredLimitPreservesActiveOwnerAndModeChanges(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(1);
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+                        setPowerAndAssert(helper, local, 1, AnkerstoneMode.SINGLE);
+
+                        limits.setActiveLimit(0);
+
+                        helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Lowering the limit must preserve an existing active owner");
+
+                        setPowerAndAssert(helper, local, 15, AnkerstoneMode.WIDE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Single-to-Wide must remain allowed above the lowered limit");
+
+                        setPowerAndAssert(helper, local, 1, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                        "Wide-to-Single must remain allowed above the lowered limit");
+
+                        setPowerAndAssert(helper, local, 0, AnkerstoneMode.OFF);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "Deactivation must still release the slot");
+
+                        setTestPower(helper, local, 15);
+                        helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                        AnkerstoneMode.OFF);
+                        helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                        "Reactivation must obey the lowered limit");
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void activeLimitIsSharedAcrossDimensions(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                ServerLevel nether = server.getLevel(Level.NETHER);
+                ServerLevel end = server.getLevel(Level.END);
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos origin = helper.absolutePos(local);
+                BlockPos remote = new BlockPos(origin.getX(), 200, origin.getZ());
+
+                helper.assertTrue(nether != null && end != null,
+                                "Limit test requires the Nether and End");
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(1);
+                        helper.setBlock(local, ModBlocks.ANKERSTONE);
+                        setPowerAndAssert(helper, local, 1, AnkerstoneMode.SINGLE);
+
+                        for (ServerLevel other : List.of(nether, end)) {
+                                other.setBlock(remote.below(), Blocks.REDSTONE_BLOCK.defaultBlockState(),
+                                                Block.UPDATE_ALL);
+                                other.setBlock(remote, ModBlocks.ANKERSTONE.defaultBlockState(),
+                                                Block.UPDATE_ALL);
+
+                                helper.assertTrue(other.getBestNeighborSignal(remote) == 15,
+                                                "Remote Ankerstone must receive power: " + other.dimension());
+                                helper.assertTrue(
+                                                other.getBlockState(remote)
+                                                                .getValue(AnkerstoneBlock.MODE) == AnkerstoneMode.OFF,
+                                                "Occupied global limit must block activation: " + other.dimension());
+                                helper.assertTrue(OwnerData.get(other).getOwnerMode(remote) == null,
+                                                "Blocked dimension must not gain an owner");
+                                helper.assertTrue(ChunkTickets.getActiveCount(server) == 1,
+                                                "Other dimensions must not bypass the global limit");
+                        }
+                } finally {
+                        for (ServerLevel other : List.of(nether, end)) {
+                                other.setBlock(remote, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                                other.setBlock(remote.below(), Blocks.AIR.defaultBlockState(),
+                                                Block.UPDATE_ALL);
+                        }
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void zeroLimitBlocksAlreadyActivePlacement(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos owner = helper.absolutePos(local);
+                ChunkPos chunk = ChunkPos.containing(owner);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(0);
+
+                        for (int signal : new int[] { 1, 15 }) {
+                                AnkerstoneMode requested = signal == 15
+                                                ? AnkerstoneMode.WIDE
+                                                : AnkerstoneMode.SINGLE;
+                                setTestPower(helper, local, signal);
+                                helper.setBlock(local, ModBlocks.ANKERSTONE.defaultBlockState()
+                                                .setValue(AnkerstoneBlock.MODE, requested));
+
+                                helper.assertTrue(level.getBestNeighborSignal(owner) == signal,
+                                                "Active placement must receive the requested power");
+                                helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                                AnkerstoneMode.OFF);
+                                helper.assertTrue(OwnerData.get(level).getOwnerMode(owner) == null,
+                                                "Blocked active placement must not create saved ownership");
+                                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                                "Active placement must not bypass the zero limit");
+                                assertTicketLevels(helper, chunk, List.of());
+
+                                helper.setBlock(local, Blocks.AIR);
+                        }
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_limit")
+        public void zeroLimitBlocksChangingOffBlockToActiveState(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                LimitData limits = LimitData.get(server);
+                int previousLimit = limits.getActiveLimit();
+                BlockPos local = new BlockPos(2, 2, 2);
+                BlockPos owner = helper.absolutePos(local);
+                ChunkPos chunk = ChunkPos.containing(owner);
+
+                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                "Limit test requires no active owners");
+
+                try {
+                        limits.setActiveLimit(0);
+
+                        for (int signal : new int[] { 1, 15 }) {
+                                AnkerstoneMode requested = signal == 15
+                                                ? AnkerstoneMode.WIDE
+                                                : AnkerstoneMode.SINGLE;
+                                helper.setBlock(local, ModBlocks.ANKERSTONE);
+                                setTestPower(helper, local, signal);
+
+                                helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                                AnkerstoneMode.OFF);
+
+                                helper.setBlock(local, ModBlocks.ANKERSTONE.defaultBlockState()
+                                                .setValue(AnkerstoneBlock.MODE, requested));
+
+                                helper.assertTrue(level.getBestNeighborSignal(owner) == signal,
+                                                "Active placement must receive the requested power");
+                                helper.assertBlockProperty(local, AnkerstoneBlock.MODE,
+                                                AnkerstoneMode.OFF);
+                                helper.assertTrue(OwnerData.get(level).getOwnerMode(owner) == null,
+                                                "Blocked active placement must not create saved ownership");
+                                helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
+                                                "Active placement must not bypass the zero limit");
+                                assertTicketLevels(helper, chunk, List.of());
+
+                                helper.setBlock(local, Blocks.AIR);
+                        }
+                } finally {
+                        helper.setBlock(local, Blocks.AIR);
+                        helper.setBlock(local.below(), Blocks.AIR);
+                        limits.setActiveLimit(previousLimit);
+                }
+
                 helper.succeed();
         }
 

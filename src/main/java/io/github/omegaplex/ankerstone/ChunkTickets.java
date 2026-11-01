@@ -182,6 +182,30 @@ public class ChunkTickets {
         OwnerData.get(level).removeOwner(ownerPos);
     }
 
+    public static long getActiveCount(MinecraftServer server) {
+        long count = 0;
+
+        for (ServerLevel level : server.getAllLevels()) {
+            var dimensionOwners = OWNERS.get(level.dimension());
+            if (dimensionOwners == null) {
+                continue;
+            }
+
+            for (var chunkOwners : dimensionOwners.values()) {
+                count += chunkOwners.size();
+            }
+        }
+
+        return count;
+    }
+
+    static boolean hasActivationCapacity(MinecraftServer server) {
+        LimitData limits = LimitData.get(server);
+
+        return limits.isUnlimited()
+                || getActiveCount(server) < limits.getActiveLimit();
+    }
+
     public static void restore(ServerLevel level) {
         OwnerData savedData = OwnerData.get(level);
 
