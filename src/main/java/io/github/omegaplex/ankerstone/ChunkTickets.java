@@ -1,6 +1,8 @@
 package io.github.omegaplex.ankerstone;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.minecraft.core.BlockPos;
@@ -16,6 +18,12 @@ public class ChunkTickets {
     // Owners with the same mode in a chunk share a ticket.
     // Rebuilt from saved owners when the dimension loads.
     private static final Map<ResourceKey<Level>, Map<ChunkPos, Map<BlockPos, AnkerstoneMode>>> OWNERS = new HashMap<>();
+
+    public record ActiveOwner(
+            ResourceKey<Level> dimension,
+            BlockPos pos,
+            AnkerstoneMode mode) {
+    }
 
     private record PendingOwner(
             ResourceKey<Level> dimension,
@@ -197,6 +205,28 @@ public class ChunkTickets {
         }
 
         return count;
+    }
+
+    public static List<ActiveOwner> getActiveOwners(MinecraftServer server) {
+        List<ActiveOwner> owners = new ArrayList<>();
+
+        for (ServerLevel level : server.getAllLevels()) {
+            var dimensionOwners = OWNERS.get(level.dimension());
+            if (dimensionOwners == null) {
+                continue;
+            }
+
+            for (var chunkOwners : dimensionOwners.values()) {
+                for (var entry : chunkOwners.entrySet()) {
+                    owners.add(new ActiveOwner(
+                            level.dimension(),
+                            entry.getKey().immutable(),
+                            entry.getValue()));
+                }
+            }
+        }
+
+        return List.copyOf(owners);
     }
 
     static boolean hasActivationCapacity(MinecraftServer server) {

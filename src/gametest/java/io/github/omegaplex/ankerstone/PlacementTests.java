@@ -890,7 +890,7 @@ public class PlacementTests {
 
         }
 
-        @GameTest(environment = "ankerstone-test:validation_cleanup")
+        @GameTest(environment = "ankerstone-test:validation_cleanup", maxTicks = Integer.MAX_VALUE)
         public void clearingDimensionDiscardsPendingValidation(GameTestHelper helper) {
                 ServerLevel level = helper.getLevel();
                 OwnerData savedData = OwnerData.get(level);
@@ -903,29 +903,40 @@ public class PlacementTests {
                                 "Stale owner position must contain air");
                 assertTicketLevels(helper, chunk, List.of());
 
-                try {
-                        savedData.addOwner(owner, AnkerstoneMode.SINGLE);
-                        ChunkTickets.restore(level);
-
-                        ChunkTickets.clear(level);
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(
-                                        savedData.getOwnerMode(owner) == AnkerstoneMode.SINGLE,
-                                        "Cleared validation work must not modify saved owners");
-
-                        ChunkTickets.restore(level);
-                        ChunkTickets.validatePending(level.getServer());
-
-                        helper.assertTrue(savedData.getOwnerMode(owner) == null,
-                                        "Restoring again must queue a fresh validation");
-                        assertTicketLevels(helper, chunk, List.of());
-                        helper.succeed();
-                } finally {
+                Runnable cleanup = () -> {
                         ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
                         level.getChunkSource().removeTicketWithRadius(
                                         ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
-                }
+                };
+
+                level.getChunkSource().addTicketWithRadius(
+                                ChunkTickets.ANKERSTONE_TICKET, chunk, 2);
+
+                awaitValidation(helper,
+                                () -> ChunkTickets.restoredFootprintReady(
+                                                level, owner, AnkerstoneMode.SINGLE),
+                                () -> {
+                                        helper.assertTrue(savedData.getOwnerModes().isEmpty(),
+                                                        "Warmup must not create saved owners");
+
+                                        savedData.addOwner(owner, AnkerstoneMode.SINGLE);
+                                        ChunkTickets.restore(level);
+
+                                        ChunkTickets.clear(level);
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(
+                                                        savedData.getOwnerMode(owner) == AnkerstoneMode.SINGLE,
+                                                        "Cleared validation work must not modify saved owners");
+
+                                        ChunkTickets.restore(level);
+                                        ChunkTickets.validatePending(level.getServer());
+
+                                        helper.assertTrue(savedData.getOwnerMode(owner) == null,
+                                                        "Restoring again must queue a fresh validation");
+                                        assertTicketLevels(helper, chunk, List.of());
+                                },
+                                cleanup, 10);
         }
 
         @GameTest(environment = "ankerstone-test:unpowered_active_owner", maxTicks = Integer.MAX_VALUE)
@@ -1423,6 +1434,19 @@ public class PlacementTests {
                         ChunkTickets.add(end, owner, AnkerstoneMode.SINGLE);
                         helper.assertTrue(ChunkTickets.getActiveCount(server) == 3,
                                         "End owner must contribute to the same count");
+                        var snapshot = ChunkTickets.getActiveOwners(server);
+
+                        helper.assertTrue(snapshot.size() == 3,
+                                        "Snapshot must include all three dimensions");
+                        helper.assertTrue(snapshot.contains(new ChunkTickets.ActiveOwner(
+                                        overworld.dimension(), owner, AnkerstoneMode.SINGLE)),
+                                        "Snapshot must identify the Overworld owner");
+                        helper.assertTrue(snapshot.contains(new ChunkTickets.ActiveOwner(
+                                        nether.dimension(), owner, AnkerstoneMode.WIDE)),
+                                        "Snapshot must identify the Nether owner");
+                        helper.assertTrue(snapshot.contains(new ChunkTickets.ActiveOwner(
+                                        end.dimension(), owner, AnkerstoneMode.SINGLE)),
+                                        "Snapshot must identify the End owner");
 
                         ChunkTickets.remove(nether, owner, AnkerstoneMode.WIDE);
                         helper.assertTrue(ChunkTickets.getActiveCount(server) == 2,
@@ -1435,6 +1459,95 @@ public class PlacementTests {
 
                 helper.assertTrue(ChunkTickets.getActiveCount(server) == 0,
                                 "Removing all dimension owners must return the count to zero");
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void activeOwnerSnapshotDoesNotLoadChunks(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                ChunkPos origin = ChunkPos.containing(
+                                helper.absolutePos(BlockPos.ZERO));
+                ChunkPos remote = new ChunkPos(
+                                origin.x() + 32000, origin.z() + 32000);
+                BlockPos owner = new BlockPos(
+                                remote.x() * 16 + 8, 200, remote.z() * 16 + 8);
+
+                helper.assertTrue(ChunkTickets.getActiveOwners(server).isEmpty(),
+                                "Snapshot test requires no active owners");
+                helper.assertTrue(
+                                level.getChunkSource().getChunkNow(remote.x(), remote.z()) == null,
+                                "Fixture requires an unloaded remote chunk");
+
+                try {
+                        ChunkTickets.add(level, owner, AnkerstoneMode.SINGLE);
+
+                        helper.assertTrue(
+                                        level.getChunkSource().getChunkNow(remote.x(), remote.z()) == null,
+                                        "Fixture chunk must still be unloaded before listing");
+
+                        var snapshot = ChunkTickets.getActiveOwners(server);
+
+                        helper.assertTrue(snapshot.equals(List.of(
+                                        new ChunkTickets.ActiveOwner(
+                                                        level.dimension(), owner, AnkerstoneMode.SINGLE))),
+                                        "Snapshot must include the owner before its chunk loads");
+                        helper.assertTrue(
+                                        level.getChunkSource().getChunkNow(remote.x(), remote.z()) == null,
+                                        "Taking a snapshot must not synchronously load the chunk");
+                } finally {
+                        ChunkTickets.remove(level, owner, AnkerstoneMode.SINGLE);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:active_count")
+        public void activeOwnerSnapshotPreservesEntries(GameTestHelper helper) {
+                ServerLevel level = helper.getLevel();
+                var server = level.getServer();
+                BlockPos first = helper.absolutePos(new BlockPos(2, 2, 2));
+                BlockPos second = first.above(2);
+
+                helper.assertTrue(ChunkTickets.getActiveOwners(server).isEmpty(),
+                                "Snapshot test requires no active owners");
+
+                try {
+                        ChunkTickets.add(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.add(level, second, AnkerstoneMode.WIDE);
+
+                        var snapshot = ChunkTickets.getActiveOwners(server);
+
+                        helper.assertTrue(snapshot.size() == 2,
+                                        "Snapshot must include both owners sharing a chunk");
+                        helper.assertTrue(snapshot.contains(new ChunkTickets.ActiveOwner(
+                                        level.dimension(), first, AnkerstoneMode.SINGLE)),
+                                        "Snapshot must preserve the first owner's details");
+                        helper.assertTrue(snapshot.contains(new ChunkTickets.ActiveOwner(
+                                        level.dimension(), second, AnkerstoneMode.WIDE)),
+                                        "Snapshot must preserve the second owner's details");
+
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, second, AnkerstoneMode.WIDE);
+
+                        helper.assertTrue(ChunkTickets.getActiveOwners(server).isEmpty(),
+                                        "A new snapshot must reflect removal");
+                        helper.assertTrue(snapshot.size() == 2,
+                                        "Removing live owners must not change the old snapshot");
+
+                        boolean rejected = false;
+                        try {
+                                snapshot.clear();
+                        } catch (UnsupportedOperationException expected) {
+                                rejected = true;
+                        }
+                        helper.assertTrue(rejected,
+                                        "Callers must not be able to modify the snapshot");
+                } finally {
+                        ChunkTickets.remove(level, first, AnkerstoneMode.SINGLE);
+                        ChunkTickets.remove(level, second, AnkerstoneMode.WIDE);
+                }
+
                 helper.succeed();
         }
 
