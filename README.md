@@ -2,8 +2,6 @@
 
 An immersive, vanilla-friendly Fabric mod featuring a redstone-controlled chunk loader, plus Stillstone and Reinforced Stillstone building blocks.
 
-Ankerstone 1.0.0 is available for Minecraft Java Edition 26.1.2, 26.2, and 26.3.
-
 ## <img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/Ankerstone_Pulse.gif" alt="Ankerstone cycling through Off, Single, and Wide modes" width="20" height="20"> Chunk Anchoring
 
 Place an Ankerstone and supply redstone power to keep chunks ticking without a player nearby. Ankerstone uses Minecraft's normal chunk-ticket system, not a simulated player.
@@ -38,9 +36,9 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 - Stillstone and Reinforced Stillstone each include full blocks, slabs, stairs, and walls.
 - Stillstone full blocks do not conduct redstone power. Reinforced Stillstone full blocks use normal solid-block conduction. Slabs, stairs, and walls follow ordinary Minecraft rules for their shapes.
 
-| Block | Minimum Pickaxe to Harvest |  
+| Block | Minimum Pickaxe to Harvest |
 |---|---|
-| Stillstone | Any pickaxe | 
+| Stillstone | Any pickaxe |
 | Reinforced Stillstone | Iron or better |
 | Ankerstone | Iron or better |
 
@@ -81,7 +79,7 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 | 26.2 | 0.20.1 | 0.161.0 for 26.2 |
 | 26.3 | 0.20.1 | 0.165.0 for 26.3 |
 
-- All three releases require Java 25 or later. 
+- All three releases require Java 25 or later.
 - For multiplayer, install Ankerstone and Fabric API on both the client and server.
 - On dedicated servers, set `pause-when-empty-seconds=0` in `server.properties` if Ankerstones should keep ticking with nobody connected. **Ankerstone does not override whole-server pausing**.
 
@@ -89,8 +87,8 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 
 - Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
 - LabPBR material maps are included for compatible shaders. No additional PBR resource pack is needed for Ankerstone’s blocks.
-- For recessed surfaces, enable LabPBR support and Parallax Occlusion Mapping (POM) in your shader settings.
-- An optional **Ankerstone POM Compatibility** pack is available in Minecraft’s Resource Packs menu. It adjusts Wide’s glowing overlay so it does not float above the recessed surface. Disable the POM compatibility pack when playing without LabPBR shaders. The pack starts disabled.
+- For recessed surfaces, enable LabPBR support and Parallax Occlusion Mapping (POM) in your shader settings. (v1.0.0)
+- An optional **Ankerstone POM Compatibility** pack is available in Minecraft’s Resource Packs menu. It adjusts Wide’s glowing overlay so it does not float above the recessed surface. Disable the POM compatibility pack when playing without LabPBR shaders. The pack starts disabled. (v1.0.0)
 
 ## 🛠️ Development
 
