@@ -1,4 +1,4 @@
-# Ankerstone 1.0.1 for Minecraft 26.3
+# Ankerstone 1.0.1 for Minecraft 26.2
 
 - Updated Ankerstone models and textures with recessed gem rings and more detailed frames.
 - Added pulsing accents to Wide mode.
