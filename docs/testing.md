@@ -35,6 +35,11 @@ The test classes are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Recipes | Core crafting, both families' variants, stonecutting, output counts, and invalid ingredients or layouts |
 | Advancements | Full-block acquisition milestones, activation credit, and the Wide advancement icon without changing the inventory item |
 | Entity ticking | Single's center chunk, Wide's full 3x3 area, unticked chunks outside those footprints, Off mode, and dimension isolation |
+| Startup reconciliation | Removes missing or unpowered owners, corrects Single/Wide mismatches, preserves shared tickets, waits for required chunks without loading them synchronously, limits validation to 16 attempts per tick across dimensions, and clears pending work on dimension unload |
+| Active limit and commands | Global counting across dimensions, overlapping owners, blocked activation and credit, mode changes, restored owners above the limit, command permissions and invalid arguments; console-set limits survive disk restarts |
+| Admin listing and visits | Cross-dimension snapshots, ordering, pagination, permissions, expiration, and rejection of old links and inactive entries |
+
+> We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
 
 Footprint tests measure armor stands' actual tick counters. Single checks the surrounding 24 chunks remain unticked; Wide checks the 16-chunk ring outside its 3x3 area. Nether coverage includes at least 320 entity ticks to check continued ticking beyond the idle-dimension grace period.
 
@@ -124,6 +129,16 @@ Test the built mod JAR, not the sources JAR, in a separate Minecraft instance.
 - Check Single and Wide sticky retraction with anchor power removed first and piston power removed first in the same tick. Compare the visible blocks with server block checks before touching the fixture or reloading.
 - Check materials in daylight and darkness with shaders off, then with LabPBR and POM on and off. Include slabs, stairs, walls, and views from different angles.
 - Check the bundled POM compatibility pack with the standalone test pack disabled. It should start disabled. With LabPBR shaders, enabling it should keep Wide's recessed glow aligned. Disable it when checking vanilla glow.
+
+### Admin Commands
+
+Use the release JAR and a level-4 operator in a backup lab world. Have active Single and Wide Ankerstones in the Overworld, one active Ankerstone in the Nether, and one Off.
+
+1. **List and read:** Run `/ankerstone list`. Check that the title and instructions are readable, coordinates and modes match the blocks, and the Off block is absent.
+2. **Visit:** Click an entry in Creative. Confirm the Spectator message appears and you do not move. Switch to Spectator and click the same entry. Confirm you arrive just above the listed block and stay in Spectator.
+3. **Visit another dimension:** From the Overworld, click the Nether entry. Confirm the destination dimension and coordinates.
+4. **Reject an old link:** Run `/ankerstone list` again. Confirm a link from the previous list is rejected and the new link works.
+5. **Check page two:** With at least 11 active Ankerstones, run `/ankerstone list`, then `/ankerstone list 2`. Confirm numbering starts at 11 and clicking that row visits the block it describes.
 
 ## Recorded Checks
 
