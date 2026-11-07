@@ -31,3 +31,5 @@ LabPBR material maps are included. Compatible shaders can add normal mapping, em
 Enable the bundled **Ankerstone POM Compatibility** resource pack when using LabPBR shaders with POM. Disable it when playing without compatible shaders to restore Wide’s vanilla glow.
 
 Shaders are not required for gameplay.
+
+`SHA A93C9418D2BC526C8EF15CB959C041CF510CC7E0D24FDC8757A333BB239C494F`

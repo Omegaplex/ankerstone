@@ -86,9 +86,26 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 ## ✨ Shaders
 
 - Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
-- LabPBR material maps are included for compatible shaders. No additional PBR resource pack is needed for Ankerstone’s blocks.
+- LabPBR material maps are included for compatible shaders. No additional PBR resource pack required.
+### Depreciated
 - For recessed surfaces, enable LabPBR support and Parallax Occlusion Mapping (POM) in your shader settings. (v1.0.0)
 - An optional **Ankerstone POM Compatibility** pack is available in Minecraft’s Resource Packs menu. It adjusts Wide’s glowing overlay so it does not float above the recessed surface. Disable the POM compatibility pack when playing without LabPBR shaders. The pack starts disabled. (v1.0.0)
+
+## 🔧 Server Administration (1.1.0)
+
+These commands require operator permission level 4. The server console can list Ankerstones and manage the limit.
+
+| Command | Purpose |
+|---|---|
+| `/ankerstone limit` | Show the current limit and active count |
+| `/ankerstone limit <number>` | Set a world-wide limit on active Ankerstones |
+| `/ankerstone limit unlimited` | Remove the limit (default) |
+| `/ankerstone list` | List registered active Ankerstones across all dimensions |
+| `/ankerstone list <page>` | Browse another page of the current list |
+
+The limit is saved with the world. Each active Ankerstone counts once, whether Single or Wide. Lowering the limit does not deactivate existing Ankerstones. Zero blocks new activations. Once a slot is free, toggle power to retry a blocked activation.
+
+Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
 
 ## 🛠️ Development
 
@@ -96,7 +113,6 @@ See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md)
 
 ### Upcoming Features
 
-- **Active Ankerstone Limit (1.1.0):** Server administrators will be able to set a world-wide limit on active Ankerstones across all dimensions. Existing Ankerstones remain active if the limit is lowered, while new activations are blocked until capacity becomes available.
 - **Mod Menu Config:** customize Ankerstone visual effects and special interactions.
 - **Sounds:** custom block sounds and Ankerstone activation sounds.
 - **Ankerstone Containment Failure:** When an active Ankerstone is destroyed by an explosion, its contained energy is released, triggering a secondary explosion.

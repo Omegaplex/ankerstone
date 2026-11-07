@@ -33,8 +33,9 @@ Test sources are in `src/gametest/java/io/github/omegaplex/ankerstone`.
 | Chunk release | Single/Wide deactivation and removal, plus Wide-to-Single downgrade, in the Overworld, Nether, and End; shared and overlapping owners in the Overworld; chunk and entity-data unloading checked without loading them |
 | Startup reconciliation | Removes missing or unpowered owners, corrects Single/Wide mismatches, preserves shared tickets, waits for required chunks without loading them synchronously, limits validation to 16 attempts per tick across dimensions, and clears pending work on dimension unload |
 | Active limit and commands | Global counting across dimensions, overlapping owners, blocked activation and credit, mode changes, restored owners above the limit, command permissions and invalid arguments; console-set limits survive disk restarts |
+| Admin listing and visits | Cross-dimension snapshots, ordering, pagination, permissions, expiration, and rejection of old links and inactive entries |
 
-We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
+> We deliberately introduced ticket leaks, loading-only leaks, broken ticket restoration, an incorrect recipe-unlock ingredient, and missing saved credit. The tests caught each fault.
 
 ### Fresh-Server Restarts
 
@@ -56,42 +57,45 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 
 1. **Blocks and advancement display:** Check every block and variant in-world and in inventory, the four advancements, their tab background, and Wide's activation icon. The ordinary inventory item should look Off.
 2. **Survival menus:** Obtain the unlock ingredients, check the nine crafting and six stonecutter recipes appear, and craft an output in each menu. Confirm previews and received items agree.
-3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off, with LabPBR alone, and with LabPBR plus POM. Confirm the bundled pack's icon and that enabling it aligns Wide's recessed glow; disable it again and check the non-shader glow. Shader appearance and GPU-specific behavior remain manual.
+3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off and with LabPBR alone. Shader appearance and GPU-specific behavior remain manual.
 4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off Ankerstone returns, and no ghost blocks remain before reloading.
 5. **Single-player reopening:** Use the remote platform to enable Single, Wide, and Off. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. This checks the integrated-server lifecycle.
+
+### Admin Commands
+
+Use the release JAR and a level-4 operator in a backup lab world. Have active Single and Wide Ankerstones in the Overworld, one active Ankerstone in the Nether, and one Off.
+
+1. **List and read:** Run `/ankerstone list`. Check that the title and instructions are readable, coordinates and modes match the blocks, and the Off block is absent.
+2. **Visit:** Click an entry in Creative. Confirm the Spectator message appears and you do not move. Switch to Spectator and click the same entry. Confirm you arrive just above the listed block and stay in Spectator.
+3. **Visit another dimension:** From the Overworld, click the Nether entry. Confirm the destination dimension and coordinates.
+4. **Reject an old link:** Run `/ankerstone list` again. Confirm a link from the previous list is rejected and the new link works.
+5. **Check page two:** With at least 11 active Ankerstones, run `/ankerstone list`, then `/ankerstone list 2`. Confirm numbering starts at 11 and clicking that row visits the block it describes.
 
 ### Integration Checks
 
 - Use the [manual multiplayer credit check](multiplayer-testing.md) once per new port and after multiplayer/login handling changes. 
 - Use a backup lab world for upgrades when save formats or supported Minecraft versions change. When lab opens successfully, save a backup of the world and add it to the lab archive. We maintain an archive of upgraded labs with the original being from 26.1.2.
 
-## Known Issues
+### Troubleshooting
 
-- Stale-owner cleanup intermittently left entity data tracked after block chunks unloaded. Tracing showed late status transitions after the ticket was removed. Validation now waits for the restored footprint's block and entity readiness before reconciliation. Ten consecutive restart-suite runs passed afterward; failure diagnostics remain in place.
+- Restart cleanup: Validation now waits for block and entity data to be ready before removing stale owners. Ten consecutive restart runs passed after the change. If it recurs, keep the restart logs.
 
-- Negative-boundary piston tests have intermittently failed during fixture setup, before movement, reporting that chunk or entity data was not ready. Setup now waits up to ten real-time seconds for entity data; movement assertions remain unchanged.
+- Negative-boundary piston tests: If a test fails before the piston moves, check whether the fixture’s chunks and entity data were ready. Setup waits up to ten real-time seconds. The original cause is still unconfirmed, so keep the failure message and server log before rerunning.
 
-- The bounded wait passed [CI](https://github.com/Omegaplex/ankerstone/actions/runs/39994180957) and controlled-delay checks, but the original cause remains unconfirmed. If it recurs, keep the failure message and server log before rerunning. Diagnostics include entity-ticking state, entity-data readiness, ticket levels, and chunk-loading details. See the [entity-data readiness failure](https://github.com/Omegaplex/ankerstone/actions/runs/39989892912).
+## Release Verification
 
-## Latest Results
+After automated and manual testing, the final release JARs were loaded into a testing instance for a smoke check. Final-JARs hashes ( SHA-256 ) are added to the each release note.
 
-### Development (`main`, Minecraft 26.3)
+## Development (`main`, Minecraft 26.3)
 
+- **2026-11-07:** All 187 GameTests and three restart phases passed locally and in CI. In-game checks confirmed that only active Ankerstones appeared, clickable visits required Spectator mode, old links were rejected, and a Nether visit worked.
 - **2026-10-31:** All 171 GameTests and three restart phases passed in the full build. In-game limit checks passed: blocked activation, Single/Wide changes, lowering the limit without disabling active blocks, and restoring unlimited activation.
 - **2026-10-31:** All 145 GameTests and three restart phases passed. Release fixtures run in separate environment batches, and both validation-budget tests establish readiness before measuring calls.
 - **2026-10-30:** All 136 GameTests passed after updating asynchronous checks to use real-time deadlines. Console progress bars are suppressed; full logs and the final pass/fail summary remain available.
 - **2026-10-29:** All 136 GameTests and all three restart phases passed, including startup reconciliation and stale-owner cleanup across disk restarts.  **Note**: Validation runs after restoration, not continuously during gameplay.
 - **Nether Single Restart, 2026-10-29** Added Nether Single coverage; all three restart phases passed.
-### Published Release Artifacts
 
-After automated and manual testing, the final release JARs were loaded into a testing instance for a smoke check. All three versions passed. The SHA-256 hashes below were confirmed against the published downloads.
-
-| Release JAR | SHA-256 |
-|---|---|
-| `ankerstone-1.0.0+mc26.1.2.jar` | `79B87F356066AE07B38E399C0E6AFB6595B692AFE9F73E512E68272E495B0289` |
-| `ankerstone-1.0.0+mc26.2.jar` | `A93C9418D2BC526C8EF15CB959C041CF510CC7E0D24FDC8757A333BB239C494F` |
-| `ankerstone-1.0.0+mc26.3.jar` | `2A6E64CA51ED0DB527E99EA007E4DBF93938D10B985E56D4772D6A4384C3292C` |
-
+## 1.0.0 Prerelease Test Results
 ### Minecraft 26.3
 
 - **Automated, 2026-10-28:** Full local build passed, as reported by the tester, after updating recipe-unlock advancements and both slab loot tables for the new data formats.
