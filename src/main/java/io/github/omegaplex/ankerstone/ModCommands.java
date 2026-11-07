@@ -5,17 +5,23 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.commands.Commands;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.permissions.Permissions;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 
@@ -147,6 +153,13 @@ public class ModCommands {
                                             .executes(context -> showExistingListPage(
                                                     context.getSource(),
                                                     IntegerArgumentType.getInteger(context, "page")))))
+                            .then(Commands.literal("visit")
+                                    .then(Commands.argument("listing", UuidArgument.uuid())
+                                            .then(Commands.argument("number", IntegerArgumentType.integer(1))
+                                                    .executes(context -> visit(
+                                                            context.getSource(),
+                                                            UuidArgument.getUuid(context, "listing"),
+                                                            IntegerArgumentType.getInteger(context, "number"))))))
                             .then(Commands.literal("limit")
                                     .executes(context -> showLimit(context.getSource()))
                                     .then(Commands.literal("unlimited")
@@ -200,6 +213,81 @@ public class ModCommands {
         return showListPage(source, listing, page);
     }
 
+    static ChunkTickets.ActiveOwner findVisitTarget(
+            CommandSourceStack source, UUID listingId, int number) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can visit Ankerstones."));
+            return null;
+        }
+        if (!player.isSpectator()) {
+            source.sendFailure(Component.literal(
+                    "Switch to Spectator mode to visit this Ankerstone."));
+            return null;
+        }
+
+        var server = source.getServer();
+        ListingStore store = LISTINGS.get(server);
+        OwnerListing listing = store == null
+                ? null
+                : store.get(player.getUUID(), System.nanoTime());
+
+        if (listing == null || !listing.id().equals(listingId)) {
+            source.sendFailure(Component.literal(
+                    "This listing is no longer current. Run /ankerstone list again."));
+            return null;
+        }
+        if (number < 1 || number > listing.owners().size()) {
+            source.sendFailure(Component.literal("No Ankerstone at entry " + number + "."));
+            return null;
+        }
+
+        var owner = listing.owners().get(number - 1);
+        var level = server.getLevel(owner.dimension());
+        if (level == null || !ChunkTickets.hasActiveOwner(level, owner.pos())) {
+            source.sendFailure(Component.literal(
+                    "That position no longer has a registered active Ankerstone."));
+            return null;
+        }
+        return owner;
+    }
+
+    private static int visit(
+            CommandSourceStack source, UUID listingId, int number) {
+        var owner = findVisitTarget(source, listingId, number);
+        if (owner == null) {
+            return 0;
+        }
+
+        var level = source.getServer().getLevel(owner.dimension());
+        var pos = owner.pos();
+        var chunkPos = ChunkPos.containing(pos);
+        var chunk = level.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z());
+        if (chunk == null) {
+            source.sendFailure(Component.literal(
+                    "The Ankerstone's chunk is not ready. Try again shortly."));
+            return 0;
+        }
+
+        var state = chunk.getBlockState(pos);
+        if (!state.is(ModBlocks.ANKERSTONE)
+                || state.getValue(AnkerstoneBlock.MODE) == AnkerstoneMode.OFF) {
+            source.sendFailure(Component.literal(
+                    "There is no active Ankerstone at that position."));
+            return 0;
+        }
+
+        var player = (ServerPlayer) source.getEntity();
+        if (!player.teleportTo(level, pos.getX() + 0.5, pos.getY() + 1.5,
+                pos.getZ() + 0.5, Set.of(), player.getYRot(), player.getXRot(), true)) {
+            source.sendFailure(Component.literal("Could not visit that Ankerstone."));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal(
+                "Visiting Ankerstone entry " + number + "."), false);
+        return 1;
+    }
+
     private static int showListPage(
             CommandSourceStack source, OwnerListing listing, int page) {
         if (page < 1 || page > listing.pageCount()) {
@@ -208,26 +296,56 @@ public class ModCommands {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal(
-                "Active Ankerstones: " + listing.owners().size()
-                        + ". Page " + page + " of " + listing.pageCount() + "."),
-                false);
+        boolean playerSource = source.getEntity() instanceof ServerPlayer;
+        var title = Component.literal("Active Ankerstones");
+        var details = Component.literal(": " + listing.owners().size()
+                + " | Page " + page + "/" + listing.pageCount());
+        if (playerSource) {
+            title.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+            details.withStyle(ChatFormatting.GRAY);
+        }
+        source.sendSuccess(() -> Component.empty().append(title).append(details), false);
 
         if (listing.owners().isEmpty()) {
-            source.sendSuccess(() -> Component.literal(
-                    "No active Ankerstones."), false);
+            source.sendSuccess(() -> Component.literal("No active Ankerstones."), false);
             return 1;
+        }
+
+        if (playerSource) {
+            var divider = Component.literal("------------------------")
+                    .withStyle(ChatFormatting.DARK_GRAY);
+            source.sendSuccess(() -> divider, false);
+            source.sendSuccess(() -> Component.literal(
+                    "Switch to Spectator mode, then click an entry to visit.")
+                    .withStyle(ChatFormatting.YELLOW), false);
+            source.sendSuccess(() -> divider, false);
         }
 
         int number = (page - 1) * LIST_PAGE_SIZE + 1;
         for (var owner : listing.pageEntries(page)) {
+            int entryNumber = number++;
             var pos = owner.pos();
-            String line = number++ + ". "
-                    + owner.dimension().identifier() + " "
-                    + pos.getX() + " " + pos.getY() + " " + pos.getZ()
-                    + " " + owner.mode().getSerializedName();
+            var label = Component.literal(entryNumber + ". ");
+            var dimension = Component.literal(owner.dimension().identifier() + " ");
+            var coords = Component.literal(
+                    pos.getX() + " " + pos.getY() + " " + pos.getZ());
+            var mode = Component.literal(" [" + owner.mode().getSerializedName() + "]");
+            var entry = Component.empty()
+                    .append(label).append(dimension).append(coords).append(mode);
 
-            source.sendSuccess(() -> Component.literal(line), false);
+            if (playerSource) {
+                label.withStyle(ChatFormatting.GOLD);
+                dimension.withStyle(ChatFormatting.GRAY);
+                mode.withStyle(owner.mode() == AnkerstoneMode.WIDE
+                        ? ChatFormatting.AQUA
+                        : ChatFormatting.GREEN);
+                String command = "/ankerstone visit " + listing.id() + " " + entryNumber;
+                entry.withStyle(style -> style
+                        .withClickEvent(new ClickEvent.RunCommand(command))
+                        .withHoverEvent(new HoverEvent.ShowText(
+                                Component.literal("Visit in Spectator mode"))));
+            }
+            source.sendSuccess(() -> entry, false);
         }
         return 1;
     }
