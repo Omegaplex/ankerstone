@@ -229,6 +229,16 @@ public class ChunkTickets {
         return List.copyOf(owners);
     }
 
+    static boolean hasActiveOwner(ServerLevel level, BlockPos pos) {
+        var dimensionOwners = OWNERS.get(level.dimension());
+        if (dimensionOwners == null) {
+            return false;
+        }
+
+        var chunkOwners = dimensionOwners.get(chunkFor(pos));
+        return chunkOwners != null && chunkOwners.containsKey(pos);
+    }
+
     static boolean hasActivationCapacity(MinecraftServer server) {
         LimitData limits = LimitData.get(server);
 

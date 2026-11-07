@@ -4,12 +4,17 @@ import java.util.List;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.UUID;
+
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 
 public class CommandTests {
@@ -687,6 +692,65 @@ public class CommandTests {
                 } finally {
                         ModCommands.clearListings(server);
                         server.getPlayerList().remove(player);
+                }
+
+                helper.succeed();
+        }
+
+        @GameTest(environment = "ankerstone-test:listing_commands")
+        @SuppressWarnings("removal")
+        public void visitRequiresSpectatorAndCurrentActiveEntry(GameTestHelper helper) {
+                var level = helper.getLevel();
+                var server = level.getServer();
+                var cookie = CommonListenerCookie.createInitial(
+                                new GameProfile(UUID.randomUUID(), "visit-test"), false);
+                var player = new ServerPlayer(
+                                server, level, cookie.gameProfile(), cookie.clientInformation()) {
+                        GameType testMode = GameType.CREATIVE;
+
+                        @Override
+                        public GameType gameMode() {
+                                return testMode;
+                        }
+                };
+                var source = server.createCommandSourceStack()
+                                .withEntity(player)
+                                .withPermission(LevelBasedPermissionSet.OWNER);
+                var pos = helper.absolutePos(new BlockPos(2, 2, 2));
+                var owner = new ChunkTickets.ActiveOwner(
+                                level.dimension(), pos, AnkerstoneMode.SINGLE);
+
+                try {
+                        ChunkTickets.add(level, pos, AnkerstoneMode.SINGLE);
+                        var store = ModCommands.listingsFor(server);
+                        var listing = store.create(
+                                        player.getUUID(), List.of(owner), System.nanoTime());
+
+                        helper.assertTrue(
+                                        ModCommands.findVisitTarget(source, listing.id(), 1) == null,
+                                        "Creative players must not be allowed to visit");
+
+                        player.testMode = GameType.SPECTATOR;
+                        helper.assertTrue(player.isSpectator(),
+                                        "Visit test fixture must report Spectator mode");
+                        helper.assertTrue(
+                                        owner.equals(ModCommands.findVisitTarget(source, listing.id(), 1)),
+                                        "Spectator must resolve the current active entry");
+
+                        var refreshed = store.create(
+                                        player.getUUID(), List.of(owner), System.nanoTime());
+                        helper.assertTrue(
+                                        ModCommands.findVisitTarget(source, listing.id(), 1) == null,
+                                        "Refreshing must invalidate the old link even if entry 1 is unchanged");
+
+                        ChunkTickets.remove(level, pos, AnkerstoneMode.SINGLE);
+                        helper.assertTrue(
+                                        ModCommands.findVisitTarget(source, refreshed.id(), 1) == null,
+                                        "A current link must reject a deactivated owner");
+                } finally {
+                        ChunkTickets.remove(level, pos, AnkerstoneMode.SINGLE);
+                        ModCommands.clearListings(server);
+
                 }
 
                 helper.succeed();
