@@ -46,7 +46,7 @@ final class RestartCreditChecks {
                 ModBlocks.ANKERSTONE.setPlacedBy(level, placement.start, level.getBlockState(placement.start),
                         placer, new ItemStack(ModBlocks.ANKERSTONE));
             } finally {
-                placer.getAdvancements().clearTriggers();
+                placer.getAdvancements().stopListening();
             }
             require(id.equals(AttributionData.get(level).getPlacer(placement.global(placement.start))),
                     placement.name + " placement hook did not record its placer");
@@ -169,7 +169,7 @@ final class RestartCreditChecks {
                     "Credit must not be delivered twice");
             player.getAdvancements().save();
         } finally {
-            player.getAdvancements().clearTriggers();
+            player.getAdvancements().stopListening();
             channel.finishAndReleaseAll();
         }
     }
