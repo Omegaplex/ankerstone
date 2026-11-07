@@ -90,6 +90,22 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 - Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
 - LabPBR material maps are included for compatible shaders. No additional PBR resource pack is needed for Ankerstone’s blocks.
 
+## 🔧 Server Administration (1.1.0)
+
+These commands require operator permission level 4. The server console can list Ankerstones and manage the limit.
+
+| Command | Purpose |
+|---|---|
+| `/ankerstone limit` | Show the current limit and active count |
+| `/ankerstone limit <number>` | Set a world-wide limit on active Ankerstones |
+| `/ankerstone limit unlimited` | Remove the limit (default) |
+| `/ankerstone list` | List registered active Ankerstones across all dimensions |
+| `/ankerstone list <page>` | Browse another page of the current list |
+
+The limit is saved with the world. Each active Ankerstone counts once, whether Single or Wide. Lowering the limit does not deactivate existing Ankerstones. Zero blocks new activations. Once a slot is free, toggle power to retry a blocked activation.
+
+Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
+
 ## 🛠️ Development
 
 See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md) for automated server coverage and the manual client checklist.
