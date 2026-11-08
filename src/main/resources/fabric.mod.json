@@ -12,9 +12,11 @@
   "license": ["MPL-2.0", "CC-BY-SA-4.0"],
   "icon": "assets/ankerstone/icon.png",
   "environment": "*",
- "entrypoints": {
-  "main": ["io.github.omegaplex.ankerstone.Ankerstone"]
-},
+  "entrypoints": {
+    "main": ["io.github.omegaplex.ankerstone.Ankerstone"],
+    "client": ["io.github.omegaplex.ankerstone.ClientSettings"],
+    "modmenu": ["io.github.omegaplex.ankerstone.AnkerstoneModMenu"]
+  },
   "mixins": ["ankerstone.mixins.json"],
   "depends": {
     "fabricloader": ">=0.20.1",
