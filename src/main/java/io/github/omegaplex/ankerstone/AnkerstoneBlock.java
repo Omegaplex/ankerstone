@@ -186,6 +186,14 @@ public class AnkerstoneBlock extends Block {
         return 0;
     }
 
+    private static int singleParticles = 1;
+    private static int wideParticles = 4;
+
+    static void setParticleCounts(int single, int wide) {
+        singleParticles = single;
+        wideParticles = wide;
+    }
+
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         AnkerstoneMode mode = state.getValue(MODE);
@@ -194,7 +202,9 @@ public class AnkerstoneBlock extends Block {
             return;
         }
 
-        int particleCount = mode == AnkerstoneMode.WIDE ? 4 : 1;
+        int particleCount = mode == AnkerstoneMode.WIDE
+                ? wideParticles
+                : singleParticles;
 
         for (int i = 0; i < particleCount; i++) {
             int side = random.nextInt(6);

@@ -60,6 +60,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off and with LabPBR alone. Shader appearance and GPU-specific behavior remain manual.
 4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off Ankerstone returns, and no ghost blocks remain before reloading.
 5. **Single-player reopening:** Use the remote platform to enable Single, Wide, and Off. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. This checks the integrated-server lifecycle.
+6. **Mod Menu:** Use mod menu settings screen to verify slider ranges and tooltips,  `Done` vs `Escape`, persistence after relaunch, and uses settings without Mod Menu.
 
 ### Admin Commands
 

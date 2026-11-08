@@ -44,14 +44,25 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 
 ## 🔨 Crafting
 
-All recipes have recipe-book unlocks.
+- All recipes have recipe-book unlocks.
+- Both building-block families have crafting recipes for slabs, stairs, and walls.
+- Full blocks can also be cut into those shapes with a stonecutter.
 
-![Stillstone crafting recipe.](https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Stillstone.png)
-![Reinforced Stillstone crafting recipe.](https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Reinforced_Stillstone.png)
+<details>
+<summary> Stillstone </Summary>
+<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Stillstone.png" alt="Stillstone crafting recipe." width="85%">
+</details>
 
-Both building-block families have crafting recipes for slabs, stairs, and walls. Their full blocks can also be cut into those shapes with a stonecutter.
+<details>
+<summary>Reinforced Stillstone</summary>
+<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Reinforced_Stillstone.png" alt="Reinforced Stillstone crafting recipe." width="85%">
+</details>
 
-![Ankerstone crafting recipe.](https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Ankerstone.png)
+<details>
+<summary>Ankerstone</summary>
+<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Ankerstone.png" alt="Ankerstone crafting recipe." width="85%">
+</details>
+
 
 | Result | Ingredients and Arrangement | Output |
 |---|---|---|
@@ -87,11 +98,8 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 
 - Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
 - LabPBR material maps are included for compatible shaders. No additional PBR resource pack required.
-### Depreciated
-- For recessed surfaces, enable LabPBR support and Parallax Occlusion Mapping (POM) in your shader settings. (v1.0.0)
-- An optional **Ankerstone POM Compatibility** pack is available in Minecraft’s Resource Packs menu. It adjusts Wide’s glowing overlay so it does not float above the recessed surface. Disable the POM compatibility pack when playing without LabPBR shaders. The pack starts disabled. (v1.0.0)
 
-## 🔧 Server Administration (1.1.0)
+## 🔧 Server Administration (1.1.0+)
 
 These commands require operator permission level 4. The server console can list Ankerstones and manage the limit.
 
@@ -107,13 +115,20 @@ The limit is saved with the world. Each active Ankerstone counts once, whether S
 
 Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
 
+## ⚙️ Client Settings (1.2.0+)
+
+- With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
+- **Single particles:** 0–4, default 1. **Wide particles:** 0–8, default 4. Set either to 0 to turn its particles off. Hover over a slider to see its default.
+- Press **Done** to save or **Escape** to cancel.
+
+These settings only affect the particles you see. They don’t change chunk loading, and saved settings still work without Mod Menu.
+
 ## 🛠️ Development
 
 See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md) for automated server coverage and the manual client checklist.
 
 ### Upcoming Features
 
-- **Mod Menu Config:** customize Ankerstone visual effects and special interactions.
 - **Sounds:** custom block sounds and Ankerstone activation sounds.
 - **Ankerstone Containment Failure:** When an active Ankerstone is destroyed by an explosion, its contained energy is released, triggering a secondary explosion.
 
