@@ -55,8 +55,8 @@ final class AnkerstoneSettingsScreen extends Screen {
             onClose();
         } catch (IOException failure) {
             Ankerstone.LOGGER.warn("Could not save Ankerstone client preferences", failure);
-            minecraft.gui.setScreen(new AlertScreen(
-                    () -> minecraft.gui.setScreen(this),
+            minecraft.setScreen(new AlertScreen(
+                    () -> minecraft.setScreen(this),
                     Component.literal("Could not save settings"),
                     Component.literal("The particle settings were not changed.")));
         }
@@ -64,6 +64,6 @@ final class AnkerstoneSettingsScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.gui.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 }

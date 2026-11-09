@@ -139,6 +139,7 @@ Use the release JAR and a level-4 operator in a backup lab world. Have active Si
 3. **Visit another dimension:** From the Overworld, click the Nether entry. Confirm the destination dimension and coordinates.
 4. **Reject an old link:** Run `/ankerstone list` again. Confirm a link from the previous list is rejected and the new link works.
 5. **Check page two:** With at least 11 active Ankerstones, run `/ankerstone list`, then `/ankerstone list 2`. Confirm numbering starts at 11 and clicking that row visits the block it describes.
+6. **Mod Menu:** Use mod menu settings screen to verify slider ranges and tooltips,  `Done` vs `Escape`, persistence after relaunch, and uses settings without Mod Menu.
 
 ## Recorded Checks
 

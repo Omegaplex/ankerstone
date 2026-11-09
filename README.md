@@ -106,6 +106,14 @@ The limit is saved with the world. Each active Ankerstone counts once, whether S
 
 Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
 
+## ⚙️ Client Settings (1.2.0+)
+
+- With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
+- **Single particles:** 0–4, default 1. **Wide particles:** 0–8, default 4. Set either to 0 to turn its particles off. Hover over a slider to see its default.
+- Press **Done** to save or **Escape** to cancel.
+
+These settings only affect the particles you see. They don’t change chunk loading, and saved settings still work without Mod Menu.
+
 ## 🛠️ Development
 
 See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md) for automated server coverage and the manual client checklist.
