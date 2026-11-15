@@ -1,0 +1,14 @@
+{
+  "block.ankerstone.activate": {
+    "sounds": ["ankerstone:ankerstone_activate"]
+  },
+  "block.ankerstone.activate_wide": {
+    "sounds": ["ankerstone:ankerstone_activate_wide"]
+  },
+  "block.ankerstone.wide_to_single": {
+    "sounds": ["ankerstone:ankerstone_wide_to_single"]
+  },
+  "block.ankerstone.deactivate": {
+    "sounds": ["ankerstone:ankerstone_deactivate"]
+  }
+}

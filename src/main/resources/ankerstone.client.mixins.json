@@ -1,0 +1,6 @@
+{
+  "required": true,
+  "package": "io.github.omegaplex.ankerstone.mixin.client",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["FootstepMixin", "ActivationSoundMixin"]
+}

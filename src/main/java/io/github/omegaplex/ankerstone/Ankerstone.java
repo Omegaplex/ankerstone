@@ -16,6 +16,7 @@ public class Ankerstone implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModBlocks.initialize();
+		ModSounds.initialize();
 		ModCommands.initialize();
 		ServerPlayConnectionEvents.JOIN
 				.register((handler, sender, server) -> ModAdvancements.onPlayerJoin(handler.player));

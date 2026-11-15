@@ -63,72 +63,13 @@ Keep the failure message and job log before rerunning. Relevant runs: [original 
 
 Use a disposable world. For chunk-loading checks, use a new Creative superflat world with commands enabled and no other chunk loaders.
 
-### Center-Chunk Restart Check
-
-First set up the scoreboard and teleport to the remote test site:
-
-```mcfunction
-/scoreboard objectives add anchor_ticks dummy
-/scoreboard objectives setdisplay sidebar anchor_ticks
-/tp @s 10008 100 10008
-```
-
-Wait for the terrain to load, then run:
-
-```mcfunction
-/fill 10004 98 10004 10011 98 10011 minecraft:stone
-/give @s minecraft:repeating_command_block
-/setblock 10010 98 10008 minecraft:redstone_block
-/setblock 10010 99 10008 ankerstone:ankerstone
-```
-
-Place the command block on the platform. Set it to Repeat, Unconditional, and Always Active, with this command:
-
-```mcfunction
-scoreboard players add Anchor anchor_ticks 1
-```
-
-The setup starts in Wide mode. To change to Single, run:
-
-```mcfunction
-/setblock 10010 98 10008 minecraft:stone
-/setblock 10007 99 10008 minecraft:redstone_block
-/setblock 10008 99 10008 minecraft:redstone_wire
-/setblock 10009 99 10008 minecraft:redstone_wire
-```
-
-For Off, remove the source:
-
-```mcfunction
-/setblock 10007 99 10008 minecraft:air
-```
-
-For each mode:
-
-1. Confirm the mode with F3, then teleport away using `/tp @s 0 100 0`.
-2. Leave the game unpaused for 20 seconds to let unrelated loading settle. Note the counter, wait another 60 seconds, and compare. Single and Wide should advance it; Off should not.
-3. Save and quit, close Minecraft completely, then relaunch and reopen the world. Stay remote and unpaused and repeat the counter check.
-4. Return with `/tp @s 10008 100 10008` before changing modes.
-
-This checks block ticking in the anchor's own chunk. It does not prove Wide's full entity-ticking footprint.
-
-### Other Restart and Multiplayer Checks
-
-- Reopen a world from the title screen without closing Minecraft and check that an active anchor resumes ticking.
-- Check an item entity's Age in a Wide corner chunk before and after a full restart, with the player remote. Repeat in the Nether, restarting with the player in the Overworld.
-- Check placer credit across a restart for an Off placement and a piston-moved placement, then activate the block.
-- With two players or test clients, activate a block while its placer is offline. Remove the block, restart, and check that the placer receives credit on return. Revoke the advancement and restart again to check that consumed credit is not delivered twice.
-- On a dedicated server, set `pause-when-empty-seconds=0`. Check that the remote counter advances after everyone disconnects and after a server restart before anyone joins. Ankerstone does not override whole-server pausing.
-
-### Client and Installed-JAR Checks
-
-Test the built mod JAR, not the sources JAR, in a separate Minecraft instance.
-
-- Check all blocks and variants, the four advancements, the tab background, and the Wide activation icon. The ordinary inventory item should remain Off.
-- In Survival, check crafting and stonecutting outputs. In a fresh world, check that lapis unlocks Stillstone, Stillstone unlocks Reinforced Stillstone, and Reinforced Stillstone unlocks Ankerstone. Base blocks should unlock their variant recipes.
-- Check Single and Wide sticky retraction with anchor power removed first and piston power removed first in the same tick. Compare the visible blocks with server block checks before touching the fixture or reloading.
-- Check materials in daylight and darkness with shaders off, then with LabPBR and POM on and off. Include slabs, stairs, walls, and views from different angles.
-- Check the bundled POM compatibility pack with the standalone test pack disabled. It should start disabled. With LabPBR shaders, enabling it should keep Wide's recessed glow aligned. Disable it when checking vanilla glow.
+1. **Blocks and advancement display:** Check every block and variant in-world and in inventory, the four advancements, their tab background, and Wide's activation icon. The ordinary inventory item should look Off.
+2. **Survival menus:** Obtain the unlock ingredients, check the nine crafting and six stonecutter recipes appear, and craft an output in each menu. Confirm previews and received items agree.
+3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off and with LabPBR alone. Shader appearance and GPU-specific behavior remain manual.
+4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off Ankerstone returns, and no ghost blocks remain before reloading.
+5. **Single-player reopening:** Use the remote platform to enable Single, Wide, and Off. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. This checks the integrated-server lifecycle.
+6. **Mod Menu:** Use mod menu settings screen to verify slider ranges and tooltips,  `Done` vs `Escape`, persistence after relaunch, and uses settings without Mod Menu.
+7. **Sound check:** Switch an Ankerstone from Off → Single → Wide → Single → Off. Listen for the matching cue at each transition.
 
 ### Admin Commands
 
