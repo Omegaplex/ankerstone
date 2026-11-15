@@ -6,6 +6,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -90,6 +91,11 @@ public class AnkerstoneBlock extends Block {
             level.setBlock(pos, state.setValue(MODE, mode),
                     Block.UPDATE_CLIENTS | Block.UPDATE_SKIP_ON_PLACE);
             level.updateNeighbourForOutputSignal(pos, state.getBlock());
+        }
+
+        var sound = ModSounds.forTransition(oldMode, mode);
+        if (sound != null) {
+            serverLevel.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
         if (oldMode == AnkerstoneMode.OFF && mode != AnkerstoneMode.OFF) {

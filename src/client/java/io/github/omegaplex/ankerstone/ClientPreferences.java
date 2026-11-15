@@ -6,10 +6,12 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Properties;
 
-record ClientPreferences(int singleParticles, int wideParticles) {
+record ClientPreferences(
+        int singleParticles, int wideParticles,
+        boolean stillstoneSounds, boolean ankerstoneSounds) {
     static final int MAX_SINGLE = 4;
     static final int MAX_WIDE = 8;
-    static final ClientPreferences DEFAULTS = new ClientPreferences(1, 4);
+    static final ClientPreferences DEFAULTS = new ClientPreferences(1, 4, true, true);
 
     ClientPreferences {
         singleParticles = Math.clamp(singleParticles, 0, MAX_SINGLE);
@@ -28,7 +30,9 @@ record ClientPreferences(int singleParticles, int wideParticles) {
                 properties.getProperty("showParticles", "true").trim());
         return new ClientPreferences(
                 readCount(properties, "singleParticles", wasEnabled ? 1 : 0),
-                readCount(properties, "wideParticles", wasEnabled ? 4 : 0));
+                readCount(properties, "wideParticles", wasEnabled ? 4 : 0),
+                !"false".equalsIgnoreCase(properties.getProperty("stillstoneSounds", "true").trim()),
+                !"false".equalsIgnoreCase(properties.getProperty("ankerstoneSounds", "true").trim()));
     }
 
     private static int readCount(Properties properties, String key, int fallback) {
@@ -44,6 +48,8 @@ record ClientPreferences(int singleParticles, int wideParticles) {
         var properties = new Properties();
         properties.setProperty("singleParticles", Integer.toString(singleParticles));
         properties.setProperty("wideParticles", Integer.toString(wideParticles));
+        properties.setProperty("stillstoneSounds", Boolean.toString(stillstoneSounds));
+        properties.setProperty("ankerstoneSounds", Boolean.toString(ankerstoneSounds));
 
         Files.createDirectories(file.toAbsolutePath().getParent());
         try (var writer = Files.newBufferedWriter(file)) {

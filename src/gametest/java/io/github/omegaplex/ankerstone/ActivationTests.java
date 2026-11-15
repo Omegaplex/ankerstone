@@ -488,4 +488,28 @@ public class ActivationTests {
                 stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
         }
 
+        @GameTest
+        public void transitionSoundsMatchModeChanges(GameTestHelper helper) {
+                var off = AnkerstoneMode.OFF;
+                var single = AnkerstoneMode.SINGLE;
+                var wide = AnkerstoneMode.WIDE;
+
+                helper.assertTrue(ModSounds.forTransition(off, single) == ModSounds.ACTIVATE,
+                                "Off to Single must use the Single cue");
+                helper.assertTrue(ModSounds.forTransition(off, wide) == ModSounds.ACTIVATE_WIDE
+                                && ModSounds.forTransition(single, wide) == ModSounds.ACTIVATE_WIDE,
+                                "Entering Wide must use the Wide cue");
+                helper.assertTrue(ModSounds.forTransition(wide, single) == ModSounds.WIDE_TO_SINGLE,
+                                "Wide to Single must use the downgrade cue");
+                helper.assertTrue(ModSounds.forTransition(single, off) == ModSounds.DEACTIVATE
+                                && ModSounds.forTransition(wide, off) == ModSounds.DEACTIVATE,
+                                "Leaving either active mode must use the Off cue");
+
+                for (var mode : AnkerstoneMode.values()) {
+                        helper.assertTrue(ModSounds.forTransition(mode, mode) == null,
+                                        "An unchanged mode must not select a sound: " + mode);
+                }
+                helper.succeed();
+        }
+
 }

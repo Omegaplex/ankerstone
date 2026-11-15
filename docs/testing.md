@@ -55,10 +55,12 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 Use the exact release JAR in a separate Minecraft instance and disposable worlds. Run this checklist before releasing a new Minecraft port; after smaller changes, repeat affected checks. The server mechanics listed under **Automated Coverage** do not need a full manual rerun.
 
 1. **Blocks and advancement display:** Check every block and variant in-world and in inventory, the four advancements, their tab background, and Wide's activation icon. The ordinary inventory item should look Off.
-2. **Survival menus:** Obtain the unlock ingredients, check the nine crafting and six stonecutter recipes appear, and craft an output in each menu. Confirm previews and received items agree. Recipe definitions, counts, and unlock rules are already automated; this checks the installed client's menus.
-3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off, with LabPBR alone, and with LabPBR plus POM. Confirm the bundled pack's icon and that enabling it aligns Wide's recessed glow; disable it again and check the non-shader glow. Shader appearance and GPU-specific behavior remain manual.
-4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off anchor returns, and no ghost blocks remain before reloading. Server movement and ticket behavior are already automated.
-5. **Single-player reopening:** Leave Single/Wide/Off counter fixtures outside the player's ticking area. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. Disk persistence and server restart behavior are already automated; this checks the integrated-server lifecycle.
+2. **Survival menus:** Obtain the unlock ingredients, check the nine crafting and six stonecutter recipes appear, and craft an output in each menu. Confirm previews and received items agree.
+3. **Materials and shaders:** Check shapes in daylight and darkness with shaders off and with LabPBR alone. Shader appearance and GPU-specific behavior remain manual.
+4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off Ankerstone returns, and no ghost blocks remain before reloading.
+5. **Single-player reopening:** Use the remote platform to enable Single, Wide, and Off. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. This checks the integrated-server lifecycle.
+6. **Mod Menu:** Use mod menu settings screen to verify slider ranges and tooltips,  `Done` vs `Escape`, persistence after relaunch, and uses settings without Mod Menu.
+7. **Sound check:** Switch an Ankerstone from Off → Single → Wide → Single → Off. Listen for the matching cue at each transition.
 
 ### Admin Commands
 
