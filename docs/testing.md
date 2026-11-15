@@ -61,6 +61,7 @@ Servers bind only to localhost on an assigned port, disable empty-server pausing
 4. **Piston rendering:** Run Single and Wide with both same-tick power-removal orders in the lab. Check the piston retracts, the Off Ankerstone returns, and no ghost blocks remain before reloading.
 5. **Single-player reopening:** Use the remote platform to enable Single, Wide, and Off. Save and return to title, reopen, then repeat after fully closing the client. Confirm active counters resume and Off stays stopped. This checks the integrated-server lifecycle.
 6. **Mod Menu:** Use mod menu settings screen to verify slider ranges and tooltips,  `Done` vs `Escape`, persistence after relaunch, and uses settings without Mod Menu.
+7. **Sound check:** Switch an Ankerstone from Off → Single → Wide → Single → Off. Listen for the matching cue at each transition.
 
 ### Admin Commands
 
@@ -89,6 +90,7 @@ After automated and manual testing, the final release JARs were loaded into a te
 
 ## Development (`main`, Minecraft 26.3)
 
+- **2026-11-15:** 188 GameTests passed.  Added 4 sounds for Ankerstone:  single, wide, wide-to-single, and off.
 - **2026-11-07:** All 187 GameTests and three restart phases passed locally and in CI. In-game checks confirmed that only active Ankerstones appeared, clickable visits required Spectator mode, old links were rejected, and a Nether visit worked.
 - **2026-10-31:** All 171 GameTests and three restart phases passed in the full build. In-game limit checks passed: blocked activation, Single/Wide changes, lowering the limit without disabling active blocks, and restoring unlimited activation.
 - **2026-10-31:** All 145 GameTests and three restart phases passed. Release fixtures run in separate environment batches, and both validation-budget tests establish readiness before measuring calls.

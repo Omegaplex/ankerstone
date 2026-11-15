@@ -3,6 +3,7 @@ package io.github.omegaplex.ankerstone;
 import java.io.IOException;
 
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
@@ -10,12 +11,14 @@ import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-final class AnkerstoneSettingsScreen extends Screen {
+final class SettingsScreen extends Screen {
     private final Screen parent;
     private ParticleCountSlider singleSlider;
     private ParticleCountSlider wideSlider;
+    private CycleButton<Boolean> stillstoneSounds;
+    private CycleButton<Boolean> ankerstoneSounds;
 
-    AnkerstoneSettingsScreen(Screen parent) {
+    SettingsScreen(Screen parent) {
         super(Component.literal("Ankerstone Settings"));
         this.parent = parent;
     }
@@ -34,9 +37,22 @@ final class AnkerstoneSettingsScreen extends Screen {
                 "Default: " + ClientPreferences.DEFAULTS.singleParticles())));
         wideSlider.setTooltip(Tooltip.create(Component.literal(
                 "Default: " + ClientPreferences.DEFAULTS.wideParticles())));
+        boolean stillstoneEnabled = stillstoneSounds == null
+                ? saved.stillstoneSounds()
+                : stillstoneSounds.getValue();
+        boolean ankerstoneEnabled = ankerstoneSounds == null
+                ? saved.ankerstoneSounds()
+                : ankerstoneSounds.getValue();
+
+        stillstoneSounds = CycleButton.onOffBuilder(stillstoneEnabled)
+                .create(0, 0, 200, 20, Component.literal("Stillstone Sounds"));
+        ankerstoneSounds = CycleButton.onOffBuilder(ankerstoneEnabled)
+                .create(0, 0, 200, 20, Component.literal("Ankerstone Sounds"));
         var controls = LinearLayout.vertical().spacing(8);
         controls.addChild(singleSlider);
         controls.addChild(wideSlider);
+        controls.addChild(stillstoneSounds);
+        controls.addChild(ankerstoneSounds);
 
         var layout = new HeaderAndFooterLayout(this);
         layout.addTitleHeader(title, font);
@@ -51,7 +67,9 @@ final class AnkerstoneSettingsScreen extends Screen {
 
     private void saveAndClose() {
         try {
-            ClientSettings.save(new ClientPreferences(singleSlider.count(), wideSlider.count()));
+            ClientSettings.save(new ClientPreferences(
+                    singleSlider.count(), wideSlider.count(),
+                    stillstoneSounds.getValue(), ankerstoneSounds.getValue()));
             onClose();
         } catch (IOException failure) {
             Ankerstone.LOGGER.warn("Could not save Ankerstone client preferences", failure);

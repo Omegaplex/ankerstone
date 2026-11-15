@@ -38,4 +38,8 @@ public class ClientSettings implements ClientModInitializer {
                 preferences.singleParticles(), preferences.wideParticles());
 
     }
+
+    public static boolean ankerstoneSoundsEnabled() {
+        return preferences.ankerstoneSounds();
+    }
 }
