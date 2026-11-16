@@ -90,8 +90,9 @@ After automated and manual testing, the final release JARs were loaded into a te
 
 ## Development (`main`, Minecraft 26.3)
 
+- **2026-11-15:** 26.3 multiplayer sound check: Two clients heard the same Ankerstone transitions with opposite sound settings. All four cues played only on the enabled client. Swapping the settings took effect without reconnecting.
 - **2026-11-15:** 188 GameTests passed.  Added 4 sounds for Ankerstone:  single, wide, wide-to-single, and off.
-- **2026-11-07:** All 187 GameTests and three restart phases passed locally and in CI. In-game checks confirmed that only active Ankerstones appeared, clickable visits required Spectator mode, old links were rejected, and a Nether visit worked.
+- *-2026-11-07:** All 187 GameTests and three restart phases passed locally and in CI. In-game checks confirmed that only active Ankerstones appeared, clickable visits required Spectator mode, old links were rejected, and a Nether visit worked.
 - **2026-10-31:** All 171 GameTests and three restart phases passed in the full build. In-game limit checks passed: blocked activation, Single/Wide changes, lowering the limit without disabling active blocks, and restoring unlimited activation.
 - **2026-10-31:** All 145 GameTests and three restart phases passed. Release fixtures run in separate environment batches, and both validation-budget tests establish readiness before measuring calls.
 - **2026-10-30:** All 136 GameTests passed after updating asynchronous checks to use real-time deadlines. Console progress bars are suppressed; full logs and the final pass/fail summary remain available.

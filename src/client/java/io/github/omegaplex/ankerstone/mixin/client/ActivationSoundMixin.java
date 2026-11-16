@@ -15,7 +15,7 @@ abstract class ActivationSoundMixin {
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
     private void ankerstone$filterActivation(
             SoundInstance sound, CallbackInfoReturnable<SoundEngine.PlayResult> callback) {
-        if (ModSounds.ACTIVATE_ID.equals(sound.getIdentifier())
+        if (ModSounds.isTransitionSound(sound.getIdentifier())
                 && !ClientSettings.ankerstoneSoundsEnabled()) {
             callback.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
         }
