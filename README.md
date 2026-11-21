@@ -38,6 +38,12 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 | A paused or closed world/server | Does not run. |
 </details>
 
+## 📜 A Little Lore
+
+Ankerstone brings together discoveries made by disparate civilizations over a long history. The spawner builders harnessed dimensional flux through iron, the ancient city builders explored its control through redstone, and enchanting scholars created Stillstone to resist it. Together, these scattered discoveries made something new possible: a way to hold the surrounding world active, even when no one remains.
+
+[Read the full lore](https://github.com/Omegaplex/ankerstone/blob/main/docs/lore.md).
+
 ## 🧱 Building With Stillstone
 
 - Stillstone and Reinforced Stillstone each include full blocks, slabs, stairs, and walls.
@@ -56,7 +62,7 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 - Full blocks can also be cut into those shapes with a stonecutter.
 
 <details>
-<summary> Stillstone </Summary>
+<summary>Stillstone</summary>
 <img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Stillstone.png" alt="Stillstone crafting recipe." width="85%">
 </details>
 
@@ -70,24 +76,45 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 <img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/CraftingRecipe-Ankerstone.png" alt="Ankerstone crafting recipe." width="85%">
 </details>
 
+<details>
+<summary>Recipes in text</summary>
 
 | Result | Ingredients and Arrangement | Output |
 |---|---|---|
 | Stillstone | Five cobbled deepslate and four lapis lazuli in a checkerboard, with deepslate in the corners and center | 5 |
 | Reinforced Stillstone | One Stillstone surrounded by eight iron nuggets | 1 |
 | Ankerstone | Four Reinforced Stillstone in the corners, four redstone dust along the sides, and an ender pearl in the center | 1 |
+</details>
 
-## 📜 A Little Lore
-
-Ankerstone brings together discoveries made by disparate civilizations over a long history. The spawner builders harnessed dimensional flux through iron, the ancient city builders explored its control through redstone, and enchanting scholars created Stillstone to resist it. Together, these scattered discoveries made something new possible: a way to hold the surrounding world active, even when no one remains.
-
-[Read the full lore](https://github.com/Omegaplex/ankerstone/blob/main/docs/lore.md).
-
-### Advancements
+## Advancements
 
 Ankerstone has its own advancement tab. Activation credit goes to the player who placed the block, even if someone else powers it. If the placer is offline, they receive credit when they return.
 
 Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/advancements.md) for more.
+
+## 🔉 Sounds
+
+- Stillstone, Reinforced Stillstone, and Ankerstone have modified footsteps.
+- Ankerstone has custom **single activation**, **wide activation**, **wide to single**, and **deactivation** sounds.
+- On servers, sound options are respected per player.
+
+## ⚙️ Client Settings
+
+With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
+
+Adjust particle counts and toggle Stillstone and Ankerstone sounds independently. These settings affect only your client. Press **Done** to save or **Escape** to cancel. Saved settings still work without Mod Menu.
+
+<details>
+<summary><b>Mod Settings</b></summary>
+
+<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/mod_settings.png" alt="ModMenu settings screen for Ankerstone Mod" width="85%">
+
+</details>
+
+## ✨ Shaders
+
+- Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
+- LabPBR material maps are included for compatible shaders. No additional PBR resource pack required.
 
 ## 📦 Requirements
 
@@ -97,20 +124,9 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 | 26.2 | 0.20.1 | 0.161.0 for 26.2 |
 | 26.3 | 0.20.1 | 0.165.0 for 26.3 |
 
-- All three releases require Java 25 or later.
+- All releases require Java 25 or later.
 - For multiplayer, install Ankerstone and Fabric API on both the client and server.
 - On dedicated servers, set `pause-when-empty-seconds=0` in `server.properties` if Ankerstones should keep ticking with nobody connected. **Ankerstone does not override whole-server pausing**.
-
-## ✨ Shaders
-
-- Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
-- LabPBR material maps are included for compatible shaders. No additional PBR resource pack required.
-
-## 🔉 Sounds
-
-- All blocks have modified walking sounds.
-- Ankerstone has custom `single activation`, `wide activation`, `wide to single`, and `deactivation` sounds.
-- On servers, sound options are respected per player.
 
 ## 🔧 Server Administration
 
@@ -128,16 +144,6 @@ The limit is saved with the world. Each active Ankerstone counts once, whether S
 
 Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
 
-## ⚙️ Client Settings
-
-With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
-<details>
-<summary><b>Mod Settings</b></summary>
-<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/mod_settings.png" alt="ModMenu settings screen for Ankerstone Mod" width="85%">
-</details><br>
-
-Press **Done** to save or **Escape** to cancel. Saved settings still work without Mod Menu.
-
 ## 🛠️ Development
 
 See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md) for automated server coverage and the manual client checklist.
@@ -149,8 +155,8 @@ See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md)
 ## ⚖️ License
 
 - Code: [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
-- Original textures and artwork: [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-- See [NOTICE](https://github.com/Omegaplex/ankerstone/blob/main/NOTICE) for artwork credits and license scope.
+- Original textures, artwork, and sounds: [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- See [NOTICE](https://github.com/Omegaplex/ankerstone/blob/main/NOTICE) for asset credits and license scope.
 
 ## 🤖 Development Disclosure
 
