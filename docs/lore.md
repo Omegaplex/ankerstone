@@ -1,32 +1,51 @@
-# Ankerstone Lore
+# <img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/Ankerstone_Pulse.gif" alt="Ankerstone cycling through Off, Single, and Wide modes" width="24" height="24"> Ankerstone Lore
 
 ## Dimensional Flux
 
-The boundaries between places are not always firm. Creatures can be drawn through them, pearls can carry someone across them, and a piece of the world can slip beyond reach. This movement is known as dimensional flux.
+The boundaries between places are not always firm. Creatures can be drawn through them, pearls can carry a traveler across them, and pieces of the world can fade entirely beyond perception. This movement is known as dimensional flux.
 
-The builders of dungeon spawners learned to force creatures through from elsewhere. Iron cages and carefully arranged structures made the process repeatable. They had found a use for dimensional energy before they understood what they were handling.
+## A History Written in Stone
 
-The ancient city builders recognized the danger. Their sculk networks listened for disturbances, and their defenses reflected a civilization trying to detect and survive the forces around it. Whether they knew of the spawner builders, or had encountered the same danger on their own, remains uncertain.
+No one civilization invented the Ankerstone. Different peoples, separated by centuries, discovered different properties of the same hidden current. Each found something useful. None understood the whole.
 
-Others approached the phenomenon through study. Lapis lazuli, already used to focus enchantments, offered a way to work with dimensional energy more carefully. Fragments of that knowledge eventually led to stillstone.
+Only recently have those scattered discoveries been brought together.
+
+### The Spawner Builders
+
+The spawner builders learned to harness dimensional flux through iron.
+
+Their devices remain in dungeons and fortresses, drawing creatures through dimensional openings held within carefully shaped iron cages. Long after their builders vanished, the cages continue to draw creatures through, making the chambers around them dangerous to explore.
+
+They had learned how to force something through. Whether they understood where the creatures came from, or what sustained the openings, has been lost with them.
+
+### The Ancient City Builders
+
+The ancient city builders sought to understand the dimensional energies at work within portals.
+
+Beneath the great frame at the city's center, chambers housed experiments in redstone. There they studied how power could be measured, directed, and controlled. The frame above was an attempt to apply those discoveries to a dimensional opening.
+
+Their contribution was control. Rather than simply forcing something through, they sought to regulate the opening itself: when it formed, how far it extended, and when it closed.
+
+Whether they succeeded is unknown. The builders are gone, and sculk has spread through the chambers where they worked. Their understanding of redstone and dimensional energy survived only in fragments, waiting to be brought together with discoveries made elsewhere.
+
+### The Enchanting Tradition
+
+Scholars of enchanting sought to understand the dimensional energy they already knew how to use.
+
+Lapis lazuli became the focus of their work. Its role in enchanting suggested that it could change how other materials responded to that energy. Through careful experiments with deepslate, they found a way to make the stone resist dimensional flux.
+
+The result was Stillstone. Footsteps fell softly against its surface, as though the stone kept some part of the sound within itself. Where earlier discoveries had opened a way through, theirs offered a way to hold the boundary firm.
 
 ## Stillstone
 
-Cobbled deepslate altered with lapis resists dimensional flux. The lapis does not burn away as fuel. It focuses the material's resistance, giving the stone its unusual stillness.
+Altering cobbled deepslate with lapis creates stillstone, an unnatural material that resists dimensional flux. Stillstone is inert to redstone power.
 
-Stillstone is not a natural material. On its own it is passive, useful for building but unable to channel redstone power. Binding it with iron restores that ability. Reinforced stillstone can contain forces that the unbound material cannot.
+Reinforced stillstone is bound with iron to make it responsive to redstone.
 
 ## Ankerstone
 
-An ender pearl tends toward movement between places. Reinforced stillstone contains that tendency, while redstone controls the finished mechanism and the reach of its effect.
+An ender pearl is a direct conduit of dimensional flux. Reinforced stillstone contains that power, while redstone compressed into gem form focuses it into a controllable field. When externally powered by redstone, the Ankerstone extends that field in all directions, binding the surrounding area to itself.
 
-## Advancements
+---
 
-| Name | Description |
-|---|---|
-| A Strange Stillness | Craft stillstone from deepslate and lapis. |
-| Iron Resolve | Strengthen stillstone with iron. |
-| Pearl of an Idea | Give an ender pearl a reason to stay put. |
-| Stay a While | Keep a piece of the world from slipping away. |
-
-See [Advancements](advancements.md) for unlock conditions and player credit.
+See [Advancements](https://github.com/Omegaplex/ankerstone/blob/main/docs/advancements.md) for unlock conditions and player credit.
