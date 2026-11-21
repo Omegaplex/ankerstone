@@ -12,31 +12,29 @@ Only recently have those scattered discoveries been brought together.
 
 ### The Spawner Builders
 
-They came first, and they came with iron.
+The spawner builders learned to harness dimensional flux through iron.
 
-Scattered across the world in crude dungeons and fortresses, these builders discovered something fundamental: dimensional flux could be harnessed. Iron wrought with exact geometry could warp this energy and bring something through from the other side. Weaponized. Repeatable. Useful — in the way that a trap is useful.
+Their devices remain in dungeons and fortresses, drawing creatures through dimensional openings held within carefully shaped iron cages. Long after their builders vanished, the cages continue to draw creatures through, making the chambers around them dangerous to explore.
 
-They did not fully understand what they were doing. They did not need to. It worked, and that was enough. They had learned how to force something through. What followed was beyond their understanding.
+They had learned how to force something through. Whether they understood where the creatures came from, or what sustained the openings, has been lost with them.
 
 ### The Ancient City Builders
 
-They came later, and they came with something the dungeon builders never had: the wisdom to be afraid.
+The ancient city builders sought to understand the dimensional energies at work within portals.
 
-The ancient cities are built deep, dark, and defensively, by a civilization that understood dimensional energy well enough to quarantine it. They were responding, in their own way, to what the spawner builders had set loose.
+Beneath the great frame at the city's center, chambers housed experiments in redstone. There they studied how power could be measured, directed, and controlled. The frame above was an attempt to apply those discoveries to a dimensional opening.
 
-The City Builders cultivated sculk into a vast sensing network. It carried warnings through the city, revealing disturbances beyond sight. They used what it told them to guard their borders and turn their attention inward.
+Their contribution was control. Rather than simply forcing something through, they sought to regulate the opening itself: when it formed, how far it extended, and when it closed.
 
-Long after its keepers vanished, the network continued to grow. What remains still listens, though the purpose that once governed it has been lost.
-
-They did not solve the problem. But they were the first to admit there was one.
+Whether they succeeded is unknown. The builders are gone, and sculk has spread through the chambers where they worked. Their understanding of redstone and dimensional energy survived only in fragments, waiting to be brought together with discoveries made elsewhere.
 
 ### The Enchanting Tradition
 
-Elsewhere, in another age, dimensional flux became a subject of patient study. These scholars approached it through enchanting, seeking to understand the energy they already knew how to use.
+Scholars of enchanting sought to understand the dimensional energy they already knew how to use.
 
-Lapis lazuli became the focus of their work. Its role in enchanting suggested an affinity for directing and transferring that energy. Through careful experiments, they began to understand how that affinity could alter other materials.
+Lapis lazuli became the focus of their work. Its role in enchanting suggested that it could change how other materials responded to that energy. Through careful experiments with deepslate, they found a way to make the stone resist dimensional flux.
 
-Their discoveries were another part of the answer. Only when these discoveries were brought together with the properties of iron and deepslate did Ankerstone become possible.
+The result was Stillstone. Footsteps fell softly against its surface, as though the stone kept some part of the sound within itself. Where earlier discoveries had opened a way through, theirs offered a way to hold the boundary firm.
 
 ## Stillstone
 

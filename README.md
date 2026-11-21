@@ -6,19 +6,25 @@ An immersive, vanilla-friendly Fabric mod featuring a redstone-controlled chunk 
 
 Place an Ankerstone and supply redstone power to keep chunks ticking without a player nearby. Ankerstone uses Minecraft's normal chunk-ticket system, not a simulated player.
 
-| Mode | Redstone Input | Entity-Ticking Coverage | Comparator Output | Piston Movable |
-|---|---|---|---|---|
-| Off | 0 | None | 0 | Yes |
-| Single | 1–14 | 1 chunk | 7 | No |
-| Wide | 15 | 3×3 chunks | 15 | No |
-
 Single keeps the chunk containing the Ankerstone entity-ticking. Wide keeps a 3×3 area entity-ticking, centered on that chunk, matching a portal chunk loader's entity-ticking coverage. Vanilla chunk loading also maintains supporting outer rings beyond these areas.
 
 Both modes work in the Overworld, Nether, and End, but affect only the dimension where the Ankerstone is placed. Loading chunks in another dimension requires a separate Ankerstone there.
 
 Turning off the power releases the chunks. Active Ankerstones resume chunk loading automatically after a server restart.
 
-### Vanilla Ticking Rules
+<details>
+<summary><b>Redstone Interactions</b></summary>
+
+| Mode | Redstone Input | Entity-Ticking Coverage | Comparator Output | Piston Movable |
+|---|---|---|---|---|
+| Off | 0 | None | 0 | Yes |
+| Single | 1–14 | 1 chunk | 7 | No |
+| Wide | 15 | 3×3 chunks | 15 | No |
+
+</details>
+
+<details>
+<summary><b> Vanilla Ticking Rules </b></summary>
 
 **Note:** Keeping chunks ticking does not satisfy mechanics that explicitly require a nearby player:
 
@@ -30,6 +36,7 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 | Standard monster spawners | Still require a nearby player to activate. Loading the chunk alone is not enough. |
 | Crops and other random-tick mechanics | Follow the target Minecraft version's vanilla random-tick rules. Ankerstone adds no separate growth system. |
 | A paused or closed world/server | Does not run. |
+</details>
 
 ## 🧱 Building With Stillstone
 
@@ -72,9 +79,9 @@ Turning off the power releases the chunks. Active Ankerstones resume chunk loadi
 
 ## 📜 A Little Lore
 
-Stillstone is deepslate altered with lapis to resist dimensional flux. Ironwork turns that resistance into a structure capable of containing the dimensional energies of an ender pearl. Redstone controls the finished Ankerstone.
+Ankerstone brings together discoveries made by disparate civilizations over a long history. The spawner builders harnessed dimensional flux through iron, the ancient city builders explored its control through redstone, and enchanting scholars created Stillstone to resist it. Together, these scattered discoveries made something new possible: a way to hold the surrounding world active, even when no one remains.
 
-Read the full [Lore](https://github.com/Omegaplex/ankerstone/blob/main/docs/lore.md).
+[Read the full lore](https://github.com/Omegaplex/ankerstone/blob/main/docs/lore.md).
 
 ### Advancements
 
@@ -99,7 +106,13 @@ Read [Advancement Notes](https://github.com/Omegaplex/ankerstone/blob/main/docs/
 - Tested with [Iris Shaders](https://modrinth.com/mod/iris) and [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined).
 - LabPBR material maps are included for compatible shaders. No additional PBR resource pack required.
 
-## 🔧 Server Administration (1.1.0+)
+## 🔉 Sounds
+
+- All blocks have modified walking sounds.
+- Ankerstone has custom `single activation`, `wide activation`, `wide to single`, and `deactivation` sounds.
+- On servers, sound options are respected per player.
+
+## 🔧 Server Administration
 
 These commands require operator permission level 4. The server console can list Ankerstones and manage the limit.
 
@@ -115,13 +128,15 @@ The limit is saved with the world. Each active Ankerstone counts once, whether S
 
 Listing does not load chunks. In Spectator mode, click an entry to visit it. Lists expire after five minutes; running `/ankerstone list` again replaces the old list and invalidates its links.
 
-## ⚙️ Client Settings (1.2.0+)
+## ⚙️ Client Settings
 
-- With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
-- **Single particles:** 0–4, default 1. **Wide particles:** 0–8, default 4. Set either to 0 to turn its particles off. Hover over a slider to see its default.
-- Press **Done** to save or **Escape** to cancel.
+With Mod Menu installed, go to **Mods → Ankerstone → Configure**.
+<details>
+<summary><b>Mod Settings</b></summary>
+<img src="https://raw.githubusercontent.com/Omegaplex/ankerstone/main/docs/images/mod_settings.png" alt="ModMenu settings screen for Ankerstone Mod" width="85%">
+</details><br>
 
-These settings only affect the particles you see. They don’t change chunk loading, and saved settings still work without Mod Menu.
+Press **Done** to save or **Escape** to cancel. Saved settings still work without Mod Menu.
 
 ## 🛠️ Development
 
@@ -129,7 +144,6 @@ See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md)
 
 ### Upcoming Features
 
-- **Sounds:** custom block sounds and Ankerstone activation sounds.
 - **Ankerstone Containment Failure:** When an active Ankerstone is destroyed by an explosion, its contained energy is released, triggering a secondary explosion.
 
 ## ⚖️ License
