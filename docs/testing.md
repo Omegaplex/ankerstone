@@ -92,6 +92,7 @@ Results apply only to the version and artifact tested. Repeat affected checks af
 
 ### Minecraft 26.2
 
+-**Test lab, 20226-11-21:** New sound setting checks passed. Mod Menu animated header works.
 - **Test lab, 2026-10-27:** All five manual checks above passed, including shader/POM appearance, both piston removal orders, and Off/Single/Wide counters after title-screen reopening and full client restarts. The lab save was upgraded from 26.1.2 to 26.2 and backed up after testing.
 - **Automated, 2026-10-27:** Full local build passed all 125 GameTests and all three restart phases after removing client automation. CI passed the earlier 113-test suite on 2026-10-23; the expanded suite still needs CI confirmation.
 - **Manual, 2026-10-23:** Installed-client block, variant, recipe, and advancement display; Off/Single/Wide full-client restart counters; POM pack icon/default state; non-shader Single/Wide appearance and compatible POM glow alignment passed.
