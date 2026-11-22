@@ -88,6 +88,7 @@ These results apply to the versions and arrangements tested. Repeat the affected
 
 | Date | Passed Checks |
 |---|---|
+| 2026-11-21 | Sounds, and mod menu support. |
 | 2026-10-06 | Off, Single, and Wide center-chunk restart checks on Minecraft 26.1.2 |
 | 2026-10-07 to 2026-10-09 | Survival crafting, stonecutting, output counts, and fresh-world recipe-book unlocks |
 | 2026-10-10 | Advancement display and credit; ordinary and piston-moved placements across restarts; offline credit after block removal; no repeat delivery |
