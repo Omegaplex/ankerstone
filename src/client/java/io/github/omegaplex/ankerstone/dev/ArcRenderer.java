@@ -1,0 +1,258 @@
+package io.github.omegaplex.ankerstone.dev;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.SplittableRandom;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.AABB;
+import io.github.omegaplex.ankerstone.AnkerstoneBlock;
+
+/**
+ * Development renderer for independently cached gem and recess paths.
+ */
+final class ArcRenderer {
+    private static final RenderStateDataKey<List<DrawPath>> PATHS = RenderStateDataKey
+            .create(() -> "ankerstone prototype paths");
+
+    // Gem Y occupies model [7,0,7]..[9,16,9]. Inset endpoints and a 0.01-model-unit
+    // lift avoid the shared edge and coplanar depth fighting without bypassing
+    // occlusion.
+    private static final List<ArcEdge> TOP_GEM_EDGES = List.of(
+            topGemEdge(7.1F, 7.6F, 8.9F, 7.6F),
+            topGemEdge(7.6F, 7.1F, 7.6F, 8.9F),
+            topGemEdge(7.1F, 8.4F, 8.9F, 8.4F),
+            topGemEdge(8.4F, 7.1F, 8.4F, 8.9F));
+    private static final List<ArcSurface> GEM_SURFACES = TOP_GEM_EDGES.stream()
+            .map(edge -> new ArcSurface(edge, new ArcPoint(0, 1, 0), false)).toList();
+
+    private static ArcEdge topGemEdge(float x1, float z1, float x2, float z2) {
+        return new ArcEdge(
+                ArcPoint.fromModel(x1, 16.01F, z1),
+                ArcPoint.fromModel(x2, 16.01F, z2),
+                new ArcBounds(
+                        ArcPoint.fromModel(7.1F, 16.01F, 7.1F),
+                        ArcPoint.fromModel(8.9F, 16.01F, 8.9F)));
+    }
+
+    private ArcRenderer() {
+    }
+
+    static void initialize() {
+        LevelExtractionEvents.END_EXTRACTION.register(ArcRenderer::extract);
+        LevelRenderEvents.COLLECT_SUBMITS.register(ArcRenderer::submit);
+    }
+
+    private static void extract(LevelExtractionContext context) {
+        var instances = ArcPrototype.instances(context.level());
+        if (instances.isEmpty() || ArcOption.MAX_LINES.value() == 0) {
+            context.levelState().setData(PATHS, List.of());
+            return;
+        }
+        long now = System.nanoTime();
+        int count = ArcInstance.slotCount(ArcOption.INTENSITY.value(), (int) ArcOption.MAX_LINES.value());
+        var paths = new ArrayList<DrawPath>(instances.size() * count);
+        var entries = instances.entrySet().iterator();
+        while (entries.hasNext()) {
+            var entry = entries.next();
+            BlockPos position = entry.getKey();
+            if (!context.level().hasChunkAt(position)) {
+                continue;
+            }
+            if (!(context.level().getBlockState(position).getBlock() instanceof AnkerstoneBlock)) {
+                entries.remove();
+                continue;
+            }
+            var camera = context.levelState().cameraRenderState;
+            double x = position.getX() - camera.pos.x;
+            double y = position.getY() - camera.pos.y;
+            double z = position.getZ() - camera.pos.z;
+            if (x * x + y * y + z * z > 64 * 64
+                    || !camera.cullFrustum.isVisible(new AABB(position).inflate(0.4))) {
+                continue;
+            }
+            ArcInstance instance = entry.getValue();
+            for (int index = 0; index < count; index++) {
+                DrawPath path = extractPath(context, position, instance, instance.slot(index), now);
+                if (path != null) {
+                    paths.add(path);
+                }
+            }
+        }
+        context.levelState().setData(PATHS, List.copyOf(paths));
+    }
+
+    private static DrawPath extractPath(LevelExtractionContext context,
+            BlockPos position, ArcInstance instance, ArcSlot slot, long now) {
+        var camera = context.levelState().cameraRenderState;
+        double x = position.getX() - camera.pos.x;
+        double y = position.getY() - camera.pos.y;
+        double z = position.getZ() - camera.pos.z;
+        long elapsedMillis = (now - instance.startedNanos) / 1_000_000L;
+        var intensity = ArcIntensity.at(
+                ArcOption.INTENSITY.value(),
+                (int) ArcOption.SELECTION_MS.value(),
+                (int) ArcOption.REFRESH_MS.value(),
+                (int) ArcOption.QUIET_MS.value());
+        var timing = ArcTiming.at(
+                elapsedMillis,
+                intensity.selectionMillis(),
+                intensity.refreshMillis(),
+                (int) ArcOption.BURST_MS.value(),
+                intensity.quietMillis());
+
+        if (!ArcActivity.activeAt(
+                elapsedMillis,
+                (int) ArcOption.BURST_MS.value(),
+                intensity.quietMillis(),
+                slot.seed)) {
+            return null;
+        }
+        int region = (int) ArcOption.REGION.value();
+        var candidates = switch (region) {
+            case 1 -> ArcModelRegions.RECESS_SURFACES;
+            case 2 -> ArcModelRegions.MIXED;
+            default -> GEM_SURFACES;
+        };
+        if (slot.cachedSurface == null
+                || timing.selectionStep() != slot.cachedSelectionStep
+                || region != slot.cachedRegion) {
+            var selectionRandom = new SplittableRandom(slot.seed + timing.selectionStep());
+            int selected = selectionRandom.nextInt(candidates.size());
+            ArcSurface template = candidates.get(selected);
+            slot.cachedBend = null;
+            slot.cachedEdge = template.edge().randomized(selectionRandom);
+            slot.cachedSurface = new ArcSurface(slot.cachedEdge, template.outward(), template.recessed());
+            if (region == 2 && selectionRandom.nextDouble() < ArcOption.CONNECTION_CHANCE.value()) {
+                var routes = selectionRandom.nextDouble() < ArcOption.ROUTED_CHANCE.value()
+                        ? ArcModelRegions.ROUTED : ArcModelRegions.CONNECTIONS;
+                var connection = routes.get(selectionRandom.nextInt(routes.size()));
+                ArcSurface sampled = connection.sample(selectionRandom);
+                ArcPoint sampledBend = connection.sampleBend(selectionRandom);
+                if (length(sampled.edge(), sampledBend) <= ArcOption.MAX_LENGTH.value()) {
+                    slot.cachedSurface = sampled;
+                    slot.cachedEdge = sampled.edge();
+                    slot.cachedBend = sampledBend;
+                }
+            }
+        }
+        ArcEdge edge = slot.cachedEdge;
+        int segments = (int) ArcOption.SEGMENTS.value();
+        float jitter = (float) ArcOption.JITTER.value();
+        ArcSurface surface = slot.cachedSurface;
+        float lift = surface.recessed() ? 0 : (float) ArcOption.LIFT.value();
+
+        if (segments != slot.cachedSegments || jitter != slot.cachedJitter
+                || lift != slot.cachedLift
+                || timing.geometryStep() != slot.cachedGeometryStep
+                || timing.selectionStep() != slot.cachedSelectionStep
+                || region != slot.cachedRegion) {
+            ArcBounds bounds = surface.boundsForLift(lift, jitter);
+            ArcPoint normal = surface.outward();
+
+            var random = new Random(slot.seed + timing.geometryStep());
+            if (slot.cachedBend != null && segments >= 2) {
+                ArcPoint bend = slot.cachedBend;
+                var raisedBend = new ArcPoint(bend.x() + normal.x() * lift,
+                        bend.y() + normal.y() * lift, bend.z() + normal.z() * lift);
+                slot.cachedPoints = ArcPath.via(edge.start(), raisedBend, edge.end(),
+                        segments, jitter, bounds, random);
+            } else {
+                slot.cachedPoints = ArcPath.raised(
+                        edge.start(), edge.end(), segments, jitter,
+                        new ArcPoint(normal.x() * lift, normal.y() * lift, normal.z() * lift), bounds, random);
+            }
+
+            slot.cachedSegments = segments;
+            slot.cachedJitter = jitter;
+            slot.cachedLift = lift;
+            slot.cachedGeometryStep = timing.geometryStep();
+            slot.cachedSelectionStep = timing.selectionStep();
+            slot.cachedRegion = region;
+        }
+        if (length(edge, slot.cachedBend) > ArcOption.MAX_LENGTH.value()) {
+            return null;
+        }
+        float brightness = (float) ArcOption.BRIGHTNESS.value();
+        int color = 0xFF000000
+                | Math.round((float) ArcOption.RED.value() * brightness * 255) << 16
+                | Math.round((float) ArcOption.GREEN.value() * brightness * 255) << 8
+                | Math.round((float) ArcOption.BLUE.value() * brightness * 255);
+        float width = (float) ArcOption.WIDTH.value();
+        // Submitted arrays are replaced on refresh, never modified while a frame may
+        // still use them.
+        return new DrawPath(x, y, z, slot.cachedPoints, color, width);
+    }
+
+    private static double length(ArcEdge edge) {
+        double dx = edge.end().x() - edge.start().x();
+        double dy = edge.end().y() - edge.start().y();
+        double dz = edge.end().z() - edge.start().z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    private static double length(ArcEdge edge, ArcPoint bend) {
+        if (bend == null) {
+            return length(edge);
+        }
+        return distance(edge.start(), bend) + distance(bend, edge.end());
+    }
+
+    private static double distance(ArcPoint a, ArcPoint b) {
+        double dx = b.x() - a.x();
+        double dy = b.y() - a.y();
+        double dz = b.z() - a.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    private static void submit(LevelRenderContext context) {
+        List<DrawPath> paths = context.levelState().getData(PATHS);
+        if (paths == null || paths.isEmpty()) {
+            return;
+        }
+        var poses = context.poseStack();
+        for (DrawPath path : paths) {
+            poses.pushPose();
+            poses.translate(path.x(), path.y(), path.z());
+            context.submitNodeCollector().submitCustomGeometry(poses,
+                    RenderTypes.linesTranslucent(), path::draw);
+            poses.popPose();
+        }
+    }
+
+    private record DrawPath(double x, double y, double z,
+            ArcPoint[] points, int color, float width) {
+        private void draw(PoseStack.Pose pose, VertexConsumer vertices) {
+            for (int i = 1; i < points.length; i++) {
+                ArcPoint a = points[i - 1];
+                ArcPoint b = points[i];
+                float dx = b.x() - a.x();
+                float dy = b.y() - a.y();
+                float dz = b.z() - a.z();
+                float length = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (length == 0) {
+                    continue;
+                }
+                vertex(vertices, pose, a, dx / length, dy / length, dz / length);
+                vertex(vertices, pose, b, dx / length, dy / length, dz / length);
+            }
+        }
+
+        private void vertex(VertexConsumer vertices, PoseStack.Pose pose, ArcPoint point,
+                float nx, float ny, float nz) {
+            vertices.addVertex(pose, point.x(), point.y(), point.z())
+                    .setColor(color)
+                    .setNormal(pose, nx, ny, nz)
+                    .setLineWidth(width);
+        }
+    }
+}

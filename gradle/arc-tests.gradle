@@ -1,0 +1,21 @@
+sourceSets {
+    arcTest {
+        compileClasspath += sourceSets.client.output
+        runtimeClasspath += sourceSets.client.output
+    }
+}
+
+tasks.register('arcGeometryTest', JavaExec) {
+    group = 'verification'
+    description = 'Checks arc geometry without launching Minecraft.'
+    dependsOn tasks.named('arcTestClasses')
+    classpath = sourceSets.arcTest.runtimeClasspath
+    mainClass = 'io.github.omegaplex.ankerstone.dev.ArcGeometryChecks'
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('arcGeometryTest')
+}

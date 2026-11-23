@@ -21,6 +21,7 @@ public class ClientSettings implements ClientModInitializer {
                     "Could not load Ankerstone client preferences; using defaults", failure);
         }
         applyParticles();
+        io.github.omegaplex.ankerstone.dev.ArcPrototype.initialize();
     }
 
     static ClientPreferences preferences() {
