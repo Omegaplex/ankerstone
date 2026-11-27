@@ -13,6 +13,7 @@ public enum ArcOption {
     SEGMENTS(4, 1, 16, true),
     JITTER(0.015, 0, 0.25, false),
     LIFT(0.02, 0, 0.125, false),
+    // Maximum base route length in blocks, before jitter and outward lift.
     MAX_LENGTH(1.5, 0.01, 2, false),
     CONNECTION_CHANCE(0.125, 0, 1, false),
     ROUTED_CHANCE(0.5, 0, 1, false),
@@ -21,10 +22,6 @@ public enum ArcOption {
     RED(1, 0, 1, false),
     GREEN(1, 0, 1, false),
     BLUE(1, 0, 1, false),
-    RECESS_WEIGHT(1, 0, 10, false),
-    EXTERIOR_WEIGHT(1, 0, 10, false),
-    ROD_WEIGHT(1, 0, 10, false),
-    TRANSITION_WEIGHT(0, 0, 10, false),
     BURST_MS(300, 1, 10000, true),
     QUIET_MS(500, 0, 10000, true),
     REGION(2, 0, 2, true),

@@ -1,26 +1,17 @@
 package io.github.omegaplex.ankerstone.dev;
 
-public record ArcTiming(
-        long selectionStep, long geometryStep, boolean active) {
-
+public record ArcTiming(long selectionStep, long geometryStep) {
     public static ArcTiming at(
             long elapsedMillis,
-            int selectionMillis, int refreshMillis,
-            int burstMillis, int quietMillis) {
+            int selectionMillis, int refreshMillis) {
         if (elapsedMillis < 0
                 || selectionMillis <= 0
-                || refreshMillis <= 0
-                || burstMillis <= 0
-                || quietMillis < 0) {
+                || refreshMillis <= 0) {
             throw new IllegalArgumentException("Invalid arc timing");
         }
 
-        long cycleMillis = (long) burstMillis + quietMillis;
-        boolean active = elapsedMillis % cycleMillis < burstMillis;
-
         return new ArcTiming(
                 elapsedMillis / selectionMillis,
-                elapsedMillis / refreshMillis,
-                active);
+                elapsedMillis / refreshMillis);
     }
 }

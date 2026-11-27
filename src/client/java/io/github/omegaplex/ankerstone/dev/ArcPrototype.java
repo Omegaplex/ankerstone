@@ -18,13 +18,16 @@ import io.github.omegaplex.ankerstone.AnkerstoneBlock;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
-/** Development controls only; never changes blocks, redstone, or chunk tickets. */
+/**
+ * Development controls only; never changes blocks, redstone, or chunk tickets.
+ */
 public final class ArcPrototype {
     private static final int MAX_POSITIONS = 8;
     private static final Map<BlockPos, ArcInstance> INSTANCES = new LinkedHashMap<>();
     private static ClientLevel selectedLevel;
 
-    private ArcPrototype() { }
+    private ArcPrototype() {
+    }
 
     public static void initialize() {
         if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -56,6 +59,7 @@ public final class ArcPrototype {
                         for (var option : ArcOption.values()) {
                             option.reset();
                         }
+                        updateTiming(context.getSource().getLevel());
                         context.getSource().sendFeedback(Component.literal("Arc tuning reset to defaults."));
                         return 1;
                     }));
@@ -69,6 +73,7 @@ public final class ArcPrototype {
                                         context.getSource().sendError(Component.literal("Use a whole number."));
                                         return 0;
                                     }
+                                    updateTiming(context.getSource().getLevel());
                                     context.getSource().sendFeedback(Component.literal(
                                             option.commandName() + " = " + value));
                                     return 1;
@@ -76,6 +81,21 @@ public final class ArcPrototype {
             }
             dispatcher.register(root);
         });
+    }
+
+    private static void updateTiming(ClientLevel level) {
+        resetIfLevelChanged(level);
+        long now = System.nanoTime();
+        var intensity = ArcIntensity.at(
+                ArcOption.INTENSITY.value(),
+                (int) ArcOption.SELECTION_MS.value(),
+                (int) ArcOption.REFRESH_MS.value(),
+                (int) ArcOption.QUIET_MS.value());
+
+        for (var instance : INSTANCES.values()) {
+            instance.changeTimingAt(
+                    now, intensity, (int) ArcOption.BURST_MS.value());
+        }
     }
 
     private static int start(FabricClientCommandSource source) {
@@ -106,6 +126,7 @@ public final class ArcPrototype {
             clear();
             selectedLevel = level;
         }
+
     }
 
     static Map<BlockPos, ArcInstance> instances(ClientLevel level) {

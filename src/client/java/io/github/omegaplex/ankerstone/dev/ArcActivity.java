@@ -10,18 +10,30 @@ public final class ArcActivity {
         if (elapsedMillis < 0 || burstMillis <= 0 || quietMillis < 0) {
             throw new IllegalArgumentException("Invalid activity timing");
         }
+
+        long windowMillis = (long) burstMillis + quietMillis;
+        return activeInWindow(
+                elapsedMillis / windowMillis,
+                elapsedMillis % windowMillis,
+                burstMillis, quietMillis, seed);
+    }
+
+    static boolean activeInWindow(
+            long window, long position,
+            int burstMillis, int quietMillis, long seed) {
+        long windowMillis = (long) burstMillis + quietMillis;
+        if (window < 0 || position < 0
+                || burstMillis <= 0 || quietMillis < 0
+                || position >= windowMillis) {
+            throw new IllegalArgumentException("Invalid activity window");
+        }
         if (quietMillis == 0) {
             return true;
         }
 
-        long windowMillis = (long) burstMillis + quietMillis;
-        long window = elapsedMillis / windowMillis;
-        long position = elapsedMillis % windowMillis;
-
         long minimumBurst = Math.max(1, burstMillis / 2L);
         long maximumBurst = Math.min(
                 windowMillis, burstMillis + burstMillis / 2L);
-
         long random = mix(seed + window * 0x9E3779B97F4A7C15L);
         long duration = minimumBurst
                 + Math.floorMod(random, maximumBurst - minimumBurst + 1);

@@ -2,7 +2,6 @@ package io.github.omegaplex.ankerstone.dev;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.SplittableRandom;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -97,24 +96,9 @@ final class ArcRenderer {
         double x = position.getX() - camera.pos.x;
         double y = position.getY() - camera.pos.y;
         double z = position.getZ() - camera.pos.z;
-        long elapsedMillis = (now - instance.startedNanos) / 1_000_000L;
-        var intensity = ArcIntensity.at(
-                ArcOption.INTENSITY.value(),
-                (int) ArcOption.SELECTION_MS.value(),
-                (int) ArcOption.REFRESH_MS.value(),
-                (int) ArcOption.QUIET_MS.value());
-        var timing = ArcTiming.at(
-                elapsedMillis,
-                intensity.selectionMillis(),
-                intensity.refreshMillis(),
-                (int) ArcOption.BURST_MS.value(),
-                intensity.quietMillis());
+        var timing = instance.timingAt(now);
 
-        if (!ArcActivity.activeAt(
-                elapsedMillis,
-                (int) ArcOption.BURST_MS.value(),
-                intensity.quietMillis(),
-                slot.seed)) {
+        if (!instance.activeAt(now, slot.seed)) {
             return null;
         }
         int region = (int) ArcOption.REGION.value();
@@ -123,18 +107,13 @@ final class ArcRenderer {
             case 2 -> ArcModelRegions.MIXED;
             default -> GEM_SURFACES;
         };
-        if (slot.cachedSurface == null
-                || timing.selectionStep() != slot.cachedSelectionStep
-                || region != slot.cachedRegion) {
+        if (slot.needsSelection(timing, region)) {
             var selectionRandom = new SplittableRandom(slot.seed + timing.selectionStep());
-            int selected = selectionRandom.nextInt(candidates.size());
-            ArcSurface template = candidates.get(selected);
-            slot.cachedBend = null;
-            slot.cachedEdge = template.edge().randomized(selectionRandom);
-            slot.cachedSurface = new ArcSurface(slot.cachedEdge, template.outward(), template.recessed());
+            slot.selectSurface(candidates, selectionRandom);
             if (region == 2 && selectionRandom.nextDouble() < ArcOption.CONNECTION_CHANCE.value()) {
                 var routes = selectionRandom.nextDouble() < ArcOption.ROUTED_CHANCE.value()
-                        ? ArcModelRegions.ROUTED : ArcModelRegions.CONNECTIONS;
+                        ? ArcModelRegions.ROUTED
+                        : ArcModelRegions.CONNECTIONS;
                 var connection = routes.get(selectionRandom.nextInt(routes.size()));
                 ArcSurface sampled = connection.sample(selectionRandom);
                 ArcPoint sampledBend = connection.sampleBend(selectionRandom);
@@ -151,34 +130,8 @@ final class ArcRenderer {
         ArcSurface surface = slot.cachedSurface;
         float lift = surface.recessed() ? 0 : (float) ArcOption.LIFT.value();
 
-        if (segments != slot.cachedSegments || jitter != slot.cachedJitter
-                || lift != slot.cachedLift
-                || timing.geometryStep() != slot.cachedGeometryStep
-                || timing.selectionStep() != slot.cachedSelectionStep
-                || region != slot.cachedRegion) {
-            ArcBounds bounds = surface.boundsForLift(lift, jitter);
-            ArcPoint normal = surface.outward();
+        slot.refreshGeometry(timing, region, segments, jitter, lift);
 
-            var random = new Random(slot.seed + timing.geometryStep());
-            if (slot.cachedBend != null && segments >= 2) {
-                ArcPoint bend = slot.cachedBend;
-                var raisedBend = new ArcPoint(bend.x() + normal.x() * lift,
-                        bend.y() + normal.y() * lift, bend.z() + normal.z() * lift);
-                slot.cachedPoints = ArcPath.via(edge.start(), raisedBend, edge.end(),
-                        segments, jitter, bounds, random);
-            } else {
-                slot.cachedPoints = ArcPath.raised(
-                        edge.start(), edge.end(), segments, jitter,
-                        new ArcPoint(normal.x() * lift, normal.y() * lift, normal.z() * lift), bounds, random);
-            }
-
-            slot.cachedSegments = segments;
-            slot.cachedJitter = jitter;
-            slot.cachedLift = lift;
-            slot.cachedGeometryStep = timing.geometryStep();
-            slot.cachedSelectionStep = timing.selectionStep();
-            slot.cachedRegion = region;
-        }
         if (length(edge, slot.cachedBend) > ArcOption.MAX_LENGTH.value()) {
             return null;
         }
