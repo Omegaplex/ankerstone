@@ -156,8 +156,11 @@ See [Testing](https://github.com/Omegaplex/ankerstone/blob/main/docs/testing.md)
 
 - Code: [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
 - Original textures, artwork, and sounds: [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- The containment-breach sound incorporates third-party samples under the [Pixabay Content License](https://pixabay.com/service/license-summary/) and is excluded from the CC BY-SA license above.
 - See [NOTICE](https://github.com/Omegaplex/ankerstone/blob/main/NOTICE) for asset credits and license scope.
 
 ## 🤖 Development Disclosure
 
 Generative AI was used during development to help write code, tests, and documentation.
+
+The containment-breach sound includes an AI-generated third-party audio sample. Editing and mixing were done by Omegaplex. See NOTICE for sources.

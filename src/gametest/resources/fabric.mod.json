@@ -18,7 +18,8 @@
       "io.github.omegaplex.ankerstone.ActivationTests",
       "io.github.omegaplex.ankerstone.ChunkTickingTests",
       "io.github.omegaplex.ankerstone.ChunkReleaseTests",
-      "io.github.omegaplex.ankerstone.CommandTests"
+      "io.github.omegaplex.ankerstone.CommandTests",
+      "io.github.omegaplex.ankerstone.BreachTests"
     ]
   },
   "mixins": ["ankerstone-test.mixins.json"],

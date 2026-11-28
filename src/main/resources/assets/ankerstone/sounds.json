@@ -10,5 +10,8 @@
   },
   "block.ankerstone.deactivate": {
     "sounds": ["ankerstone:ankerstone_deactivate"]
+  },
+  "block.ankerstone.breach_warning": {
+    "sounds": ["ankerstone:ankerstone_breach_warning"]
   }
 }

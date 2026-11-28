@@ -81,7 +81,8 @@ final class ArcRenderer {
             }
             ArcInstance instance = entry.getValue();
             for (int index = 0; index < count; index++) {
-                DrawPath path = extractPath(context, position, instance, instance.slot(index), now);
+                DrawPath path = extractPath(
+                        instance, instance.slot(index), now, x, y, z);
                 if (path != null) {
                     paths.add(path);
                 }
@@ -90,18 +91,35 @@ final class ArcRenderer {
         context.levelState().setData(PATHS, List.copyOf(paths));
     }
 
-    private static DrawPath extractPath(LevelExtractionContext context,
-            BlockPos position, ArcInstance instance, ArcSlot slot, long now) {
-        var camera = context.levelState().cameraRenderState;
-        double x = position.getX() - camera.pos.x;
-        double y = position.getY() - camera.pos.y;
-        double z = position.getZ() - camera.pos.z;
+    static DrawPath extractPath(
+            ArcInstance instance, ArcSlot slot, long now,
+            double x, double y, double z) {
+        float brightness = (float) ArcOption.BRIGHTNESS.value();
+        int color = 0xFF000000
+                | Math.round((float) ArcOption.RED.value() * brightness * 255) << 16
+                | Math.round((float) ArcOption.GREEN.value() * brightness * 255) << 8
+                | Math.round((float) ArcOption.BLUE.value() * brightness * 255);
+        var style = new Style(
+                (int) ArcOption.REGION.value(),
+                (int) ArcOption.SEGMENTS.value(),
+                (float) ArcOption.JITTER.value(),
+                (float) ArcOption.LIFT.value(),
+                ArcOption.MAX_LENGTH.value(),
+                ArcOption.CONNECTION_CHANCE.value(),
+                ArcOption.ROUTED_CHANCE.value(), color,
+                (float) ArcOption.WIDTH.value());
+        return extractPath(instance, slot, now, x, y, z, style);
+    }
+
+    static DrawPath extractPath(
+            ArcInstance instance, ArcSlot slot, long now,
+            double x, double y, double z, Style style) {
         var timing = instance.timingAt(now);
 
         if (!instance.activeAt(now, slot.seed)) {
             return null;
         }
-        int region = (int) ArcOption.REGION.value();
+        int region = style.region();
         var candidates = switch (region) {
             case 1 -> ArcModelRegions.RECESS_SURFACES;
             case 2 -> ArcModelRegions.MIXED;
@@ -110,14 +128,14 @@ final class ArcRenderer {
         if (slot.needsSelection(timing, region)) {
             var selectionRandom = new SplittableRandom(slot.seed + timing.selectionStep());
             slot.selectSurface(candidates, selectionRandom);
-            if (region == 2 && selectionRandom.nextDouble() < ArcOption.CONNECTION_CHANCE.value()) {
-                var routes = selectionRandom.nextDouble() < ArcOption.ROUTED_CHANCE.value()
+            if (region == 2 && selectionRandom.nextDouble() < style.connectionChance()) {
+                var routes = selectionRandom.nextDouble() < style.routedChance()
                         ? ArcModelRegions.ROUTED
                         : ArcModelRegions.CONNECTIONS;
                 var connection = routes.get(selectionRandom.nextInt(routes.size()));
                 ArcSurface sampled = connection.sample(selectionRandom);
                 ArcPoint sampledBend = connection.sampleBend(selectionRandom);
-                if (length(sampled.edge(), sampledBend) <= ArcOption.MAX_LENGTH.value()) {
+                if (length(sampled.edge(), sampledBend) <= style.maxLength()) {
                     slot.cachedSurface = sampled;
                     slot.cachedEdge = sampled.edge();
                     slot.cachedBend = sampledBend;
@@ -125,22 +143,18 @@ final class ArcRenderer {
             }
         }
         ArcEdge edge = slot.cachedEdge;
-        int segments = (int) ArcOption.SEGMENTS.value();
-        float jitter = (float) ArcOption.JITTER.value();
+        int segments = style.segments();
+        float jitter = style.jitter();
         ArcSurface surface = slot.cachedSurface;
-        float lift = surface.recessed() ? 0 : (float) ArcOption.LIFT.value();
+        float lift = surface.recessed() ? 0 : style.lift();
 
         slot.refreshGeometry(timing, region, segments, jitter, lift);
 
-        if (length(edge, slot.cachedBend) > ArcOption.MAX_LENGTH.value()) {
+        if (length(edge, slot.cachedBend) > style.maxLength()) {
             return null;
         }
-        float brightness = (float) ArcOption.BRIGHTNESS.value();
-        int color = 0xFF000000
-                | Math.round((float) ArcOption.RED.value() * brightness * 255) << 16
-                | Math.round((float) ArcOption.GREEN.value() * brightness * 255) << 8
-                | Math.round((float) ArcOption.BLUE.value() * brightness * 255);
-        float width = (float) ArcOption.WIDTH.value();
+        int color = style.color();
+        float width = style.width();
         // Submitted arrays are replaced on refresh, never modified while a frame may
         // still use them.
         return new DrawPath(x, y, z, slot.cachedPoints, color, width);
@@ -182,9 +196,9 @@ final class ArcRenderer {
         }
     }
 
-    private record DrawPath(double x, double y, double z,
+    record DrawPath(double x, double y, double z,
             ArcPoint[] points, int color, float width) {
-        private void draw(PoseStack.Pose pose, VertexConsumer vertices) {
+        void draw(PoseStack.Pose pose, VertexConsumer vertices) {
             for (int i = 1; i < points.length; i++) {
                 ArcPoint a = points[i - 1];
                 ArcPoint b = points[i];
@@ -208,4 +222,17 @@ final class ArcRenderer {
                     .setLineWidth(width);
         }
     }
+
+    record Style(int region, int segments, float jitter, float lift,
+            double maxLength, double connectionChance, double routedChance,
+            int color, float width) {
+        Style withColor(int updatedColor) {
+            return new Style(region, segments, jitter, lift,
+                    maxLength, connectionChance, routedChance,
+                    updatedColor, width);
+        }
+    }
+
+    static final Style GAMEPLAY_STYLE = new Style(2, 4, 0.015F, 0.02F, 1.5, 0.125, 0.5,
+            0xFFFFFFFF, 1.0F);
 }

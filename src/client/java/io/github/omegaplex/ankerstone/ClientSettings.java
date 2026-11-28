@@ -5,6 +5,8 @@ import java.nio.file.Path;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import io.github.omegaplex.ankerstone.dev.PrimedArcRenderer;
 
 public class ClientSettings implements ClientModInitializer {
     private static final Path FILE = FabricLoader.getInstance()
@@ -21,7 +23,11 @@ public class ClientSettings implements ClientModInitializer {
                     "Could not load Ankerstone client preferences; using defaults", failure);
         }
         applyParticles();
+        BreachParticle.initialize();
         io.github.omegaplex.ankerstone.dev.ArcPrototype.initialize();
+        BlockEntityRendererRegistry.register(
+                ModBlockEntities.PRIMED_ANKERSTONE,
+                context -> new PrimedArcRenderer(context.blockModelResolver()));
     }
 
     static ClientPreferences preferences() {

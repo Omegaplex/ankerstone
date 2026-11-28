@@ -18,17 +18,26 @@ final class ArcInstance {
     private final ArcSlot[] slots = new ArcSlot[32];
 
     ArcInstance(long seed, long startedNanos) {
+        this(seed, startedNanos,
+                ArcIntensity.at(
+                        ArcOption.INTENSITY.value(),
+                        (int) ArcOption.SELECTION_MS.value(),
+                        (int) ArcOption.REFRESH_MS.value(),
+                        (int) ArcOption.QUIET_MS.value()),
+                (int) ArcOption.BURST_MS.value());
+    }
+
+    ArcInstance(long seed, long startedNanos,
+            ArcIntensity initial, int burstMillis) {
+        if (burstMillis <= 0) {
+            throw new IllegalArgumentException("Invalid burst interval");
+        }
+
         this.seed = seed;
         this.startedNanos = startedNanos;
-
-        var initial = ArcIntensity.at(
-                ArcOption.INTENSITY.value(),
-                (int) ArcOption.SELECTION_MS.value(),
-                (int) ArcOption.REFRESH_MS.value(),
-                (int) ArcOption.QUIET_MS.value());
         selectionClock = new ArcClock(initial.selectionMillis());
         geometryClock = new ArcClock(initial.refreshMillis());
-        activityBurstMillis = (int) ArcOption.BURST_MS.value();
+        activityBurstMillis = burstMillis;
         activityQuietMillis = initial.quietMillis();
         pendingBurstMillis = activityBurstMillis;
         pendingQuietMillis = activityQuietMillis;

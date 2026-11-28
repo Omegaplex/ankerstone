@@ -12,11 +12,13 @@ public final class ModSounds {
     public static final Identifier ACTIVATE_WIDE_ID = id("block.ankerstone.activate_wide");
     public static final Identifier WIDE_TO_SINGLE_ID = id("block.ankerstone.wide_to_single");
     public static final Identifier DEACTIVATE_ID = id("block.ankerstone.deactivate");
+    public static final Identifier BREACH_WARNING_ID = id("block.ankerstone.breach_warning");
 
     static final SoundEvent ACTIVATE = register(ACTIVATE_ID);
     static final SoundEvent ACTIVATE_WIDE = register(ACTIVATE_WIDE_ID);
     static final SoundEvent WIDE_TO_SINGLE = register(WIDE_TO_SINGLE_ID);
     static final SoundEvent DEACTIVATE = register(DEACTIVATE_ID);
+    static final SoundEvent BREACH_WARNING = register(BREACH_WARNING_ID);
 
     private static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath(Ankerstone.MOD_ID, path);
@@ -44,6 +46,11 @@ public final class ModSounds {
                 || ACTIVATE_WIDE_ID.equals(id)
                 || WIDE_TO_SINGLE_ID.equals(id)
                 || DEACTIVATE_ID.equals(id);
+    }
+
+    public static boolean isAnkerstoneSound(Identifier id) {
+        return isTransitionSound(id)
+                || BREACH_WARNING_ID.equals(id);
     }
 
     static void initialize() {
